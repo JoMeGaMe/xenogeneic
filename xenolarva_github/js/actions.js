@@ -52,8 +52,8 @@ function actOut(){
   if(free.length&&Math.random()<.35){deco=R(free);META.decor.push(deco);codexSave()}
   emote(txt.length||deco?'ex':'q');
   say(txt.length?`出門逛了一圈，帶回：${txt.join('、')}。`:'出門逛了一圈，空手而回。');
-  if(got.kit)say('你得到了水質檢測儀！現在能看到精確的水質數值了，之後的周目也會一直帶著它。','ev');
-  if(deco)say(`在外面發現了「${DECOR[deco].name}」，已經放進水缸當裝飾！（之後的周目也會保留）`,'ev');
+  if(got.kit)say('你得到了水質檢測儀！現在能看到精確的水質數值了（永久）。','ev');
+  if(deco)say(`在外面發現了「${DECOR[deco].name}」，已經放進水缸當裝飾！（永久）`,'ev');
   refresh();
 }
 function actBag(){
