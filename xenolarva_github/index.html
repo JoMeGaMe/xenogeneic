@@ -4,58 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>異種幼體養成模擬器</title>
-<style>
-:root{--bg:#0b2330;--panel:#12394a;--line:#2b6b80;--ink:#e6f6f2;--dim:#8fb9bd;--acc:#f2c14e;--bad:#ff8a6b;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
-:root[data-theme="light"],:root:not([data-theme="dark"]){--bg:#0b2330}
-*{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
-main{max-width:1000px;margin:0 auto;padding:12px}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
-#pname{font-size:17px}
-.pips span{display:inline-block;width:14px;height:14px;margin-left:4px;border:2px solid var(--acc);background:transparent}
-.pips span.on{background:var(--acc)}
-#tank{width:100%;aspect-ratio:1/1;image-rendering:pixelated;border:3px solid var(--line);display:block;background:#123}
-#status{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
-#status div{background:var(--panel);border:2px solid var(--line);padding:4px 6px;text-align:center;font-size:13px}
-#status b{display:block;font-size:12px;color:var(--dim);font-weight:400}
-#log{height:128px;overflow:auto;background:#081a24;border:2px solid var(--line);padding:6px 8px;font-size:14px}
-#log p{margin:0 0 4px}#log p.ev{color:var(--acc)}#log p.bad{color:var(--bad)}#log p.sys{color:var(--dim)}
-#acts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
-button{font:inherit;color:var(--ink);background:var(--panel);border:2px solid var(--line);padding:9px 4px;cursor:pointer;border-radius:0}
-button:hover:not(:disabled){border-color:var(--acc)}
-button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
-button:disabled{opacity:.4;cursor:not-allowed}
-button small{display:block;color:var(--dim);font-size:11px}
-#end{grid-column:1/-1;background:var(--acc);color:#1b1b1b;border-color:var(--acc);font-weight:700}
-.ov{position:fixed;inset:0;background:rgba(5,15,22,.88);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
-.ov.show{display:flex}
-.box{background:var(--panel);border:3px solid var(--line);padding:18px;width:100%;max-width:400px;max-height:90vh;overflow:auto}
-.box h2{margin:0 0 8px;font-size:20px}
-.box p{margin:0 0 10px}
-.box button{display:block;width:100%;margin-top:6px}
-input[type=text]{width:100%;padding:8px;background:#081a24;color:var(--ink);border:2px solid var(--line);font:inherit}
-.sw{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
-.sw button{width:38px;height:38px;padding:0}
-.sw button.sel{border-color:#fff;box-shadow:0 0 0 2px var(--acc)}
-#sum{font-size:13px;color:var(--dim)}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}}
-.pips{margin-left:6px}#cname{font-size:15px}#pname{text-align:right}
-
-.game{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
-.left{min-width:0}
-#tank{width:min(100%,calc(100vh - 380px));min-width:min(100%,270px);margin:0 auto}
-#log{height:92px}
-.cust{display:flex;gap:8px}.cust input[type=color]{width:46px;height:38px;padding:0;border:2px solid var(--line);background:none}.cust input[type=text]{flex:1}
-@media (min-width:760px){
- .game{grid-template-columns:minmax(0,max(340px,calc(100vh - 230px))) 200px;justify-content:center;gap:16px;align-items:start}
- #tank{width:100%}
- #acts{display:flex;flex-direction:column;gap:8px;margin-top:36px}
- #acts button{padding:14px 6px;font-size:16px}
- #log{height:112px}
-}
-</style>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <main><div class="game"><div class="left">
@@ -63,13 +12,13 @@ input[type=text]{width:100%;padding:8px;background:#081a24;color:var(--ink);bord
 <canvas id="tank" width="500" height="500" aria-label="水缸與異種幼體"></canvas>
 <div id="status"></div>
 <div id="log" role="log" aria-live="polite"></div>
+<div class="tools"><button id="bAbout">說明</button><button id="bCodex">圖鑑</button></div>
 </div>
 <div id="acts">
 <button id="bWater">換水<small>不耗行動</small></button>
 <button id="bFeed">餵食<small>不耗行動</small></button>
 <button id="bPlay">玩耍<small>耗 1 行動</small></button>
 <button id="bOut">出門<small>耗 1 行動</small></button>
-<button id="bGift">送禮<small>耗 1 行動</small></button>
 <button id="bBag">物品<small>查看庫存</small></button>
 <button id="end">結束今日</button>
 </div>
@@ -86,401 +35,38 @@ input[type=text]{width:100%;padding:8px;background:#081a24;color:var(--ink);bord
 <div class="sw" id="sw"></div>
 <div class="cust"><input type="color" id="cp" value="#58a6ff" aria-label="自訂顏色"><input type="text" id="hex" placeholder="#RRGGBB 或 255,128,0" aria-label="色碼或 RGB"></div>
 <button id="go">開始養成</button>
+<div class="row2"><button id="sAbout">說明</button><button id="sCodex">圖鑑</button></div>
 </div></div>
+<div class="ov" id="ovAbout"><div class="box wide"><h2>說明</h2><div id="aboutBody"></div><button id="aboutClose">關閉</button></div></div>
+<div class="ov" id="ovCodex"><div class="box wide"><h2>圖鑑</h2><p id="cstat"></p><p id="cends" class="dim"></p><div class="cgrid" id="cgrid"></div><p id="cmsg" class="dim" role="status"></p>
+<div class="row2"><button id="cDown">下載進度</button><label class="fbtn">上傳進度<input type="file" id="cUp" accept=".json,application/json" hidden></label></div>
+<details><summary class="dim">文字進度碼（備用）</summary><textarea id="saveText" aria-label="進度碼"></textarea><button id="cImport">匯入上方文字</button></details>
+<button id="codexClose">關閉</button></div></div>
 <div class="ov" id="ovPick"><div class="box"><h2 id="pt"></h2><div id="po"></div><button id="pc">取消</button></div></div>
 <div class="ov" id="ovEnd"><div class="box"><h2 id="et"></h2><p id="ex"></p><p id="sum"></p><button id="again">重新開始</button></div></div>
 
-<script>
-const $=id=>document.getElementById(id), R=a=>a[Math.floor(Math.random()*a.length)];
-const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
-function parseColor(v){v=v.trim();let m;
-  if(m=v.match(/^#?([0-9a-f]{6})$/i))return '#'+m[1].toLowerCase();
-  if(m=v.match(/^#?([0-9a-f])([0-9a-f])([0-9a-f])$/i))return '#'+m[1]+m[1]+m[2]+m[2]+m[3]+m[3];
-  if(m=v.match(/^(\d{1,3})[\s,，]+(\d{1,3})[\s,，]+(\d{1,3})$/)){const c=[m[1],m[2],m[3]].map(Number);if(c.every(n=>n<=255))return '#'+c.map(n=>n.toString(16).padStart(2,'0')).join('')}
-  return null}
-function paintName(el,c){el.style.color=c||'';let d=false;
-  if(c){const r=[1,3,5].map(i=>parseInt(c.substr(i,2),16));d=(r[0]*.3+r[1]*.59+r[2]*.11)/255<.3}
-  el.style.background=d?'rgba(230,246,242,.9)':'';el.style.padding=d?'0 8px':'';el.style.borderRadius=d?'4px':''}
-const NAME={food:'食物',agent:'換水劑',sweet:'甜果',salty:'鹹貝',bitter:'苦藻',bubble:'氣泡棒',bell:'小鈴鐺',ball:'軟球',kit:'水質檢測儀'};
-const GIFTS=['sweet','salty','bitter'], TOYS=['bubble','bell','ball'];
-const COLORS=['#e5484d','#ff8a3d','#f2b84b','#ffe94d','#5fd38d','#58a6ff','#a56bff','#ff7aa8','#8b5a2b','#25252b','#f5f5f5'];
-const CNAME=['紅','橘','金','黃','綠','藍','紫','粉','棕','黑','白'];
-let S=null, selColor=COLORS[5];
+<script src="js/utils.js"></script>
+<script src="js/data/assets-inline.js"></script>
+<script src="js/data/items.js"></script>
+<script src="js/data/endings.js"></script>
+<script src="js/data/emotes.js"></script>
+<script src="js/data/about.js"></script>
+<script src="js/data/decor.js"></script>
+<script src="js/data/sprites.js"></script>
+<script src="js/state.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/actions.js"></script>
+<script src="js/settle.js"></script>
+<script src="js/endings.js"></script>
+<script src="js/codex.js"></script>
+<script src="js/render/canvas.js"></script>
+<script src="js/render/sprites.js"></script>
+<script src="js/render/larva.js"></script>
+<script src="js/render/emote.js"></script>
+<script src="js/render/creature.js"></script>
+<script src="js/render/guests.js"></script>
+<script src="js/render/scene.js"></script>
+<script src="js/main.js"></script>
 
-// ---------- 新周目 ----------
-function newGame(pname,name,col){
-  const g=R(GIFTS);
-  S={day:1,ap:2,life:90,sat:70,dirt:15,ph:7,trust:10,bond:0,explore:0,outs:0,
-    pname,name,col,hue:Math.floor(Math.random()*360),colored:false,over:null,
-    pref:{gift:g,dislike:R(GIFTS.filter(x=>x!==g)),toy:R(TOYS)},
-    temp:R(['clingy','shy','curious']),
-    inv:{food:3,agent:3,sweet:1,salty:0,bitter:0,bubble:1,bell:0,ball:0,kit:0},
-    waterToday:0,history:[]};
-  $('pname').textContent=pname;paintName($('pname'),col);$('cname').textContent=name;
-  $('log').innerHTML='';
-  say('幼體在水中輕輕晃動，透明的身體什麼也看不出來。',"sys");
-  say('提示：每天有 2 次行動。換水與餵食不佔行動，但要小心別過度。','sys');
-  refresh();
-}
-// ---------- 文字化狀態 ----------
-const lifeW=()=>S.life>75?'穩定':S.life>50?'注意':S.life>25?'衰弱':'危險';
-const satW=()=>S.sat>75?'飽足':S.sat>35?'正常':'飢餓';
-const trustW=()=>S.trust>75?'依偎':S.trust>50?'親近':S.trust>25?'好奇':'警戒';
-const waterBad=()=>S.dirt>60||Math.abs(S.ph-7)>1.2;
-const waterSevere=()=>S.dirt>85||Math.abs(S.ph-7)>2;
-function waterW(){
-  if(S.inv.kit>0) return `污${Math.round(S.dirt)} pH${S.ph.toFixed(1)}`;
-  return '未知';
-}
-function hints(){
-  const h=[];
-  if(S.dirt>60)h.push('水色混濁，幼體縮在缸底。');
-  else if(S.dirt>35)h.push('水有點霧霧的。');
-  if(S.ph-7>1.2)h.push('水面浮著細小泡沫，觸肢一直抖。');
-  if(7-S.ph>1.2)h.push('水帶著酸味，幼體的觸肢捲了起來。');
-  if(S.sat<=35)h.push('幼體繞著缸壁打轉，一直碰你放食物的地方。');
-  if(S.life<=50)h.push('幼體活動力很低，慢慢往下沉。');
-  return h;
-}
-// ---------- 訊息 / 介面 ----------
-function say(t,c=''){bounce=1;const p=document.createElement('p');p.textContent=(S?t.replace(/幼體/g,S.name):t);if(c)p.className=c;$('log').appendChild(p);$('log').scrollTop=1e9}
-function refresh(){
-  paintName($('cname'),S.colored?S.col:'');
-  $('day').textContent=`第 ${Math.min(S.day,7)} 日 / 7`;
-  $('pips').innerHTML=[0,1].map(i=>`<span class="${i<S.ap?'on':''}"></span>`).join('');
-  $('status').innerHTML=[['生命',lifeW()],['飽食',satW()],['水質',waterW()],['信賴',trustW()]]
-    .map(([a,b])=>`<div><b>${a}</b>${b}</div>`).join('');
-  const off=!!S.over;
-  $('bWater').disabled=off||S.inv.agent<1;
-  $('bFeed').disabled=off||S.inv.food<1;
-  $('bPlay').disabled=off||S.ap<1||!TOYS.some(t=>S.inv[t]>0);
-  $('bOut').disabled=off||S.ap<1;
-  $('bGift').disabled=off||S.ap<1||!GIFTS.some(t=>S.inv[t]>0);
-  $('end').disabled=off;
-}
-function pick(title,opts,cb){
-  $('pt').textContent=title;
-  $('po').innerHTML='';
-  opts.forEach(o=>{const b=document.createElement('button');b.textContent=o.label;b.disabled=!!o.off;
-    b.onclick=()=>{$('ovPick').classList.remove('show');cb(o.id)};$('po').appendChild(b)});
-  $('ovPick').classList.add('show');
-}
-$('pc').onclick=()=>$('ovPick').classList.remove('show');
-
-// ---------- 行動 ----------
-function gain(n){return Math.round(n*(S.temp==='clingy'?1.3:S.temp==='shy'?0.8:1))}
-function actWater(){
-  S.inv.agent--;S.waterToday++;
-  S.dirt=Math.max(5,S.dirt-60);S.ph+= (7-S.ph)*0.7;
-  if(S.waterToday>1){S.life=clamp(S.life-6);emote('x');say('今天換太多次水了，幼體被嚇到，身體縮成一小球。','bad')}
-  else{emote('drop');say('換上乾淨的水。水面晃了晃，幼體慢慢伸出觸肢。')}
-  refresh();
-}
-function actFeed(){
-  S.inv.food--;
-  if(S.sat>85){S.life=clamp(S.life-5);emote('x');say('幼體已經吃飽了，被塞進食物後身體脹得圓圓的。','bad')}
-  else{emote('star');say('幼體用觸肢把食物一點一點包進核心。')}
-  S.sat=clamp(S.sat+35);S.history.push('feed');refresh();
-}
-function actPlay(){
-  pick('選一個玩具',TOYS.filter(t=>S.inv[t]>0).map(t=>({id:t,label:NAME[t]})),t=>{
-    S.ap--;
-    if(t===S.pref.toy){S.trust=clamp(S.trust+gain(9));S.bond++;emote('heart');say(`幼體抱著${NAME[t]}不放，觸肢興奮地一起擺動。`,'ev')}
-    else{S.trust=clamp(S.trust+gain(2));emote('q');say(`幼體碰了碰${NAME[t]}，看起來沒那麼感興趣。`)}
-    if(S.temp==='curious')S.explore++;
-    refresh();
-  });
-}
-function actGift(){
-  pick('選一份禮物',GIFTS.filter(t=>S.inv[t]>0).map(t=>({id:t,label:`${NAME[t]} ×${S.inv[t]}`})),t=>{
-    S.ap--;S.inv[t]--;
-    if(t===S.pref.gift){S.trust=clamp(S.trust+gain(11));S.bond++;emote('heart');say(`幼體整個身體亮了一下，用觸肢輕輕碰你的手。（${NAME[t]}好像很合牠的胃口）`,'ev')}
-    else if(t===S.pref.dislike){emote('x');say(`幼體把${NAME[t]}推開，縮到缸的另一邊。`)}
-    else{S.trust=clamp(S.trust+gain(4));emote('star');say(`幼體收下${NAME[t]}，慢慢吃掉了。`)}
-    refresh();
-  });
-}
-function actOut(){
-  S.ap--;S.outs++;S.explore++;
-  const pool=['food','food','agent','agent','sweet','salty','bitter','bubble','bell','ball'];
-  const got={};
-  for(let i=0;i<3;i++){const k=R(pool);got[k]=(got[k]||0)+1}
-  if(S.inv.kit<1&&(S.outs>=3||Math.random()<0.25)){got.kit=1}
-  const txt=[];
-  for(const k in got){
-    if(k==='kit'||TOYS.includes(k)){ if(S.inv[k]>0){got[k]=0;continue} S.inv[k]=1;txt.push(NAME[k]) }
-    else{S.inv[k]+=got[k];txt.push(`${NAME[k]}×${got[k]}`)}
-  }
-  emote(txt.length?'ex':'q');say(txt.length?`出門逛了一圈，帶回：${txt.join('、')}。`:'出門逛了一圈，空手而回。');
-  if(S.inv.kit>0&&got.kit)say('你得到了水質檢測儀！現在能看到精確的水質數值了。','ev');
-  refresh();
-}
-function actBag(){
-  const rows=Object.keys(NAME).filter(k=>S.inv[k]>0).map(k=>`${NAME[k]}${['kit','bubble','bell','ball'].includes(k)?'':' ×'+S.inv[k]}`);
-  pick('物品庫存：'+(rows.join('、')||'空空如也'),[],()=>{});
-}
-
-// ---------- 每日結算 ----------
-function settle(){
-  // 1 更新飽食與水質
-  S.sat=clamp(S.sat-28);
-  S.dirt=clamp(S.dirt+18);
-  S.ph+=(Math.random()-0.5)*1.1+(S.ph>7?0.15:-0.15);
-  S.ph=clamp(S.ph,4,10);
-  // 2 生命
-  let d=0;
-  d+= S.sat<20?-15:S.sat<45?-4:4;
-  d+= waterSevere()?-20:waterBad()?-10:3;
-  S.life=clamp(S.life+d);
-  // 3 信賴
-  S.trust=clamp(S.trust+((S.sat>=35&&S.life>50)?2:-5));
-  // 4 事件
-  const lines=hints();
-  const ev=[];
-  if(!S.colored&&S.day>=3&&S.trust>=60&&S.bond>=2&&S.life>=50){
-    S.colored=true;setTimeout(()=>emote('heart'),400);ev.push('幼體的核心慢慢染上了你的代表色，像是把你記住了。');
-  }
-  S.waterToday=0;
-  // 5 死亡判定
-  if(S.life<=0){finish('END-07');return}
-  if(S.day>=7){finish(endCode());return}
-  S.day++;S.ap=2;
-  say(`—— 第 ${S.day} 日 ——`,'sys');
-  lines.forEach(l=>say(l,'bad'));
-  ev.forEach(e=>say(e,'ev'));
-  if(!lines.length&&!ev.length)say(moodLine());
-  refresh();
-}
-function moodLine(){
-  const m={clingy:'幼體貼著玻璃，看著你這一側。',shy:'幼體躲在水草旁偷偷看你。',curious:'幼體在缸裡四處亂游，觸肢摸遍每個角落。'};
-  return m[S.temp];
-}
-function endCode(){
-  if(S.colored)return'END-05';
-  if(S.life<40||S.trust<25)return'END-06';
-  if(S.trust>=70&&S.bond>=5)return'END-02';
-  if(S.explore>=4&&S.temp==='curious')return'END-03';
-  if(S.life>=70&&S.bond<=2)return'END-04';
-  return'END-01';
-}
-const ENDS={
- 'END-01':['平穩成長','七天過去，幼體的顏色安穩下來。牠不特別黏人，但已經習慣有你在。'],
- 'END-02':['親密依附','幼體總是第一個游到你面前。牠學會了你的動作，也記得你的聲音。'],
- 'END-03':['好奇探索','牠對每一件新東西都伸出觸肢。你帶回來的世界，成了牠的第一堂課。'],
- 'END-04':['慢熱獨立','牠健康地長大，保持著自己的步調。偶爾，牠會悄悄游到玻璃邊。'],
- 'END-05':['特殊色彩','牠的核心留下了你的顏色。對異種來說，這是很重要的記號。'],
- 'END-06':['遺憾的存活','幼體撐過了第一週，但還有很多事你們沒能一起做。之後還有時間。'],
- 'END-07':['提前消逝','幼體的身體慢慢化開，溶進水裡。牠最後靠向你這一側。']
-};
-function finish(code){
-  S.over=code;refresh();
-  const [t,x]=ENDS[code];
-  $('et').textContent=`${code}　${t}`;
-  $('ex').textContent=x.replace(/幼體/g,S.name);
-  const color=S.colored?'已染上你的代表色':`核心為 hsl ${S.hue}° 色`;
-  $('sum').textContent=`存活至第 ${S.day} 日｜生命 ${lifeW()}｜信賴 ${trustW()}｜個性：${{clingy:'黏人',shy:'害羞',curious:'好奇'}[S.temp]}｜喜歡的禮物：${NAME[S.pref.gift]}｜喜歡的玩具：${NAME[S.pref.toy]}｜${color}`;
-  setTimeout(()=>$('ovEnd').classList.add('show'),code==='END-07'?1800:600);
-}
-
-// ---------- 事件綁定 ----------
-$('bWater').onclick=actWater;$('bFeed').onclick=actFeed;$('bPlay').onclick=actPlay;
-$('bOut').onclick=actOut;$('bGift').onclick=actGift;$('bBag').onclick=actBag;
-$('end').onclick=()=>pick(S.ap>0?`還有 ${S.ap} 次行動沒用，確定結束今天？`:'結束今天並進行結算？',
-  [{id:1,label:'結束今日'}],settle);
-function markSw(){[...$('sw').children].forEach(b=>b.className=b.dataset.c===selColor?'sel':'')}
-function setColor(c){selColor=c;$('cp').value=c;$('hex').value=c;$('hex').style.borderColor='';markSw()}
-COLORS.forEach((c,i)=>{const b=document.createElement('button');b.style.background=c;b.dataset.c=c;b.title=CNAME[i];b.setAttribute('aria-label',CNAME[i]);
-  b.onclick=()=>setColor(c);$('sw').appendChild(b)});
-$('cp').oninput=e=>setColor(e.target.value);
-$('hex').oninput=e=>{const c=parseColor(e.target.value);if(c){selColor=c;$('cp').value=c;e.target.style.borderColor='';markSw()}else e.target.style.borderColor='#ff8a6b'};
-$('hex').onchange=()=>{$('hex').value=selColor;$('hex').style.borderColor=''};
-setColor(selColor);
-$('go').onclick=()=>{$('ovStart').classList.remove('show');newGame($('pn').value.trim()||'玩家',$('nm').value.trim()||'小球',selColor)};
-$('again').onclick=()=>{$('ovEnd').classList.remove('show');$('ovStart').classList.add('show')};
-
-// ---------- 像素水缸 ----------
-const cv=$('tank'),cx=cv.getContext('2d');
-function hexRgb(h){return[1,3,5].map(i=>parseInt(h.substr(i,2),16))}
-let dead=0,bounce=0,EM=null;
-cx.imageSmoothingEnabled=false;
-const hsl2rgb=(h,s,l)=>{s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return[f(0),f(8),f(4)].map(v=>Math.round(v*255))};
-function px(x,y,w,h,col,al){cx.globalAlpha=al;cx.fillStyle=col;cx.fillRect(Math.round(x),Math.round(y),w,h)}
-// ---- 圖片載入（ASSETS 為內嵌版專用，GitHub 版讀 assets/larva/）----
-const ASSETS={};
-const BASE='assets/larva/';
-const IMGN=['bg_tank','bg_tank_glass_1','bg_tank_glass_2','body_close','body_curl','body_droop','body_flat_a','body_flat_b','body_idle_a','body_idle_b','body_open_a','body_open_b','body_reach_a','body_reach_b','body_rest','core_mask','core_glow'];
-const IMG={};let nLoaded=0;
-IMGN.forEach(n=>{const im=new Image();im.onload=im.onerror=()=>nLoaded++;im.src=ASSETS[n]||BASE+n+'.png';IMG[n]=im});
-const TINT={};
-function tint(n,rgb){const k=n+rgb;if(TINT[k])return TINT[k];const im=IMG[n],c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');
-  g.drawImage(im,0,0);g.globalCompositeOperation='multiply';g.fillStyle=`rgb(${rgb})`;g.fillRect(0,0,c.width,c.height);g.globalCompositeOperation='destination-in';g.drawImage(im,0,0);return TINT[k]=c}
-// 核心中心位置（以 96×96 幼體圖為座標），不同姿勢可微調
-const CORE={rest:[48,62],curl:[46,50],droop:[46,48],flat_a:[46,50],flat_b:[46,50]};
-const coreAt=p=>CORE[p]||[46,46];
-// ---- 表情氣泡 ----
-function emote(type){EM={type,t:performance.now()}}
-const ICON={
- heart:{c:'#ff6b8b',m:[' ## ## ','#######','#######',' ##### ','  ###  ','   #   ']},
- q:{c:'#4f86ff',m:[' ### ','#   #','   # ','  #  ','  #  ','     ','  #  ']},
- ex:{c:'#ffa81f',m:['  #  ','  #  ','  #  ','  #  ','  #  ','     ','  #  ']},
- x:{c:'#e0505a',m:['#   #',' # # ','  #  ',' # # ','#   #']},
- drop:{c:'#3fb2ff',m:['  #  ','  #  ',' ### ','#####','#####',' ### ']},
- star:{c:'#f2b73d',m:['  #  ','  #  ','#####','  #  ','  #  ']}};
-function drawEmote(t,x,y){
-  if(!EM)return;const age=t-EM.t;if(age>2000){EM=null;return}
-  const ic=ICON[EM.type],m=ic.m,K=5,T=3,P=12,w=m[0].length*K,h=m.length*K,al=age>1600?(2000-age)/400:1,pop=Math.min(1,age/150);
-  const bw=w+P*2,bh=h+P*2,X=Math.round(Math.max(4,Math.min(496-bw,x-bw/2))),Y=Math.round(y-bh-14-Math.sin(age/200)*4-(1-pop)*16),o='#3b6b80';
-  px(X+T,Y,bw-2*T,bh,o,al);px(X,Y+T,bw,bh-2*T,o,al);
-  px(X+2*T,Y+T,bw-4*T,bh-2*T,'#fff',al);px(X+T,Y+2*T,bw-2*T,bh-4*T,'#fff',al);
-  px(x-2*T,Y+bh-T,4*T,T,'#fff',al);px(x-3*T,Y+bh-T,T,T,o,al);px(x+2*T,Y+bh-T,T,T,o,al);
-  px(x-2*T,Y+bh,T,T,o,al);px(x+T,Y+bh,T,T,o,al);px(x-T,Y+bh,2*T,T,'#fff',al);px(x-T,Y+bh+T,2*T,T,o,al);
-  m.forEach((row,j)=>{for(let i=0;i<row.length;i++)if(row[i]==='#')px(X+P+i*K,Y+P+j*K,K,K,ic.c,al)});
-  cx.globalAlpha=1;
-}
-// ---- 游動（撞牆反彈＋整隻旋轉）----
-const C={x:250,y:180,vx:1,vy:.15,tx:1,ty:0,rot:0,rv:0,face:1,next:0,last:0,p:'idle_a',pt:0};
-const PI2=Math.PI*2;
-function step(t){
-  const dt=Math.min(3,(t-(C.last||t))/16.7);C.last=t;
-  const low=S.dirt>60||S.life<40||S.over;
-  if(M){
-    if(t>M.until){M=null;C.next=0}
-    else{
-      C.next=t+200;
-      if(M.k==='hide'||M.k==='come'){
-        const dx=M.tx-C.x,dy=M.ty-C.y,d=Math.hypot(dx,dy),sp=M.k==='hide'?1.4:1;
-        M.near=d<40;
-        if(d>8){C.tx=dx/d*sp;C.ty=dy/d*sp}else{C.tx=0;C.ty=0}
-      }else if(M.k==='wave'){C.tx=0;C.ty=0}
-    }
-  }
-  if(t>C.next){
-    const sp=S.over?0:low?.2:S.temp==='curious'?1.2:S.temp==='shy'?.5:.8;
-    const a=Math.random()*PI2,k=Math.random()<.6?1:.3;
-    C.tx=Math.cos(a)*sp*k;C.ty=Math.sin(a)*sp*k*.6+(low?.15:0);
-    C.next=t+1500+Math.random()*2500;
-  }
-  C.vx+=(C.tx-C.vx)*.03*dt;C.vy+=(C.ty-C.vy)*.03*dt;
-  C.x+=C.vx*dt;C.y+=C.vy*dt;
-  let hit=0;
-  if(C.x<40){C.x=40;C.vx=Math.abs(C.vx)+.25;C.tx=Math.abs(C.tx);hit=-1}
-  if(C.x>460){C.x=460;C.vx=-Math.abs(C.vx)-.25;C.tx=-Math.abs(C.tx);hit=1}
-  if(C.y<48){C.y=48;C.vy=Math.abs(C.vy)+.15;C.ty=Math.abs(C.ty);hit=hit||.6}
-  if(C.y>308){C.y=308;C.vy=-Math.abs(C.vy)*.5;C.ty=-Math.abs(C.ty)*.5;hit=hit||-.6}
-  if(hit&&!S.over){C.rv=hit*(.08+Math.random()*.08);bounce=Math.max(bounce,.5)}
-  const lean=Math.max(-.3,Math.min(.3,C.vx*.25))+Math.sin(t/900)*.05;
-  const diff=((lean-C.rot+Math.PI*3)%PI2)-Math.PI;
-  C.rv+=diff*.004*dt;C.rv*=Math.pow(.97,dt);C.rot+=C.rv*dt;
-}
-function pickPose(t){
-  if(M){
-    const f=(t%440<220?'a':'b');
-    if(M.k==='hide')return 'curl';
-    if(M.k==='flee')return 'flat_'+f;
-    if(M.k==='wave'||(M.k==='come'&&M.near))return 'reach_'+f;
-    if(M.k==='come')return 'flat_'+f;
-  }
-  if(EM&&t-EM.t<1800){
-    if(EM.type==='heart')return 'reach_'+(t%400<200?'a':'b');
-    if(EM.type==='x')return 'curl';
-    return 'open_'+(t%500<250?'a':'b');
-  }
-  if(S.over||S.life<40||S.dirt>60||S.sat<=20)return 'droop';
-  const spd=Math.hypot(C.vx,C.vy);
-  if(spd>.6)return 'flat_'+(t%440<220?'a':'b');
-  if(C.y>=300&&spd<.35)return 'rest';
-  if(S.temp==='shy'&&S.trust<35&&Math.floor(t/5000)%3===0)return 'curl';
-  if(S.trust>50&&Math.floor(t/6000)%3===0)return 'reach_'+(t%500<250?'a':'b');
-  return ['idle_a','idle_b','idle_a','open_a','open_b','open_a','close','idle_b'][Math.floor(t/450)%8];
-}
-let M=null,pokes=[];
-function poke(x,y){
-  const t=performance.now();
-  if(t-(C.lastPoke||0)<500)return;
-  C.lastPoke=t;pokes=pokes.filter(v=>t-v<10000);pokes.push(t);bounce=1;
-  if(pokes.length>=6){S.trust=clamp(S.trust-2);emote('x');say('被戳太多次了，幼體有點煩躁。','bad');pokes=[];refresh();return}
-  const away=Math.atan2(C.y-y,C.x-x);
-  if(S.trust<=25){
-    M={k:'flee',until:t+2200};C.tx=Math.cos(away)*2.2;C.ty=Math.sin(away)*1.2;C.vx=C.tx;C.vy=C.ty;
-    emote('ex');say('幼體嚇了一跳，警戒地退開。');
-  }else if(S.temp==='shy'){
-    M={k:'hide',until:t+5000,tx:C.x<250?52:448,ty:306};emote('q');say('幼體縮成一小團，躲到角落去了。');
-  }else if(S.temp==='curious'){
-    M={k:'wave',until:t+2200};emote('ex');say('幼體停下來，好奇地朝你揮了揮觸肢。');
-  }else{
-    M={k:'come',until:t+3000,tx:Math.max(60,Math.min(440,x)),ty:Math.max(60,Math.min(300,y))};
-    emote(S.trust>=40?'heart':'q');say('幼體游過來，貼著你戳的地方。');
-  }
-}
-cv.addEventListener('pointerdown',e=>{
-  if(!S||S.over)return;
-  const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*500/r.width,y=(e.clientY-r.top)*500/r.height;
-  if(Math.abs(x-C.x)<52&&Math.abs(y-((C.dy||C.y)-6))<52)poke(x,y);
-});
-cv.style.cursor='pointer';
-const BUB=Array.from({length:10},(_,i)=>({x:30+i*47+(i%3)*9,y:60+(i*83)%280,r:3+(i*5)%6,sp:.4+(i%4)*.25,ph:i*1.7}));
-function plant(n,x,yBottom,sc,t,ph){
-  const im=IMG[n];if(!im.naturalWidth)return;
-  const w=im.width,h=im.height,sl=2;
-  for(let y=0;y<h;y+=sl){
-    const k=(h-y)/h,off=Math.sin(t/1100+ph)*10*k*k;
-    cx.drawImage(im,0,y,w,sl,Math.round(x+off),Math.round(yBottom-(h-y)*sc),w*sc,sl*sc+1);
-  }
-}
-function draw(t){
-  requestAnimationFrame(draw);
-  const W=500,H=500;
-  cx.globalAlpha=1;
-  if(nLoaded<IMGN.length||!S){cx.fillStyle='#0f3a4c';cx.fillRect(0,0,W,H);if(IMG.bg_tank.naturalWidth)cx.drawImage(IMG.bg_tank,0,0,W,H);return}
-  cx.drawImage(IMG.bg_tank,0,0,W,H);
-  step(t);
-  const tt=t/1000;
-  bounce*=0.96;
-  if(S.over==='END-07')dead=Math.min(1,dead+.004);else dead=0;
-  const a=1-dead;
-  // 水草（程式擺動）
-  plant('bg_tank_glass_1',22,452,1.5,t,0);
-  plant('bg_tank_glass_2',416,456,1.5,t,2);
-  // 影子
-  const drawY=C.y+Math.sin(tt*.9)*5-bounce*Math.abs(Math.sin(tt*9))*14;C.dy=drawY;
-  const sw=Math.max(34,64-(318-C.y)*.12);
-  cx.globalAlpha=.22*a;cx.fillStyle='#000';cx.beginPath();cx.ellipse(C.x,342,sw/2,8,0,0,PI2);cx.fill();cx.globalAlpha=1;
-  // 姿勢
-  if(t-C.pt>260||(EM&&t-EM.t<120)){C.p=pickPose(t);C.pt=t}
-  const body=IMG['body_'+C.p],sq=Math.sin(tt*2)*.03+bounce*Math.sin(tt*13)*.08;
-  cx.save();
-  cx.translate(Math.round(C.x),Math.round(drawY));cx.rotate(C.rot);cx.scale(1+sq,1-sq);
-  cx.translate(-48,-44);
-  cx.globalAlpha=a;
-  // 核心（在身體後方，透過半透明身體看見）
-  const base=S.colored?hexRgb(S.col):hsl2rgb(S.hue,75,72);
-  const ca=S.colored?1:Math.min(.95,.15+(S.day-1)*.13);
-  const [kx,ky]=coreAt(C.p),pul=1+Math.sin(tt*2.2)*.06;
-  const gl=tint('core_glow',base),mk=tint('core_mask',base);
-  cx.globalAlpha=a*ca*.8;cx.drawImage(gl,kx-20*pul,ky-20*pul,40*pul,40*pul);
-  cx.globalAlpha=a*ca;cx.drawImage(mk,kx-12*pul,ky-12*pul,24*pul,24*pul);
-  cx.globalAlpha=a;cx.drawImage(body,0,0);
-  cx.restore();
-  // 彩色小光點
-  if(S.colored)for(let i=0;i<4;i++){
-    const sx=C.x+Math.cos(tt+i*1.6)*70,sy=drawY+Math.sin(tt*1.3+i*1.6)*60,on=Math.sin(tt*4+i)>0?1:0;
-    const sc=(base[0]*.3+base[1]*.59+base[2]*.11)<64?'#fff':S.col;px(sx-1,sy-5,3,11,sc,.9*on);px(sx-5,sy-1,11,3,sc,.9*on);
-  }
-  // 泡泡（程式）
-  cx.lineWidth=2;
-  BUB.forEach(b=>{
-    b.y-=b.sp;if(b.y<30){b.y=330+Math.random()*30;b.x=30+Math.random()*440}
-    const x=b.x+Math.sin(tt*1.2+b.ph)*6;
-    cx.globalAlpha=.55;cx.strokeStyle='#e8fbfa';cx.beginPath();cx.arc(x,b.y,b.r,0,PI2);cx.stroke();
-    cx.fillStyle='#fff';cx.fillRect(Math.round(x-b.r*.5),Math.round(b.y-b.r*.55),2,2);
-  });
-  // 水質色調
-  cx.globalAlpha=Math.min(.45,S.dirt/260);cx.fillStyle='#6b8e3a';cx.fillRect(0,0,W,H);
-  if(Math.abs(S.ph-7)>1.2){cx.globalAlpha=.12;cx.fillStyle=S.ph>7?'#ffd37a':'#d77aff';cx.fillRect(0,0,W,H)}
-  cx.globalAlpha=1;
-  drawEmote(t,C.x,drawY-46);
-}
-requestAnimationFrame(draw);
-</script>
 </body>
 </html>

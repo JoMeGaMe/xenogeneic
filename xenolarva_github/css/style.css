@@ -1,0 +1,66 @@
+:root{--bg:#0b2330;--panel:#12394a;--line:#2b6b80;--ink:#e6f6f2;--dim:#8fb9bd;--acc:#f2c14e;--bad:#ff8a6b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+:root[data-theme="light"],:root:not([data-theme="dark"]){--bg:#0b2330}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:12px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
+#pname{font-size:17px}
+.pips span{display:inline-block;width:14px;height:14px;margin-left:4px;border:2px solid var(--acc);background:transparent}
+.pips span.on{background:var(--acc)}
+#tank{width:100%;aspect-ratio:1/1;image-rendering:pixelated;border:3px solid var(--line);display:block;background:#123}
+#status{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
+#status div{background:var(--panel);border:2px solid var(--line);padding:4px 6px;text-align:center;font-size:13px}
+#status b{display:block;font-size:12px;color:var(--dim);font-weight:400}
+#log{height:128px;overflow:auto;background:#081a24;border:2px solid var(--line);padding:6px 8px;font-size:14px}
+#log p{margin:0 0 4px}#log p.ev{color:var(--acc)}#log p.bad{color:var(--bad)}#log p.sys{color:var(--dim)}
+#acts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+button{font:inherit;color:var(--ink);background:var(--panel);border:2px solid var(--line);padding:9px 4px;cursor:pointer;border-radius:0}
+button:hover:not(:disabled){border-color:var(--acc)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+button:disabled{opacity:.4;cursor:not-allowed}
+button small{display:block;color:var(--dim);font-size:11px}
+#end{grid-column:1/-1;background:var(--acc);color:#1b1b1b;border-color:var(--acc);font-weight:700}
+.ov{position:fixed;inset:0;background:rgba(5,15,22,.88);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+.ov.show{display:flex}
+.box{background:var(--panel);border:3px solid var(--line);padding:18px;width:100%;max-width:400px;max-height:90vh;overflow:auto}
+.box h2{margin:0 0 8px;font-size:20px}
+.box p{margin:0 0 10px}
+.box button{display:block;width:100%;margin-top:6px}
+input[type=text]{width:100%;padding:8px;background:#081a24;color:var(--ink);border:2px solid var(--line);font:inherit}
+.sw{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.sw button{width:38px;height:38px;padding:0}
+.sw button.sel{border-color:#fff;box-shadow:0 0 0 2px var(--acc)}
+#sum{font-size:13px;color:var(--dim)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.pips{margin-left:6px}#cname{font-size:15px}#pname{text-align:right}
+
+.game{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.left{min-width:0}
+#tank{width:min(100%,calc(100vh - 380px));min-width:min(100%,270px);margin:0 auto}
+#log{height:92px}
+.cust{display:flex;gap:8px}.cust input[type=color]{width:46px;height:38px;padding:0;border:2px solid var(--line);background:none}.cust input[type=text]{flex:1}
+@media (min-width:760px){
+ .game{grid-template-columns:minmax(0,max(340px,calc(100vh - 230px))) 200px;justify-content:center;gap:16px;align-items:start}
+ #tank{width:100%}
+ #acts{display:flex;flex-direction:column;gap:8px;margin-top:36px}
+ #acts button{padding:14px 6px;font-size:16px}
+ #log{height:112px}
+}
+
+.tools,.row2{display:flex;gap:8px}.tools{margin-top:8px}.tools button{flex:1;padding:6px;font-size:13px}
+.row2 button,.fbtn{flex:1;margin-top:8px}
+.fbtn{text-align:center;background:var(--panel);border:2px solid var(--line);padding:9px 4px;cursor:pointer}
+.fbtn:hover{border-color:var(--acc)}
+.box.wide{max-width:640px}.box h3{margin:14px 0 4px;font-size:15px;color:var(--acc)}.box ul{margin:0 0 10px;padding-left:20px}
+.dim{color:var(--dim);font-size:13px}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:8px 0}
+.card{background:#0b2330;border:2px solid var(--line);padding:6px;text-align:center;font-size:13px}
+.card canvas{width:96px;height:96px;image-rendering:pixelated;display:block;margin:0 auto 4px}
+.card label{display:block;margin-top:4px;font-size:12px;cursor:pointer}
+details{margin-top:8px}textarea{width:100%;height:70px;margin-top:6px;background:#081a24;color:var(--ink);border:2px solid var(--line);font-size:11px}
+#status{grid-template-columns:1fr 1fr 1fr 1.5fr}
+#status div{font-size:13px}
+#bBag{grid-column:span 2}
+@media (min-width:760px){#bBag{grid-column:auto}}
