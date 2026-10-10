@@ -1,9 +1,10 @@
 // 圖鑑：每個周目結束後收錄一隻。存在瀏覽器（localStorage），可下載／上傳成 JSON 檔搬移。
 const CODEX_KEY='xenolarva.codex.v1', TEMPN={clingy:'黏人',shy:'害羞',curious:'好奇'};
 let CODEX=[], GUEST_IDS=[];
-const META={kit:false,decor:[]};   // 跨周目繼承：水質檢測儀、背景裝飾
-const saveObj=()=>({v:1,codex:CODEX,guests:GUEST_IDS,kit:META.kit,decor:META.decor});
-function codexLoad(){try{const d=JSON.parse(localStorage.getItem(CODEX_KEY)||'{}');CODEX=(d.codex||[]).map(codexNorm).filter(Boolean);GUEST_IDS=(d.guests||[]).map(String);META.kit=d.kit===true;META.decor=(d.decor||[]).filter(k=>DECOR[k])}catch(e){}}
+// 跨周目繼承：水質檢測儀、背景裝飾（含隱藏設定）、玩家名字與代表色
+const META={kit:false,decor:[],hidden:[],pname:'',pcol:''};
+const saveObj=()=>({v:1,codex:CODEX,guests:GUEST_IDS,kit:META.kit,decor:META.decor,hidden:META.hidden,pname:META.pname,pcol:META.pcol});
+function codexLoad(){try{const d=JSON.parse(localStorage.getItem(CODEX_KEY)||'{}');CODEX=(d.codex||[]).map(codexNorm).filter(Boolean);GUEST_IDS=(d.guests||[]).map(String);META.kit=d.kit===true;META.decor=(d.decor||[]).filter(k=>DECOR[k]);META.hidden=(d.hidden||[]).filter(k=>DECOR[k]);META.pname=String(d.pname||'').slice(0,8);META.pcol=parseColor(String(d.pcol||''))||''}catch(e){}}
 function codexSave(){try{localStorage.setItem(CODEX_KEY,JSON.stringify(saveObj()))}catch(e){}}
 // 檢查並整理一筆資料（匯入的檔案不可信，所以每個欄位都驗證）
 function codexNorm(e){
@@ -26,6 +27,10 @@ function toggleGuest(id,on){
   GUEST_IDS=GUEST_IDS.slice(-3);codexSave();
   $('cmsg').textContent=on?'下一次換日時，牠會游進水缸（最多 3 隻）。':'';renderCodex();
 }
+function toggleDecor(id,show){
+  META.hidden=META.hidden.filter(x=>x!==id);if(!show)META.hidden.push(id);
+  codexSave();renderCodex();
+}
 function thumb(c,e){
   if(nLoaded<IMGN.length){setTimeout(()=>thumb(c,e),300);return}
   const g=c.getContext('2d');g.imageSmoothingEnabled=false;
@@ -38,6 +43,15 @@ function renderCodex(){
   const keys=Object.keys(ENDS),got=new Set(CODEX.map(e=>e.end));
   $('cstat').textContent=`已收錄 ${CODEX.length} 隻｜結局收藏 ${got.size}/${keys.length}｜裝飾 ${META.decor.length}/${Object.keys(DECOR).length}｜水質檢測儀 ${META.kit?'已取得':'未取得'}`;
   $('cends').textContent=keys.map(k=>got.has(k)?'✔ '+ENDS[k][0]:'？？？').join('　');
+  const dz=$('cdeco');dz.innerHTML='';dz.append('裝飾：');
+  Object.keys(DECOR).forEach(id=>{
+    const l=document.createElement('label');l.className='dchip';
+    if(META.decor.includes(id)){
+      const k=document.createElement('input');k.type='checkbox';k.checked=!META.hidden.includes(id);
+      k.onchange=()=>toggleDecor(id,k.checked);l.append(k,' '+DECOR[id].name);
+    }else l.append('？？？');
+    dz.appendChild(l);
+  });
   if(!CODEX.length)box.textContent='還沒有紀錄。完成一個周目後，幼體會出現在這裡。';
   CODEX.forEach(e=>{
     const d=document.createElement('div');d.className='card';
@@ -64,6 +78,10 @@ function codexMerge(txt){
     list.forEach(e=>{if(!CODEX.some(x=>x.id===e.id)){CODEX.push(e);n++}});
     if(Array.isArray(d.guests))GUEST_IDS=[...new Set([...GUEST_IDS,...d.guests.map(String)])].slice(-3);
     if(d.kit===true)META.kit=true;
+    if(Array.isArray(d.hidden))META.hidden=[...new Set([...META.hidden,...d.hidden.filter(k=>DECOR[k])])];
+    if(!META.pname&&d.pname)META.pname=String(d.pname).slice(0,8);
+    if(!META.pcol&&d.pcol)META.pcol=parseColor(String(d.pcol))||'';
+    prefillPlayer();
     META.decor=[...new Set([...META.decor,...(Array.isArray(d.decor)?d.decor:[]).filter(k=>DECOR[k])])];
     codexSave();renderCodex();$('cmsg').textContent=`匯入完成，新增 ${n} 隻。`;
   }catch(err){$('cmsg').textContent='讀取失敗：檔案格式不正確。'}

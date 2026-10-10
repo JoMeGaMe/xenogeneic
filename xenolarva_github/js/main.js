@@ -12,7 +12,14 @@ $('cp').oninput=e=>setColor(e.target.value);
 $('hex').oninput=e=>{const c=parseColor(e.target.value);if(c){selColor=c;$('cp').value=c;e.target.style.borderColor='';markSw()}else e.target.style.borderColor='#ff8a6b'};
 $('hex').onchange=()=>{$('hex').value=selColor;$('hex').style.borderColor=''};
 setColor(selColor);
-$('go').onclick=()=>{$('ovStart').classList.remove('show');newGame($('pn').value.trim()||'玩家',$('nm').value.trim()||'小球',selColor)};
+// 玩家名字與代表色跨周目繼承：上次用的會自動填入
+function prefillPlayer(){if(META.pname)$('pn').value=META.pname;if(META.pcol)setColor(META.pcol)}
+prefillPlayer();
+$('go').onclick=()=>{
+  const pn=$('pn').value.trim()||'玩家';
+  META.pname=pn.slice(0,8);META.pcol=selColor;codexSave();
+  $('ovStart').classList.remove('show');newGame(pn,$('nm').value.trim()||'小球',selColor);
+};
 $('again').onclick=()=>{$('ovEnd').classList.remove('show');$('ovStart').classList.add('show')};
 
 // ---------- 說明 / 圖鑑 ----------

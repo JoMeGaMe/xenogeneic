@@ -23,7 +23,7 @@ function draw(t){
   plant('bg_tank_glass_1',22,452,1.5,t,0);
   plant('bg_tank_glass_2',416,456,1.5,t,2);
   cx.globalAlpha=1;
-  META.decor.forEach(id=>{const d=DECOR[id],im=IMG['deco_'+id];if(d&&im.naturalWidth)cx.drawImage(im,Math.round(d.x-im.width/2),Math.round(d.y-im.height))});
+  META.decor.filter(id=>!META.hidden.includes(id)).forEach(id=>{const d=DECOR[id],im=IMG['deco_'+id];if(d&&im.naturalWidth)cx.drawImage(im,Math.round(d.x-im.width/2),Math.round(d.y-im.height))});
   drawGuests(t,tt);
   // 影子
   const drawY=C.y+Math.sin(tt*.9)*5-bounce*Math.abs(Math.sin(tt*9))*14;C.dy=drawY;

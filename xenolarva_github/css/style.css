@@ -64,3 +64,5 @@ details{margin-top:8px}textarea{width:100%;height:70px;margin-top:6px;background
 #status div{font-size:13px}
 #bBag{grid-column:span 2}
 @media (min-width:760px){#bBag{grid-column:auto}}
+.dchip{margin-right:12px;cursor:pointer;white-space:nowrap}
+#cdeco{margin:4px 0 8px}
