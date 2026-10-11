@@ -12,6 +12,17 @@ const EVENTS={
     log:()=>TEXT.grete.meet,
     declined:()=>TEXT.grete.declined
   },
+  // 聊顏色：認識格蕾特後出門遇到。走完最後一頁才永久解鎖
+  colorTalk:{
+    pages:()=>TEXT.chatEv.talk.pages.map(withImg),
+    apply(){META.chatColor=true;codexSave()},
+    log:()=>TEXT.chatEv.talk.log
+  },
+  colorTalk2:{
+    pages:()=>TEXT.chatEv.dual.pages.map(withImg),
+    apply(){META.chatDual=true;codexSave()},
+    log:()=>TEXT.chatEv.dual.log
+  },
   greteAgain:{
     pages:()=>[withImg({...TEXT.grete.again,opts:TEXT.grete.again.opts.map(o=>({...o,next:o.next==='intro'?1:o.next}))}),withImg(TEXT.grete.pages[TEXT.grete.pages.length-1])],
     apply(){META.grete=true;codexSave()},

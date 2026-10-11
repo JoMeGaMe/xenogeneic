@@ -57,16 +57,20 @@ function feedItem(k){
 
 // ---------- 玩耍（耗 1 行動）----------
 function actPlay(){
-  pick(TEXT.play.pick,TOYS.filter(t=>S.inv[t]>0).map(t=>({id:t,label:NAME[t]})),t=>{
+  const toys=TOYS.filter(t=>S.inv[t]>0).map(t=>({id:t,label:NAME[t]}));
+  const opts=[{head:toys.length?TEXT.play.toyHead:TEXT.play.noToy},...toys];
+  opts.push({rule:1,label:TEXT.chat.head},{node:chatBox()});     // 聊天：分隔線＋選色＋兩顆聊天按鈕
+  pick(TEXT.play.pick,opts,t=>{
     S.ap--;S.playedToday=true;
     const v={item:NAME[t]},before=[...S.tagsFound],pl=hasTag('playful');
+    const pgain=(n,f)=>hasTag('scholar')?Math.round(gain(n,f)/2):gain(n,f);   // 學者：玩耍加的信賴只有一半
     if(t===S.pref.toy){
-      S.trust=clamp(S.trust+gain(9,true));S.bond++;S.found.toy=true;
+      S.trust=clamp(S.trust+pgain(9,true));S.bond++;S.found.toy=true;
       emote('heart');say(fmt(TEXT.temper[S.temp].playFav||TEXT.play.fav,v),'ev');
     }else if(pl){                                   // 貪玩：每種玩具都喜歡（信賴增加比最愛的少一點）
-      S.trust=clamp(S.trust+gain(6));emote('heart');
+      S.trust=clamp(S.trust+pgain(6));emote('heart');
     }else{
-      S.trust=clamp(S.trust+gain(2));emote('q');say(fmt(TEXT.play.meh,v));
+      S.trust=clamp(S.trust+pgain(2));emote('q');say(fmt(TEXT.play.meh,v));
     }
     if(pl)discoverTag('playful');
     tagReact('play',v,before);
@@ -77,11 +81,12 @@ function actPlay(){
 
 // ---------- 出門（耗 1 行動）----------
 // 帶回 3 件東西（海草湯、換水劑、零食、玩具）；有機會撿到「水質檢測儀」和「背景裝飾」，兩者都永久保留。
-const LOOT_POOL=['food','food','agent','agent','sweet','salty','bitter','bubble','bell','ball'];
+const LOOT_POOL=['food','food','agent','agent','sweet','salty','bitter'];   // 一般物品
+const LOOT_TOY=.35;                                          // 每件戰利品是玩具（泡泡、鈴鐺、球 三選一）的機率
 function actOut(){
   S.ap--;S.outs++;S.explore++;
   const got={};
-  for(let i=0;i<3;i++){const k=R(LOOT_POOL);got[k]=(got[k]||0)+1}
+  for(let i=0;i<3;i++){const k=Math.random()<LOOT_TOY?R(TOYS):R(LOOT_POOL);got[k]=(got[k]||0)+1}
   if(S.inv.kit<1&&(S.outs>=3||Math.random()<0.25))got.kit=1;      // 水質檢測儀：第 3 次出門起必拿到，之前有 25% 機率
 
   const list=[];
@@ -106,6 +111,9 @@ function actOut(){
   if(!META.grete&&(META.greteMet?Math.random()<GRETE_MEET.again:(S.outs>=GRETE_MEET.sure||Math.random()<GRETE_MEET.chance))){
     runEvent(META.greteMet?'greteAgain':'greteMeet');return;
   }
+  // 認識格蕾特之後：遇到她閒聊，學會「聊天染色」；之後有機會再學「雙色」（小球至少成功染過一次）
+  if(META.grete&&!META.chatColor&&Math.random()<CHAT_RULE.event){runEvent('colorTalk');return}
+  if(META.grete&&META.chatColor&&!META.chatDual&&META.chatWins>0&&Math.random()<CHAT_RULE.event){runEvent('colorTalk2');return}
   refresh();
 }
 

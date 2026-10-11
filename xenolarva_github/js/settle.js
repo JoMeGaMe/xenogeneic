@@ -31,7 +31,7 @@ function settle(){
   // ④ 事件：核心變色（最早第 3 日；信賴 ≥60、互動 ≥2 次、生命 ≥50）
   const lines=hints();
   const ev=[];
-  if(!S.colored&&S.day>=3&&S.trust>=60&&S.bond>=2&&S.life>=50){
+  if(!S.colored&&!S.tc&&S.day>=3&&S.trust>=60&&S.bond>=2&&S.life>=50){
     S.colored=true;setTimeout(()=>emote('heart'),400);ev.push(TEXT.settle.color);
   }
   S.waterToday=0;
@@ -51,6 +51,7 @@ function settle(){
   if(clean&&((clamp(dirt0+18)>35&&S.dirt<=35)||S.day>=3))discoverTag('clean');
   if(frailSym())discoverTag('frail');                 // 虛弱：水質或飢餓出現徵兆時揭曉
   tagReact('day',{},before.filter(id=>id!=='frail'||frailSym()));
+  sneakDaily();souvDaily();                           // 偷偷七逃從缸邊游進來、小球送禮
   ev.forEach(e=>say(e,'ev'));
   if(!lines.length&&!ev.length)say(TEXT.temper[S.temp].mood);
   refresh();

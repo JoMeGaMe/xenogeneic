@@ -10,21 +10,24 @@ function plant(n,x,yBottom,sc,t,ph){
 }
 function draw(t){
   requestAnimationFrame(draw);
-  const W=500,H=500;
+  const W=WORLD.w,H=500;
   cx.globalAlpha=1;
   if(nLoaded<IMGN.length||!S){cx.fillStyle='#0f3a4c';cx.fillRect(0,0,W,H);if(IMG.bg_tank.naturalWidth)cx.drawImage(IMG.bg_tank,0,0,W,H);return}
-  cx.drawImage(IMG.bg_tank,0,0,W,H);
-  step(t);stepGuests(t);
+  const bg=(W>500&&IMG.bg_preview&&IMG.bg_preview.naturalWidth)?IMG.bg_preview:IMG.bg_tank;   // 預覽模式專用背景（assets/larva/bg_preview.png，750×500）；沒有就把一般背景拉寬
+  cx.drawImage(bg,0,0,W,H);
+  if(!PV)step(t);
+  stepGuests(t);
   const tt=t/1000;
   bounce*=0.96;
   if(S.over==='END-07')dead=Math.min(1,dead+.004);else dead=0;
   const a=1-dead;
   // 水草（程式擺動）
   plant('bg_tank_glass_1',22,452,1.5,t,0);
-  plant('bg_tank_glass_2',416,456,1.5,t,2);
+  plant('bg_tank_glass_2',416+WORLD.dx*2,456,1.5,t,2);
   cx.globalAlpha=1;
-  META.decor.filter(id=>!META.hidden.includes(id)).forEach(id=>{const d=DECOR[id],im=IMG['deco_'+id];if(d&&im.naturalWidth)cx.drawImage(im,Math.round(d.x-im.width/2),Math.round(d.y-im.height))});
+  META.decor.filter(id=>!META.hidden.includes(id)).forEach(id=>{const d=DECOR[id],im=IMG['deco_'+id];if(d&&im.naturalWidth)cx.drawImage(im,Math.round(d.x+WORLD.dx-im.width/2),Math.round(d.y-im.height))});
   drawGuests(t,tt);
+  if(!PV){
   // 影子
   const drawY=C.y+Math.sin(tt*.9)*5-bounce*Math.abs(Math.sin(tt*9))*14;C.dy=drawY;
   const sw=Math.min(64,Math.max(34,64-(318-C.y)*.12));
@@ -38,10 +41,11 @@ function draw(t){
     const sx=C.x+Math.cos(tt+i*1.6)*70,sy=drawY+Math.sin(tt*1.3+i*1.6)*60,on=Math.sin(tt*4+i)>0?1:0;
     const sc=(look.core[0]*.3+look.core[1]*.59+look.core[2]*.11)<64?'#fff':S.col;px(sx-1,sy-5,3,11,sc,.9*on);px(sx-5,sy-1,11,3,sc,.9*on);
   }
+  }
   // 泡泡（程式）
   cx.lineWidth=2;
   BUB.forEach(b=>{
-    b.y-=b.sp;if(b.y<30){b.y=330+Math.random()*30;b.x=30+Math.random()*440}
+    b.y-=b.sp;if(b.y<30){b.y=330+Math.random()*30;b.x=30+Math.random()*(W-60)}
     const x=b.x+Math.sin(tt*1.2+b.ph)*6;
     cx.globalAlpha=.55;cx.strokeStyle='#e8fbfa';cx.beginPath();cx.arc(x,b.y,b.r,0,PI2);cx.stroke();
     cx.fillStyle='#fff';cx.fillRect(Math.round(x-b.r*.5),Math.round(b.y-b.r*.55),2,2);
@@ -50,6 +54,6 @@ function draw(t){
   cx.globalAlpha=Math.min(.45,S.dirt/260);cx.fillStyle='#6b8e3a';cx.fillRect(0,0,W,H);
   if(Math.abs(S.ph-7)>1.2){cx.globalAlpha=.12;cx.fillStyle=S.ph>7?'#ffd37a':'#d77aff';cx.fillRect(0,0,W,H)}
   cx.globalAlpha=1;
-  drawEmote(t,C.x,drawY-46);
+  if(!PV)drawEmote(t,C.x,C.dy-46);
 }
 requestAnimationFrame(draw);

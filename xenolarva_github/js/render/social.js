@@ -56,7 +56,7 @@ function socialSteer(o,t){
     case 'chase':case 'tryPush':return aim(o,p,1.1);
     case 'bounce':return aim(o,p,1.2);
     case 'nestle':{                                      // 窩在睏睏的一側（選有空間的那邊，不貼牆、不鑽進牆外）
-      if(!o.nx)o.nx=(p.x<250?1:-1)*80;
+      if(!o.nx)o.nx=(p.x<WORLD.w/2?1:-1)*80;
       if(p.x+o.nx<WALL.l+25||p.x+o.nx>WALL.r-25)o.nx=-o.nx;
       return aim(o,inTank({x:p.x+o.nx,y:p.y},o),.6);
     }
@@ -68,7 +68,7 @@ function socialSteer(o,t){
 function escapeDir(o,n){
   let dx=o.x-n.x,dy=o.y-n.y,d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;
   const wall=Math.min(o.x-WALL.l,WALL.r-o.x,o.y-WALL.t,WALL.b-o.y),k=Math.max(0,Math.min(1,(110-wall)/110));   // 越靠牆 k 越大
-  let cx_=250-o.x,cy_=180-o.y;const cd=Math.hypot(cx_,cy_)||1;cx_/=cd;cy_/=cd;                              // 水缸中央的方向
+  let cx_=WORLD.w/2-o.x,cy_=180-o.y;const cd=Math.hypot(cx_,cy_)||1;cx_/=cd;cy_/=cd;                              // 水缸中央的方向
   let px=-dy,py=dx;if(px*cx_+py*cy_<0){px=-px;py=-py}                                                        // 沿牆往開闊那側滑
   let vx=dx*(1-k)+cx_*k*.8+px*k*.6,vy=dy*(1-k)+cy_*k*.8+py*k*.6;const l=Math.hypot(vx,vy)||1;
   return [vx/l,vy/l];
@@ -88,10 +88,10 @@ function dashSteer(o,t){
 
 // ---------- 頑固：兩隻頑固不要搶同一個角落，後來的換到另一邊 ----------
 function fixHomes(){
-  const st=[C,...GUESTS].filter(b=>b===C?(S&&TEMPERS[S.temp].territory):TEMPERS[b.e.temp].territory);
+  const st=[...(PV?[]:[C]),...GUESTS].filter(b=>b===C?(S&&TEMPERS[S.temp].territory):TEMPERS[b.e.temp].territory);
   for(let i=0;i<st.length;i++)for(let j=i+1;j<st.length;j++){
     if(Math.abs(st[i].home.x-st[j].home.x)>50)continue;
-    const mv=st[j]===C?st[i]:st[j],nx=mv.home.x<250?444:56;
+    const mv=st[j]===C?st[i]:st[j],nx=mv.home.x<WORLD.w/2?WALL.r-16:WALL.l+16;
     if(!st.some(b=>b!==mv&&Math.abs(b.home.x-nx)<50))mv.home={x:nx,y:304};   // 另一邊沒人才換
   }
 }

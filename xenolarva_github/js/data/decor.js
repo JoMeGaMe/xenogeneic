@@ -2,6 +2,6 @@
 // 圖片放 assets/larva/deco_<id>.png，並在 js/data/sprites.js 的 IMGN 登記。x、y 是圖片「底部中心」在畫布上的位置。
 const DECOR={
   castle:{name:'海底小城堡',x:195,y:360},
-  shell:{name:'大貝殼',x:90,y:470},
-  coral:{name:'珊瑚叢',x:355,y:365}
+  shell:{name:'大貝殼',x:70,y:482},
+  coral:{name:'珊瑚叢',x:385,y:385}
 };

@@ -38,26 +38,34 @@ function greteDaily(){
 }
 
 // 心聲：翻譯開著時戳小球。約 55% 什麼都沒在想（格蕾特說）；其餘是主腦（本體）與觸肢副腦的對話，不加格蕾特前綴。
-function voiceLine(){
+// 學者、回歸者：第一次聽見心聲時揭曉（VOICE_FOUND 由 creature.js 的 poke 讀取）
+let VOICE_FOUND=null;
+function voiceLine(sub){
   if(Math.random()<.55)return TEXT.grete.nothing;
+  // sub＝說話的是誰（預覽模式戳其他小球時用）；沒給就是玩家養的這隻
+  const w=sub||{temp:S.temp,tags:S.tags,found:S.tagsFound,sat:S.sat,dirt:S.dirt,life:S.life,trust:S.trust,self:C};
   const V=TEXT.voice,v={},r=Math.random();
-  const live=GUESTS.filter(g=>g.phase==='live');
+  const first=!sub&&['scholar','homereturn'].find(id=>w.tags.includes(id)&&!w.found.includes(id));
+  if(first){VOICE_FOUND=first;return R(V.tag[first]).map(([a,t])=>a+'：'+t).join('\n')}
+  const others=[...(PV?[]:[C]),...GUESTS].filter(b=>b!==w.self&&isLive(b));      // 水缸裡其他的小球
   let pool=null;
-  if(live.length&&r<.3){const g=R(live);v.g=nm(g.name);pool=V.guest[g.e.temp]}
+  if(others.length&&r<.3){
+    const b=R(others);v.g=nm(b===C?S.name:b.name);pool=V.guest[b===C?S.temp:b.e.temp];
+  }
   if(!pool){
     const st=[];
-    if(S.sat<=35)st.push(V.hungry);else if(S.sat>=75)st.push(V.full);
-    if(S.dirt>60)st.push(V.dirty);
-    if(S.life<40)st.push(V.weak);
-    if(S.trust>75)st.push(V.love);
+    if(w.sat<=35)st.push(V.hungry);else if(w.sat>=75)st.push(V.full);
+    if(w.dirt>60)st.push(V.dirty);
+    if(w.life<40)st.push(V.weak);
+    if(w.trust>75)st.push(V.love);
     if(st.length&&r<.65)pool=R(st);
   }
   if(!pool&&r<.78)pool=V.notice;
   if(!pool){
-    const tg=S.tags.filter(id=>has(V.tag,id));
+    const tg=w.tags.filter(id=>has(V.tag,id));
     if(tg.length&&Math.random()<.35)pool=V.tag[R(tg)];
-    else if(S.temp==='sleepy'&&Math.random()<.4)pool=V.stone;
-    else pool=V.temper[S.temp];
+    else if(w.temp==='sleepy'&&Math.random()<.4)pool=V.stone;
+    else pool=V.temper[w.temp];
   }
-  return R(pool).map(([w,t])=>w+'：'+fmt(t,v)).join('\n');
+  return R(pool).map(([a,t])=>a+'：'+fmt(t,v)).join('\n');
 }

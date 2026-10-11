@@ -2,12 +2,14 @@
 // 共用的移動規則（撞牆、旋轉、漫遊、個性行為）在 js/render/motion.js；個性參數在 js/data/temperaments.js。
 const C={x:250,y:180,vx:1,vy:.15,tx:1,ty:0,rot:0,rv:0,next:0,last:0,p:'idle_a',pt:0,
          lastPoke:0,dy:180,home:{x:56,y:304},calm:0,steering:false};
+let PV=false;      // 預覽模式中（js/preview.js）
 let M=null;        // 被戳後正在進行的反應：{k:反應名稱, until:結束時間, ...}。null＝沒有
 let pokes=[];      // 最近被戳的時間（用來判斷「戳太多次」）
 
 // ---------- 每一格的移動 ----------
 function step(t){
   const dt=Math.min(3,(t-(C.last||t))/16.7);C.last=t;
+  if(SN){snStep(t,dt);return}                                          // 偷偷七逃：游出去／游回來的動畫
   const T=TEMPERS[S.temp];
   const low=S.dirt>60||S.life<40||!!S.over||frailSym();              // 水髒、虛弱或已消逝：動作變慢、往下沉
 
@@ -76,7 +78,7 @@ const POKE={
   // 黏人：游過來貼著你戳的地方
   come:{
     start(t,x,y){
-      M={k:'come',until:t+3000,x:clampN(x,60,440),y:clampN(y,60,300)};
+      M={k:'come',until:t+3000,x:clampN(x,60,WALL.r-20),y:clampN(y,60,300)};
       emote(S.trust>=40?'heart':'q');say(TEXT.poke.come);
     },
     tick(m){goTo(m,1)},
@@ -85,7 +87,7 @@ const POKE={
   // 害羞：縮成一團，躲到最近的底部角落
   hide:{
     start(t){
-      M={k:'hide',until:t+5000,x:C.x<250?52:448,y:306};
+      M={k:'hide',until:t+5000,x:C.x<WORLD.w/2?WALL.l+12:WALL.r-12,y:306};
       emote('q');say(TEXT.poke.hide);
     },
     tick(m){goTo(m,1.4)},
@@ -115,7 +117,7 @@ const POKE={
   // 喜歡觸碰（標籤）：不退開，伸出觸肢碰你戳的地方
   touch:{
     start(t,x,y){
-      M={k:'touch',until:t+2500,x:clampN(x,60,440),y:clampN(y,60,300)};
+      M={k:'touch',until:t+2500,x:clampN(x,60,WALL.r-20),y:clampN(y,60,300)};
       emote('heart');say(TEXT.poke.touch);
     },
     tick(m){goTo(m,.5)},
@@ -135,14 +137,14 @@ const POKE={
 
 function poke(x,y){
   const t=performance.now();
-  if(t-C.lastPoke<500)return;                            // 戳太快不算
+  if(SN||t-C.lastPoke<500)return;                        // 戳太快不算；溜出去的時候戳不到
   C.lastPoke=t;pokes=pokes.filter(v=>t-v<10000);pokes.push(t);bounce=1;
   const touchy=hasTag('touchy');
   if(pokes.length>=(touchy?9:6)){                        // 喜歡觸碰的小球比較不容易煩                                   // 10 秒內戳 6 次：煩躁，扣一點信賴
     S.trust=clamp(S.trust-2);emote('x');say(TEXT.poke.tooMany,'bad');pokes=[];refresh();return;
   }
   let kind=S.trust<=25?'flee':TEMPERS[S.temp].poke;      // 信賴太低一律先退開
-  if(touchy&&['flee','hide','turn'].includes(kind))kind='touch';   // 喜歡觸碰：不會躲開
+  if((touchy||hasTag('homereturn'))&&['flee','hide','turn'].includes(kind))kind='touch';   // 喜歡觸碰、回歸者：不會躲開
   const before=[...S.tagsFound];
   POKE[kind].start(t,x,y);
   if(touchy){
@@ -150,17 +152,18 @@ function poke(x,y){
     discoverTag('touchy');
   }
   tagReact('poke',{},before,.5);
-  if(S.grete&&S.trans){const vl=voiceLine();say(vl,vl===TEXT.grete.nothing?'ev':'voice')}                // 格蕾特的翻譯：心聲
+  if(S.grete&&S.trans){const vl=voiceLine();say(vl,vl===TEXT.grete.nothing?'ev':'voice');if(VOICE_FOUND){const id=VOICE_FOUND;VOICE_FOUND=null;discoverTag(id)}}                // 格蕾特的翻譯：心聲
 }
 
 // 點擊或觸碰幼體本身才算「戳」
 cv.addEventListener('pointerdown',e=>{
   if(!S||S.over)return;
-  const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*500/r.width,y=(e.clientY-r.top)*500/r.height;
+  const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*WORLD.w/r.width,y=(e.clientY-r.top)*500/r.height;
+  if(PV){pvPoke(x,y);return}
   if(Math.abs(x-C.x)<52&&Math.abs(y-((C.dy||C.y)-6))<52)poke(x,y);
 });
 // 記下游標在水缸上的位置（人類愛好者會追）
 cv.addEventListener('pointermove',e=>{
-  const r=cv.getBoundingClientRect();CUR.x=(e.clientX-r.left)*500/r.width;CUR.y=(e.clientY-r.top)*500/r.height;CUR.t=performance.now();
+  const r=cv.getBoundingClientRect();CUR.x=(e.clientX-r.left)*WORLD.w/r.width;CUR.y=(e.clientY-r.top)*500/r.height;CUR.t=performance.now();
 });
 cv.style.cursor='pointer';

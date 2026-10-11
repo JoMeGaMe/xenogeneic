@@ -22,6 +22,7 @@ function nextToast(){
 
 // 重畫上方日期、行動點、狀態面板，並依狀態啟用／停用按鈕
 function refresh(){
+  if(PV)return;                                          // 預覽模式沒有這些面板
   paintName($('cname'),S.colored?S.col:'');
   $('day').textContent=`第 ${Math.min(S.day,7)} 日 / 7`;
   $('pips').innerHTML=[0,1].map(i=>`<span class="${i<S.ap?'on':''}"></span>`).join('');
@@ -44,7 +45,7 @@ function refresh(){
   const off=!!S.over;
   $('bWater').disabled=off||S.inv.agent<1;
   $('bFeed').disabled=off||!FOODS.some(k=>S.inv[k]>0);
-  $('bPlay').disabled=off||S.ap<1||!TOYS.some(t=>S.inv[t]>0);
+  $('bPlay').disabled=off||S.ap<1||false;
   $('bOut').disabled=off||S.ap<1;
   $('end').disabled=off;
 }
@@ -56,6 +57,8 @@ function pick(title,opts,cb,body){
   if(!body)$('pFig').hidden=true
   $('po').innerHTML='';
   opts.forEach(o=>{
+    if(o.rule){$('po').appendChild(document.createElement('hr'));if(o.label){const d=document.createElement('div');d.className='phead';d.textContent=o.label;$('po').appendChild(d)}return}
+    if(o.node){$('po').appendChild(o.node);return}
     if(o.head){const d=document.createElement('div');d.className='phead';d.textContent=o.head;$('po').appendChild(d);return}
     const b=document.createElement('button');
     b.textContent=o.label;b.disabled=!!o.off;

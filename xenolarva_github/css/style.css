@@ -185,3 +185,30 @@ hr.sep{border:0;border-top:2px solid var(--line);margin:16px 0}
 /* 事件：名牌（圖片正下方、靠右）與內文下方的小字 */
 .pname{display:block;width:100%;margin:4px 0 0;text-align:center;padding:1px 4px;font-size:12px;line-height:1.5;color:#ffb066;background:#0b2330;border:2px solid var(--line)}
 .pnote{margin:6px 0 0;font-size:12px;color:#9be3a5}
+
+@media (max-width:420px){.cnav button{font-size:12px;padding:6px 1px}}
+
+.ctab td{white-space:pre-line}
+/* 預覽模式（js/preview.js）：單欄、寬 750 的水缸，三個選擇按鈕在上、翻譯與離開在下 */
+#pvbar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+#pvbar button{padding:8px 4px;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.pv header,body.pv #acts{display:none!important}
+body.pv .game{grid-template-columns:minmax(0,750px)!important;justify-content:center}
+body.pv .tankwrap{width:100%!important;min-width:0!important}
+body.pv #log{height:150px}
+.srcT{color:#ffbf8a}.srcG{color:#9fd0ff}
+.wbtn{margin-right:8px}
+#sPv{margin-top:6px}
+#ovWatch .box{height:80vh;height:80dvh;display:flex;flex-direction:column;overflow:hidden}#ovWatch #wlist{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+#pvbar .tog{grid-column:auto}
+#bWater[hidden]~#bBag{grid-column:auto}
+/* 聊天染色（玩耍選單） */
+#po hr{border:0;border-top:2px solid var(--line);margin:12px 0 6px}
+.chatbox{margin:4px 0 8px}.chatbox .sw{margin:6px 0}.chatbox .sw button{width:32px;height:32px}
+.prow{display:flex;gap:6px}.prow button{flex:1;padding:6px}.pbtn.on{background:var(--acc);color:#1b1b1b;border-color:var(--acc);font-weight:700}
+.chatinfo{font-size:12px;margin-top:6px}.chatbox .cust{align-items:center}
+
+.x{}
+.pbtn i{display:inline-block;width:12px;height:12px;border:1px solid var(--line);margin-right:6px;vertical-align:-1px}
+.cclr{margin-left:auto;padding:4px 10px;font-size:13px}
+.crow{display:flex;gap:6px;margin-top:8px}.crow .cbtn{flex:1;padding:8px 4px;font-size:14px}

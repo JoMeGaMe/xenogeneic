@@ -5,10 +5,10 @@ const CODEX_KEY='xenolarva.codex.v1';
 let CODEX=[];          // 養過的每一隻小球（見 codexNorm 的欄位）
 let GUEST_IDS=[];      // 勾選「放入水缸」的小球 id（最多 3 隻）
 // 跨周目繼承的東西
-const META={kit:false,grete:false,greteMet:false,decor:[],hidden:[],seen:[],pname:'',pcol:''};
+const META={kit:false,grete:false,greteMet:false,chatColor:false,chatDual:false,chatWins:0,souv:{},decor:[],hidden:[],seen:[],pname:'',pcol:''};
 //  kit 水質檢測儀｜grete 已遇見格蕾特｜decor 撿到的裝飾｜hidden 在水缸隱藏的裝飾｜seen 見過的物品（物品圖鑑）｜pname/pcol 玩家名字與代表色
 
-const saveObj=()=>({v:2,codex:CODEX,guests:GUEST_IDS,kit:META.kit,grete:META.grete,greteMet:META.greteMet,decor:META.decor,hidden:META.hidden,seen:META.seen,pname:META.pname,pcol:META.pcol});
+const saveObj=()=>({v:2,codex:CODEX,guests:GUEST_IDS,kit:META.kit,grete:META.grete,greteMet:META.greteMet,chatColor:META.chatColor,chatDual:META.chatDual,chatWins:META.chatWins,souv:Object.keys(SOUV_SRC).reduce((o,k)=>(META.souv[k]>0&&(o[k]=META.souv[k]),o),{}),decor:META.decor,hidden:META.hidden,seen:META.seen,pname:META.pname,pcol:META.pcol});
 
 // ---------- 讀取與驗證（匯入的檔案不可信，每個欄位都檢查）----------
 function codexNorm(e){
@@ -17,7 +17,7 @@ function codexNorm(e){
   return {
     id:String(e.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)).slice(0,40),
     name:String(e.name||'小球').slice(0,8),pname:String(e.pname||'').slice(0,8),col,
-    hue:((+e.hue||0)%360+360)%360,colored:!!e.colored,
+    hue:((+e.hue||0)%360+360)%360,colored:!!e.colored,tc:parseColor(String(e.tc||''))||'',tb:parseColor(String(e.tb||''))||'',
     day:Math.max(1,Math.min(7,Math.round(+e.day)||7)),
     temp:has(TEMPERS,e.temp)?e.temp:'curious',end:has(ENDS,e.end)?e.end:'END-01',
     pg:has(NAME,e.pg)?e.pg:'sweet',pt:has(NAME,e.pt)?e.pt:'bubble',at:String(e.at||'').slice(0,10),
@@ -29,7 +29,8 @@ function codexNorm(e){
 function readSave(d){
   d=(d&&typeof d==='object')?d:{};
   const list=a=>Array.isArray(a)?a:[];
-  return {codex:list(d.codex).map(codexNorm).filter(Boolean),guests:list(d.guests).map(String),kit:d.kit===true,grete:d.grete===true,greteMet:d.greteMet===true,
+  return {codex:list(d.codex).map(codexNorm).filter(Boolean),guests:list(d.guests).map(String),kit:d.kit===true,grete:d.grete===true,greteMet:d.greteMet===true,chatColor:d.chatColor===true,chatDual:d.chatDual===true,chatWins:Math.max(0,Math.min(9999,Math.floor(Number(d.chatWins))||0)),
+    souv:Object.keys(SOUV_SRC).reduce((o,k)=>{const n=Math.floor(Number(d.souv&&d.souv[k]));if(n>0)o[k]=Math.min(n,9999);return o},{}),
     decor:list(d.decor).filter(k=>has(DECOR,k)),hidden:list(d.hidden).filter(k=>has(DECOR,k)),seen:list(d.seen).filter(k=>has(NAME,k)),
     pname:String(d.pname||'').slice(0,8),pcol:parseColor(String(d.pcol||''))||''};
 }
@@ -37,14 +38,14 @@ function codexLoad(){
   try{
     const s=readSave(JSON.parse(localStorage.getItem(CODEX_KEY)||'{}'));
     CODEX=s.codex;GUEST_IDS=s.guests;
-    Object.assign(META,{kit:s.kit,grete:s.grete,greteMet:s.greteMet,decor:s.decor,hidden:s.hidden,seen:s.seen,pname:s.pname,pcol:s.pcol});
+    Object.assign(META,{kit:s.kit,grete:s.grete,greteMet:s.greteMet,chatColor:s.chatColor,chatDual:s.chatDual,chatWins:s.chatWins,souv:s.souv,decor:s.decor,hidden:s.hidden,seen:s.seen,pname:s.pname,pcol:s.pcol});
   }catch(e){}
 }
 function codexSave(){try{localStorage.setItem(CODEX_KEY,JSON.stringify(saveObj()))}catch(e){}}
 
 // ---------- 收錄與查詢 ----------
 function codexRecord(code){
-  CODEX.push(codexNorm({name:S.name,pname:S.pname,col:S.col,hue:S.hue,colored:S.colored,day:S.day,temp:S.temp,end:code,
+  CODEX.push(codexNorm({name:S.name,pname:S.pname,col:S.col,hue:S.hue,colored:S.colored,tc:S.tc,tb:S.tb,day:S.day,temp:S.temp,end:code,
     pg:S.pref.gift,pt:S.pref.toy,tags:S.tagsFound,own:S.tags,at:new Date().toISOString().slice(0,10)}));
   codexSave();
 }
@@ -87,7 +88,7 @@ function thumb(c,e){
 const tipSpan=(id)=>h('span',{class:'tipc','data-tip':TEXT.temper[id].desc,tabindex:0},TEXT.temper[id].name);
 
 // ---------- 收藏（每個種類一頁，文字列表；沒發現的顯示 ？？？）----------
-const COLL_TABS=[['end','結局'],['temper','個性'],['item','物品'],['decor','裝飾品'],['tag','標籤']];
+const COLL_TABS=[['end','結局'],['temper','個性'],['item','物品'],['decor','裝飾品'],['tag','標籤'],['souv','禮物']];
 let CT='end';
 const UNK='？？？';
 let REVEAL=false;      // 開發者模式：把所有收藏都顯示成已發現（不會存檔）
@@ -110,6 +111,12 @@ function collData(k){
     return {head:['顯示','名稱','說明'],rows:Object.keys(DECOR).map(id=>META.decor.includes(id)||REVEAL
       ?{found:1,cells:[META.decor.includes(id)?h('input',{type:'checkbox',checked:!META.hidden.includes(id),'aria-label':'顯示在水缸',onchange:ev=>toggleDecor(id,ev.target.checked)}):'—',DECOR[id].name,TEXT.decor[id]||'']}
       :{cells:['—',UNK,UNK]})};
+  }
+  if(k==='souv'){
+    return {head:['名稱','來源','數量','說明'],rows:Object.keys(SOUV_SRC).map(id=>{
+      const n=META.souv[id]||0,[kind,key]=SOUV_SRC[id],t=TEXT.souv[id];
+      return n>0||REVEAL?{found:1,cells:[t.name,(kind==='temper'?h('span',{class:'srcT'},TEXT.temper[key].name):h('span',{class:'srcG'},TEXT.tags[key].name)),String(n),t.desc]}
+        :{cells:[UNK,UNK,'0',UNK]}})};
   }
   const got=new Set(CODEX.reduce((a,e)=>a.concat(e.tags),[]));   // 標籤：有小球在結局前被發現過就算
   return {head:['名稱','說明'],rows:Object.keys(TAGS).map(id=>got.has(id)||REVEAL?{found:1,cells:[TEXT.tags[id].name,TEXT.tags[id].desc]}:{cells:[UNK,UNK]})};
@@ -202,6 +209,8 @@ function codexMerge(txt){
     if(s.kit)META.kit=true;
     if(s.grete)META.grete=true;
     if(s.greteMet)META.greteMet=true;
+    if(s.chatColor)META.chatColor=true;if(s.chatDual)META.chatDual=true;META.chatWins=Math.max(META.chatWins||0,s.chatWins||0);
+    Object.keys(s.souv).forEach(k=>{META.souv[k]=Math.max(META.souv[k]||0,s.souv[k])});
     META.decor=[...new Set([...META.decor,...s.decor])];
     META.hidden=[...new Set([...META.hidden,...s.hidden])];
     META.seen=[...new Set([...META.seen,...s.seen])];
@@ -216,7 +225,7 @@ codexLoad();
 // ---------- 清除存檔：圖鑑、同伴、物品、裝飾、玩家名字全部清空（目前進行中的周目不受影響）----------
 function codexWipe(){
   CODEX=[];GUEST_IDS=[];
-  Object.assign(META,{kit:false,grete:false,greteMet:false,decor:[],hidden:[],seen:[],pname:'',pcol:''});
+  Object.assign(META,{kit:false,grete:false,greteMet:false,chatColor:false,chatDual:false,chatWins:0,souv:{},decor:[],hidden:[],seen:[],pname:'',pcol:''});
   codexSave();
   if(S){syncGuests(false);refresh()}
   showTab(TAB);

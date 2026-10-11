@@ -17,11 +17,12 @@
   window.addEventListener('unhandledrejection',function(e){show(String(e.reason))});
 })();
 </script>
-<link rel="stylesheet" href="css/style.css?v=12">
+<link rel="stylesheet" href="css/style.css?v=22">
 </head>
 <body>
 <main><div class="game"><div class="left">
-<header><span><span id="ver" class="ver"></span><span id="day">第 1 日 / 7</span><span class="pips" id="pips" title="今日剩餘行動次數"></span></span><span id="cname"></span><span class="hr"><span id="pname"></span><button id="bMenu" class="mbtn">說明／圖鑑</button></span></header>
+<header><span><span id="ver" class="ver"></span><button id="bWatch" class="mbtn wbtn">觀察水缸</button><span id="day">第 1 日 / 7</span><span class="pips" id="pips" title="今日剩餘行動次數"></span></span><span id="cname"></span><span class="hr"><span id="pname"></span><button id="bMenu" class="mbtn">說明／圖鑑</button></span></header>
+<div id="pvbar" hidden><button id="pvSel"></button><button id="pvTrans" class="tog" aria-pressed="false">翻譯（心聲）：關</button><button id="pvExit">離開</button></div>
 <div class="tankwrap"><canvas id="tank" width="500" height="500" aria-label="水缸與異種幼體"></canvas><div id="toast" role="status" aria-live="polite"></div><div id="wq" hidden></div></div>
 <div id="log" role="log" aria-live="polite"></div>
 </div>
@@ -52,8 +53,10 @@
 <div class="cust"><input type="color" id="cp" value="#58a6ff" aria-label="自訂顏色"><input type="text" id="hex" placeholder="#RRGGBB 或 255,128,0" aria-label="色碼或 RGB"></div>
 <button id="go">開始養成</button>
 <button id="sMenu">說明／圖鑑</button>
+<button id="sPv">觀察水缸</button>
 </div></div>
 <div class="ov" id="ovPick"><div class="box"><button id="pc" class="xbtn" aria-label="關閉">✕</button><h2 id="pt"></h2><p id="pp" class="pp"></p><p id="pNote" class="pnote" hidden></p><figure id="pFig" class="pfig" hidden><img id="pAv" class="pav" alt=""><div id="pTag" class="pname" hidden></div></figure><div id="po"></div></div></div>
+<div class="ov" id="ovWatch"><div class="box menu"><button id="watchClose" class="xbtn" aria-label="關閉">✕</button><h3 style="margin-top:0">觀察水缸：選擇小球</h3><p class="dim" id="wstat"></p><div class="page" id="wlist"></div></div></div>
 <div class="ov" id="ovBag"><div class="box"><button id="bagClose" class="xbtn" aria-label="關閉">✕</button><h2>物品</h2><div id="bagBody"></div></div></div>
 <div class="ov" id="ovEnd"><div class="box"><h2 id="et"></h2><p id="ex"></p><p id="sum"></p><button id="again">重新開始</button><button id="eLarvae">查看小球們</button></div></div>
 <div class="ov" id="ovMenu"><div class="box wide menu"><button id="menuClose" class="xbtn" aria-label="關閉">✕</button>
@@ -79,39 +82,44 @@
 </div>
 </div></div>
 
-<script src="js/utils.js?v=12"></script>
-<script src="js/data/assets-inline.js?v=12"></script>
+<script src="js/utils.js?v=22"></script>
+<script src="js/data/assets-inline.js?v=22"></script>
 <script src="js/data/version.js"></script>
-<script src="js/data/grete.js?v=12"></script>
-<script src="js/data/texts.js?v=12"></script>
-<script src="js/data/temperaments.js?v=12"></script>
-<script src="js/data/tags.js?v=12"></script>
-<script src="js/data/items.js?v=12"></script>
-<script src="js/data/endings.js?v=12"></script>
-<script src="js/data/emotes.js?v=12"></script>
-<script src="js/data/about.js?v=12"></script>
-<script src="js/data/decor.js?v=12"></script>
-<script src="js/data/sprites.js?v=12"></script>
-<script src="js/state.js?v=12"></script>
-<script src="js/ui.js?v=12"></script>
-<script src="js/actions.js?v=12"></script>
-<script src="js/tags.js?v=12"></script>
-<script src="js/grete.js?v=12"></script>
-<script src="js/events.js?v=12"></script>
-<script src="js/settle.js?v=12"></script>
-<script src="js/endings.js?v=12"></script>
-<script src="js/codex.js?v=12"></script>
-<script src="js/render/canvas.js?v=12"></script>
-<script src="js/render/sprites.js?v=12"></script>
-<script src="js/render/larva.js?v=12"></script>
-<script src="js/render/emote.js?v=12"></script>
-<script src="js/render/motion.js?v=12"></script>
-<script src="js/render/social.js?v=12"></script>
-<script src="js/render/creature.js?v=12"></script>
-<script src="js/render/guests.js?v=12"></script>
-<script src="js/render/scene.js?v=12"></script>
-<script src="js/main.js?v=12"></script>
-<script src="js/dev.js?v=12"></script>
+<script src="js/data/grete.js?v=22"></script>
+<script src="js/data/chat.js?v=22"></script>
+<script src="js/data/souvenirs.js?v=22"></script>
+<script src="js/data/texts.js?v=22"></script>
+<script src="js/data/temperaments.js?v=22"></script>
+<script src="js/data/tags.js?v=22"></script>
+<script src="js/data/items.js?v=22"></script>
+<script src="js/data/endings.js?v=22"></script>
+<script src="js/data/emotes.js?v=22"></script>
+<script src="js/data/about.js?v=22"></script>
+<script src="js/data/decor.js?v=22"></script>
+<script src="js/data/sprites.js?v=22"></script>
+<script src="js/state.js?v=22"></script>
+<script src="js/ui.js?v=22"></script>
+<script src="js/actions.js?v=22"></script>
+<script src="js/tags.js?v=22"></script>
+<script src="js/grete.js?v=22"></script>
+<script src="js/events.js?v=22"></script>
+<script src="js/chat.js?v=22"></script>
+<script src="js/souvenirs.js?v=22"></script>
+<script src="js/settle.js?v=22"></script>
+<script src="js/endings.js?v=22"></script>
+<script src="js/codex.js?v=22"></script>
+<script src="js/render/canvas.js?v=22"></script>
+<script src="js/render/sprites.js?v=22"></script>
+<script src="js/render/larva.js?v=22"></script>
+<script src="js/render/emote.js?v=22"></script>
+<script src="js/render/motion.js?v=22"></script>
+<script src="js/render/social.js?v=22"></script>
+<script src="js/render/creature.js?v=22"></script>
+<script src="js/render/guests.js?v=22"></script>
+<script src="js/render/scene.js?v=22"></script>
+<script src="js/main.js?v=22"></script>
+<script src="js/preview.js?v=22"></script>
+<script src="js/dev.js?v=22"></script>
 
 </body>
 </html>

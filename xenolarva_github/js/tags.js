@@ -69,7 +69,7 @@ function judgeSteer(t){
   }
   if(!JD.id)return null;
   if(!ids.includes(JD.id)){JD.id=null;return null}
-  const d=DECOR[JD.id],p={x:d.x,y:Math.min(300,d.y-30)};
+  const d=DECOR[JD.id],p={x:d.x+WORLD.dx,y:Math.min(300,d.y-30)};
   if(dist(C,p)<45){
     if(!JD.heart&&Math.random()<.02){JD.heart=true;emote('heart')}
     return [Math.sin(t/900)*.12,Math.cos(t/700)*.06];                       // 在裝飾旁輕輕打轉

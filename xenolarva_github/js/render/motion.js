@@ -4,6 +4,7 @@
 //   next 下次換方向的時間｜home 自己的角落（頑固用）｜calm 這個時間前先回角落冷靜（頑固撞人後）
 const PI2=Math.PI*2;
 const WALL={l:40,r:460,t:48,b:308};
+const WORLD={w:500,dx:0};                               // 水缸寬度（一般 500；預覽模式 750）。dx＝比 500 多出來的一半，用來把裝飾置中
 const FLOOR_LOW=392;                                   // 睏睏可以躺到更低（水缸下方三分之一的沙地）
 const floorOf=o=>(o===C?(S&&TEMPERS[S.temp].sleepy):(o.e&&TEMPERS[o.e.temp].sleepy))?FLOOR_LOW:WALL.b;                    // 活動範圍（水缸玻璃邊緣）
 const IDLE_CYCLE=['idle_a','idle_b','idle_a','open_a','open_b','open_a','close','idle_b'];   // 待機時輪流用的姿勢
@@ -12,14 +13,14 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 // 朝 p 前進的速度向量。s 是速度，s 為負數就是「遠離 p」。已經很近就停下。
 function aim(o,p,s){const dx=p.x-o.x,dy=p.y-o.y,d=Math.hypot(dx,dy);return d<6?[0,0]:[dx/d*s,dy/d*s]}
 // 隨機挑一個水缸底部的角落當「自己的領地」
-function pickHome(){return {x:Math.random()<.5?56:444,y:304}}
+function pickHome(){return {x:Math.random()<.5?WALL.l+16:WALL.r-16,y:304}}
 // 目前在水缸裡、可以互動的小球（飄進／飄出中的不算）
 const isLive=o=>o===C||o.phase==='live';
 
 // 找離 o 最近的其他小球。回傳 {o:那隻或null, d:距離}
 function nearest(o,ok){
   let best=null,bd=1e9;
-  [C,...GUESTS].forEach(b=>{if(b===o||!isLive(b)||(ok&&!ok(b)))return;const d=dist(o,b);if(d<bd){bd=d;best=b}});
+  [...(PV?[]:[C]),...GUESTS].forEach(b=>{if(b===o||!isLive(b)||(ok&&!ok(b)))return;const d=dist(o,b);if(d<bd){bd=d;best=b}});
   return {o:best,d:bd};
 }
 // 找 o 附近的泡泡（range 範圍內最近的一顆）

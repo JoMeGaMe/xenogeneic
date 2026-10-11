@@ -48,7 +48,7 @@ if(typeof ABOUT_HTML!=='undefined')$('aboutBody').innerHTML=ABOUT_HTML;
 $('eLarvae').onclick=()=>openMenu('larvae');
 [...$('mtabs').children].forEach(b=>{b.onclick=()=>showTab(b.getAttribute('data-tab'))});
 $('menuClose').onclick=()=>$('ovMenu').classList.remove('show');
-document.addEventListener('keydown',e=>{if(e.key==='Escape')['ovMenu','ovPick','ovBag'].forEach(i=>$(i).classList.remove('show'))});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')['ovMenu','ovPick','ovBag','ovWatch'].forEach(i=>$(i).classList.remove('show'))});
 $('cDown').onclick=()=>codexDownload();
 $('cUp').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(codexMerge);e.target.value=''};
 $('cImport').onclick=()=>codexMerge($('saveText').value);

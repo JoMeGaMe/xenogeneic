@@ -9,16 +9,18 @@ function newGame(pname,name,col){
     pname,name,col,hue:Math.floor(Math.random()*360),colored:false,over:null,
     pref:{gift:g,dislike:R(GIFTS.filter(x=>x!==g)),toy:R(TOYS)},
     temp:R(TEMPER_IDS),
-    inv:{food:3,agent:3,sweet:1,salty:0,bitter:0,bubble:1,bell:0,ball:0,kit:META.kit?1:0},   // 水質檢測儀跨周目繼承
+    inv:{food:3,agent:3,sweet:1,salty:0,bitter:0,bubble:0,bell:0,ball:0,kit:META.kit?1:0},   // 水質檢測儀跨周目繼承
     waterToday:0,history:[],found:{gift:false,toy:false},
     tags:rollTags(),tagsFound:[],                 // tags：擁有的特殊標籤（開局依機率分配）；tagsFound：已被發現的
-    playedToday:false,noPlay:0,touchGain:0,grete:false,trans:false};      // 標籤用：今天有沒有玩、連續幾天沒玩、今天被戳加了幾次信賴
+    playedToday:false,noPlay:0,touchGain:0,grete:false,trans:false,
+    tc:'',tb:'',chatC:[],chatB:[]};      // 標籤用：今天有沒有玩、連續幾天沒玩、今天被戳加了幾次信賴
+  if(S.tags.includes('homereturn'))S.trust+=15;     // 回歸者：覺得一切都很熟悉，一開始就比較信任你
   tagsReset();
   Object.keys(S.inv).forEach(k=>{if(S.inv[k]>0)seeItem(k)});codexSave();   // 開局就有的物品也記進物品圖鑑
 
   // 重設幼體在水缸裡的狀態
   Object.assign(C,{lastFood:0,x:250,y:180,vx:1,vy:.15,tx:1,ty:0,rot:0,rv:0,next:0,calm:0,steering:false,home:pickHome()});
-  M=null;pokes=[];
+  M=null;pokes=[];CHAT_SEL.core=CHAT_SEL.shell=null;CHAT_SEL.part='core';
 
   $('pname').textContent=pname;paintName($('pname'),col);$('cname').textContent=name;
   $('log').innerHTML='';

@@ -13,10 +13,11 @@ const TAGS={
   judge:     {weight:30},
   lovey:     {weight:10},
   clean:     {weight:30},
-  scholar:   {weight:10,off:true},                  // 要等「心聲」道具做好才開放
-  homereturn:{weight:5, off:true,needsLost:true}    // 同上；另外需要有消逝過的小球
+  scholar:   {weight:10},                           // 第一次聽到心聲時揭曉
+  homereturn:{weight:5, needsLost:true},            // 同上；另外需要有消逝過的小球才會出現
+  sneak:     {weight:10}                            // 偷偷七逃：換日時偶爾從缸邊游進來，才發現牠溜出去過
 };
 // 互相矛盾、不會同時出現的標籤
-const TAG_CLASH=[['glutton','frail'],['playful','scholar']];
+const TAG_CLASH=[['glutton','frail'],['playful','scholar'],['frail','sneak']];
 // 每隻小球的標籤數量：60% 沒有、35% 一個、5% 兩個
 const TAG_ODDS={none:.60,one:.35};

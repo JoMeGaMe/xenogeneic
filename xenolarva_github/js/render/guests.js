@@ -14,17 +14,17 @@ function makeGuest(e){
   const g={e,name:e.name,phase:'in',t0:null,dur:FLY_IN,al:0,
     x:0,y:0,vx:0,vy:0,tx:0,ty:0,rot:0,rv:0,bn:0,next:0,steering:false,mode:'wander',mu:0,
     p:'open_a',pt:0,ph:Math.random()*6,look:larvaLook(e),home:pickHome(),calm:0};
-  g.ex=110+Math.random()*280;g.ey=100+Math.random()*180;   // 最後停下來的位置
+  g.ex=WALL.l+70+Math.random()*(WALL.r-WALL.l-140);g.ey=100+Math.random()*180;   // 最後停下來的位置
   if(side==='top'){g.sx=g.ex;g.sy=-70}
   else if(side==='left'){g.sx=-70;g.sy=g.ey}
-  else{g.sx=570;g.sy=g.ey}
+  else{g.sx=WORLD.w+70;g.sy=g.ey}
   g.x=g.sx;g.y=g.sy;
   return g;
 }
 function leaveGuest(g){
   g.phase='out';g.t0=null;g.dur=FLY_OUT;g.sx=g.x;g.sy=g.y;
   if(Math.random()<.4){g.ex=g.x;g.ey=-80}                  // 往上飄走
-  else{g.ex=g.x<250?-80:580;g.ey=g.y}                      // 或往最近的側邊飄走
+  else{g.ex=g.x<WORLD.w/2?-80:WORLD.w+80;g.ey=g.y}                      // 或往最近的側邊飄走
 }
 // 飄動中的每一格：緩入緩出地移動，帶一點晃動，淡入或淡出
 function flyStep(g,t){
@@ -66,7 +66,7 @@ function stepGuests(t){
     if(g.phase!=='live'){flyStep(g,t);return}
     const T=TEMPERS[g.e.temp];
     // 躲開 → 個性特別行為（領地、追泡泡、睡覺）→ 對其他小球的互動（見 social.js）→ 一般漫遊
-    const tgt=dashSteer(g,t)||steer(g,t,T)||socialSteer(g,t);
+    const tgt=dashSteer(g,t)||pkSteer(g,t)||steer(g,t,T)||socialSteer(g,t);
     if(tgt){g.tx=tgt[0];g.ty=tgt[1];g.steering=true}
     else{
       if(g.steering){g.steering=false;g.next=0}
@@ -81,7 +81,7 @@ function stepGuests(t){
 // ---------- 互相碰撞 ----------
 const isStubborn=o=>!!TEMPERS[o===C?S.temp:o.e.temp].territory;
 function collide(t){
-  const bodies=[...(S&&S.over?[]:[C]),...GUESTS.filter(g=>g.phase==='live')];
+  const bodies=[...(PV||(S&&S.over)?[]:[C]),...GUESTS.filter(g=>g.phase==='live')];
   const R2=68;                                                // 兩隻靠得比這個近就算碰到
   for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
     const a=bodies[i],b=bodies[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
@@ -111,7 +111,7 @@ function bump(from,to,nx,ny,t){
   from.vx-=nx*.5;from.vy-=ny*.5;
   from.calm=t+2500;
   const sl=TEMPERS[idOf(to)].sleepy;
-  if(sl)to.moveTo={x:to.x<250?300+Math.random()*130:60+Math.random()*130,until:t+5000};   // 睏睏被撞開：換個地方繼續躺
+  if(sl)to.moveTo={x:to.x<WORLD.w/2?WORLD.w*.6+Math.random()*130:60+Math.random()*130,until:t+5000};   // 睏睏被撞開：換個地方繼續躺
   if(t-lastBumpMsg>8000&&S&&!S.over){                          // 訊息最多每 8 秒一次，不洗版（同伴之間也會寫）
     lastBumpMsg=t;
     if(sl)say(fmt(R(TEXT.social.moved),{b:nameOf(to)}));
@@ -124,6 +124,7 @@ function bump(from,to,nx,ny,t){
 // ---------- 畫出同伴 ----------
 function guestPose(g,i,t){
   if(g.phase!=='live')return t%700<350?'open_a':'open_b';    // 飄動時觸肢張開
+  if(g.pk&&t<g.pk.until)return ['hide','turn'].includes(g.pk.kind)?'curl':['wave','stretch','touch'].includes(g.pk.kind)||(g.pk.kind==='come'&&Math.hypot(g.pk.x-g.x,g.pk.y-g.y)<40)?'reach_'+(t%440<220?'a':'b'):'flat_'+(t%440<220?'a':'b');   // 被戳的反應
   if(Math.hypot(g.vx,g.vy)>.6)return 'flat_'+(t%440<220?'a':'b');
   if(TEMPERS[g.e.temp].sleepy&&g.y>=296&&Math.hypot(g.vx,g.vy)<.35)return 'rest';   // 睏睏貼底睡覺
   return IDLE_CYCLE[Math.floor(t/450+i*3)%IDLE_CYCLE.length];
@@ -140,4 +141,30 @@ function drawGuests(t,tt){
     cx.strokeStyle='rgba(8,26,36,.8)';cx.strokeText(g.name,g.x,dy+58);cx.fillStyle='#e6f6f2';cx.fillText(g.name,g.x,dy+58);
     cx.globalAlpha=1;
   });
+}
+
+// ---------- 被戳（預覽模式：每隻同伴都能戳）----------
+// 反應和玩家養的那隻一樣，照個性的 poke 種類（見 POKE 表）：黏人靠過來、害羞躲角落、好奇揮觸肢、頑固背過身回角落、活潑轉圈、睏睏伸展。
+function pokeGuest(g,t,x,y){
+  if(g.phase!=='live'||t-(g.lp||0)<500)return false;
+  g.lp=t;g.bn=Math.max(g.bn,.9);
+  let kind=TEMPERS[g.e.temp].poke;
+  if(g.e.own.includes('touchy')&&['hide','turn'].includes(kind))kind='touch';
+  const dur={come:3000,hide:5000,wave:2200,turn:3500,spin:1800,stretch:3200,touch:2500}[kind]||2000;
+  g.pk={kind,x:Math.max(60,Math.min(WALL.r-20,x)),y:Math.max(60,Math.min(300,y)),until:t+dur};
+  g.next=0;
+  if(kind==='spin')g.rv=(Math.random()<.5?-1:1)*.5;
+  if(kind==='hide'){g.vx+=(g.x<x?-1:1)*1.6}
+  say(TEXT.poke[kind].replace(/幼體/g,nm(g.name)));
+  return true;
+}
+// 被戳之後這段時間要去哪裡（回傳 [tx,ty]；沒有就 null）
+function pkSteer(g,t){
+  const k=g.pk;if(!k)return null;
+  if(t>=k.until){g.pk=null;return null}
+  if(k.kind==='come')return aim(g,k,1);
+  if(k.kind==='touch')return aim(g,k,.5);
+  if(k.kind==='hide')return aim(g,{x:g.x<WORLD.w/2?WALL.l+12:WALL.r-12,y:306},1.4);
+  if(k.kind==='turn')return aim(g,g.home,.7);
+  return [0,0];
 }
