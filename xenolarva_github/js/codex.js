@@ -20,7 +20,8 @@ function codexNorm(e){
     hue:((+e.hue||0)%360+360)%360,colored:!!e.colored,tc:parseColor(String(e.tc||''))||'',tb:parseColor(String(e.tb||''))||'',
     day:Math.max(1,Math.min(7,Math.round(+e.day)||7)),
     temp:has(TEMPERS,e.temp)?e.temp:'curious',end:has(ENDS,e.end)?e.end:'END-01',
-    pg:has(NAME,e.pg)?e.pg:'sweet',pt:has(NAME,e.pt)?e.pt:'bubble',at:String(e.at||'').slice(0,10),
+    pg:has(NAME,e.pg)?e.pg:R(GIFTS),pt:has(NAME,e.pt)?e.pt:R(TOYS),      // 舊資料沒有記錄喜好時，隨機補一個（之後存檔就固定了）
+    at:String(e.at||'').slice(0,10),
     star:!!e.star,hide:!!e.hide,                                   // 星號、隱藏
     tags:(Array.isArray(e.tags)?e.tags:[]).map(String).filter(x=>has(TAGS,x)).slice(0,6),   // 已發現的特殊標籤（id）
     own:(Array.isArray(e.own)?e.own:[]).map(String).filter(x=>has(TAGS,x)).slice(0,6)       // 實際擁有的標籤（含沒被發現的，回歸者計數用）
@@ -157,7 +158,8 @@ function larvaRow(e){
     nameRow(e),
     h('div',{},ENDS[e.end][0],' ｜ ',tipSpan(e.temp)),
     h('div',{class:'dim'},`第 ${e.day} 日｜${e.at||'—'}｜${e.pname||'—'}`),
-    h('div',{class:'dim'},'標籤：'+(e.tags.length?e.tags.map(t=>TEXT.tags[t].name).join('、'):'—')));
+    h('div',{class:'dim'},'標籤：'+(e.tags.length?e.tags.map(t=>TEXT.tags[t].name).join('、'):'—')),
+    h('div',{class:'dim'},`喜歡：${NAME[e.pg]}｜${NAME[e.pt]}`));
   const act=h('div',{class:'lact'});
   // 消逝的小球不能放進水缸，只能改名、標星號或隱藏
   if(alive&&!e.hide){

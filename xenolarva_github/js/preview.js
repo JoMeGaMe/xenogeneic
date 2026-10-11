@@ -48,7 +48,8 @@ function watchRow(e){
   const mid=h('div',{class:'lmid'},h('div',{class:'nrow'},h('strong',{class:'nm'},e.name)),
     h('div',{},ENDS[e.end][0],' ｜ ',tipSpan(e.temp)),
     h('div',{class:'dim'},`第 ${e.day} 日｜${e.at||'—'}｜${e.pname||'—'}`),
-    h('div',{class:'dim'},'標籤：'+(e.tags.length?e.tags.map(t=>TEXT.tags[t].name).join('、'):'—')));
+    h('div',{class:'dim'},'標籤：'+(e.tags.length?e.tags.map(t=>TEXT.tags[t].name).join('、'):'—')),
+    h('div',{class:'dim'},`喜歡：${NAME[e.pg]}｜${NAME[e.pt]}`));
   const act=h('div',{class:'lact'},h('button',{class:'ib'+(on?' on':''),'aria-pressed':String(on),onclick:()=>watchToggle(e.id,!on)},on?'取消觀察':'放入觀察'));
   return h('div',{class:'lrow'},c,mid,act);
 }
