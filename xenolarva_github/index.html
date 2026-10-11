@@ -4,26 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>異種幼體養成模擬器</title>
-<link rel="stylesheet" href="css/style.css">
+<script>
+/* 出錯時在畫面底部顯示訊息（手機沒有主控台，方便回報問題）。點一下可關閉。 */
+(function(){
+  function show(m){var d=document.getElementById('err');
+    if(!d){d=document.createElement('div');d.id='err';d.onclick=function(){d.style.display='none'};(document.body||document.documentElement).appendChild(d)}
+    d.style.display='block';d.textContent='發生錯誤（點一下關閉）：'+m}
+  window.addEventListener('error',function(e){var t=e.target;
+    if(t&&t.tagName==='SCRIPT'){show('檔案載入失敗 '+(t.getAttribute('src')||''));return}
+    if(t&&t!==window)return;
+    show((e.message||'未知錯誤')+' @'+String(e.filename||'').split('/').pop()+':'+e.lineno)},true);
+  window.addEventListener('unhandledrejection',function(e){show(String(e.reason))});
+})();
+</script>
+<link rel="stylesheet" href="css/style.css?v=12">
 </head>
 <body>
 <main><div class="game"><div class="left">
-<header><span><span id="day">第 1 日 / 7</span><span class="pips" id="pips" title="今日剩餘行動次數"></span></span><span id="cname"></span><span id="pname"></span></header>
-<canvas id="tank" width="500" height="500" aria-label="水缸與異種幼體"></canvas>
-<div id="status"></div>
+<header><span><span id="ver" class="ver"></span><span id="day">第 1 日 / 7</span><span class="pips" id="pips" title="今日剩餘行動次數"></span></span><span id="cname"></span><span class="hr"><span id="pname"></span><button id="bMenu" class="mbtn">說明／圖鑑</button></span></header>
+<div class="tankwrap"><canvas id="tank" width="500" height="500" aria-label="水缸與異種幼體"></canvas><div id="toast" role="status" aria-live="polite"></div><div id="wq" hidden></div></div>
 <div id="log" role="log" aria-live="polite"></div>
-<div class="tools"><button id="bAbout">說明</button><button id="bCodex">圖鑑</button></div>
 </div>
 <div id="acts">
+<div id="notes"></div>
+<button id="bGrete" class="tog" hidden>格蕾特小助手</button>
+<button id="bTrans" class="tog" hidden>翻譯（心聲）</button>
 <button id="bWater">換水<small>不耗行動</small></button>
 <button id="bFeed">餵食<small>不耗行動</small></button>
 <button id="bPlay">玩耍<small>耗 1 行動</small></button>
 <button id="bOut">出門<small>耗 1 行動</small></button>
 <button id="bBag">物品<small>查看庫存</small></button>
 <button id="end">結束今日</button>
+<button id="bDev" hidden>開發者模式</button>
 </div>
 </div>
 </main>
+<div id="devp" hidden></div>
 <div class="ov show" id="ovStart"><div class="box">
 <h2>異種幼體養成模擬器</h2>
 <p>一顆透明的小果凍剛出生了。用七天照顧牠、觀察牠，看看牠會長成什麼樣子。</p>
@@ -35,38 +51,67 @@
 <div class="sw" id="sw"></div>
 <div class="cust"><input type="color" id="cp" value="#58a6ff" aria-label="自訂顏色"><input type="text" id="hex" placeholder="#RRGGBB 或 255,128,0" aria-label="色碼或 RGB"></div>
 <button id="go">開始養成</button>
-<div class="row2"><button id="sAbout">說明</button><button id="sCodex">圖鑑</button></div>
+<button id="sMenu">說明／圖鑑</button>
 </div></div>
-<div class="ov" id="ovAbout"><div class="box wide"><h2>說明</h2><div id="aboutBody"></div><button id="aboutClose">關閉</button></div></div>
-<div class="ov" id="ovCodex"><div class="box wide"><h2>圖鑑</h2><p id="cstat"></p><p id="cends" class="dim"></p><div class="dim" id="cdeco"></div><div class="cgrid" id="cgrid"></div><p id="cmsg" class="dim" role="status"></p>
+<div class="ov" id="ovPick"><div class="box"><button id="pc" class="xbtn" aria-label="關閉">✕</button><h2 id="pt"></h2><p id="pp" class="pp"></p><p id="pNote" class="pnote" hidden></p><figure id="pFig" class="pfig" hidden><img id="pAv" class="pav" alt=""><div id="pTag" class="pname" hidden></div></figure><div id="po"></div></div></div>
+<div class="ov" id="ovBag"><div class="box"><button id="bagClose" class="xbtn" aria-label="關閉">✕</button><h2>物品</h2><div id="bagBody"></div></div></div>
+<div class="ov" id="ovEnd"><div class="box"><h2 id="et"></h2><p id="ex"></p><p id="sum"></p><button id="again">重新開始</button><button id="eLarvae">查看小球們</button></div></div>
+<div class="ov" id="ovMenu"><div class="box wide menu"><button id="menuClose" class="xbtn" aria-label="關閉">✕</button>
+<div class="tabs" id="mtabs" role="tablist"><button data-tab="larvae" class="on">小球們</button><button data-tab="coll">收藏</button><button data-tab="info">說明與存檔</button></div>
+<div class="page" id="pg_larvae">
+<div class="lbar"><div class="filter" id="lfilter"></div><span class="dim" id="lstat"></span></div>
+<p id="lmsg" class="dim" role="status"></p>
+<div id="llist"></div>
+</div>
+<div class="page" id="pg_coll" hidden>
+<div class="collwrap"><div class="filter cnav" id="cfilter"></div>
+<div id="collBody"></div></div>
+</div>
+<div class="page" id="pg_info" hidden>
+<h3>存檔</h3>
+<p class="dim">進度存在這個瀏覽器裡。換裝置時，請在舊裝置按「下載進度」，再到新裝置按「上傳進度」（會合併，不會覆蓋）。</p>
 <div class="row2"><button id="cDown">下載進度</button><label class="fbtn">上傳進度<input type="file" id="cUp" accept=".json,application/json" hidden></label></div>
+<p id="cmsg" class="dim" role="status"></p>
 <details><summary class="dim">文字進度碼（備用）</summary><textarea id="saveText" aria-label="進度碼"></textarea><button id="cImport">匯入上方文字</button></details>
-<button id="codexClose">關閉</button></div></div>
-<div class="ov" id="ovPick"><div class="box"><h2 id="pt"></h2><div id="po"></div><button id="pc">取消</button></div></div>
-<div class="ov" id="ovEnd"><div class="box"><h2 id="et"></h2><p id="ex"></p><p id="sum"></p><button id="again">重新開始</button></div></div>
+<div class="savefoot"><button id="cWipe" class="danger">清除存檔</button></div>
+<hr class="sep">
+<div id="aboutBody"></div>
+</div>
+</div></div>
 
-<script src="js/utils.js"></script>
-<script src="js/data/assets-inline.js"></script>
-<script src="js/data/items.js"></script>
-<script src="js/data/endings.js"></script>
-<script src="js/data/emotes.js"></script>
-<script src="js/data/about.js"></script>
-<script src="js/data/decor.js"></script>
-<script src="js/data/sprites.js"></script>
-<script src="js/state.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/actions.js"></script>
-<script src="js/settle.js"></script>
-<script src="js/endings.js"></script>
-<script src="js/codex.js"></script>
-<script src="js/render/canvas.js"></script>
-<script src="js/render/sprites.js"></script>
-<script src="js/render/larva.js"></script>
-<script src="js/render/emote.js"></script>
-<script src="js/render/creature.js"></script>
-<script src="js/render/guests.js"></script>
-<script src="js/render/scene.js"></script>
-<script src="js/main.js"></script>
+<script src="js/utils.js?v=12"></script>
+<script src="js/data/assets-inline.js?v=12"></script>
+<script src="js/data/version.js"></script>
+<script src="js/data/grete.js?v=12"></script>
+<script src="js/data/texts.js?v=12"></script>
+<script src="js/data/temperaments.js?v=12"></script>
+<script src="js/data/tags.js?v=12"></script>
+<script src="js/data/items.js?v=12"></script>
+<script src="js/data/endings.js?v=12"></script>
+<script src="js/data/emotes.js?v=12"></script>
+<script src="js/data/about.js?v=12"></script>
+<script src="js/data/decor.js?v=12"></script>
+<script src="js/data/sprites.js?v=12"></script>
+<script src="js/state.js?v=12"></script>
+<script src="js/ui.js?v=12"></script>
+<script src="js/actions.js?v=12"></script>
+<script src="js/tags.js?v=12"></script>
+<script src="js/grete.js?v=12"></script>
+<script src="js/events.js?v=12"></script>
+<script src="js/settle.js?v=12"></script>
+<script src="js/endings.js?v=12"></script>
+<script src="js/codex.js?v=12"></script>
+<script src="js/render/canvas.js?v=12"></script>
+<script src="js/render/sprites.js?v=12"></script>
+<script src="js/render/larva.js?v=12"></script>
+<script src="js/render/emote.js?v=12"></script>
+<script src="js/render/motion.js?v=12"></script>
+<script src="js/render/social.js?v=12"></script>
+<script src="js/render/creature.js?v=12"></script>
+<script src="js/render/guests.js?v=12"></script>
+<script src="js/render/scene.js?v=12"></script>
+<script src="js/main.js?v=12"></script>
+<script src="js/dev.js?v=12"></script>
 
 </body>
 </html>

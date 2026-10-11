@@ -14,6 +14,15 @@
 | 說明頁文字、世界觀、製作者 | `js/data/about.js` |
 | 幼體共用繪製與身體染色幅度 | `js/render/larva.js` |
 | 背景裝飾（出門撿到、永久保留） | `js/data/decor.js` ＋ `assets/larva/deco_*.png` |
+| 所有顯示給玩家的文字（訊息、反應、提示） | `js/data/texts.js` |
+| 新增／調整個性（速度、信賴倍率、被戳反應） | `js/data/temperaments.js` ＋ `js/data/texts.js`（名字與說明） |
+| 特殊標籤（機率、互斥、效果、發現時機） | `js/data/tags.js`（資料）＋ `js/tags.js`（分配、揭曉、鑑賞家／人類愛好者行為）＋ 餵玩在 `js/actions.js`、結算在 `js/settle.js`、被戳在 `js/render/creature.js` |
+| 版本號（畫面左上角） | `js/data/version.js` |
+| 新增被戳的反應動作 | `js/render/creature.js` 的 `POKE` 表 |
+| 小球之間的互動（一起玩、追逐、躲開…）對照表 | `js/render/social.js`（`REL` 表與 `ACT` 機率） |
+| 同伴行為、飄進飄出、互撞 | `js/render/guests.js` |
+| 共用移動、撞牆、個性行為（領地、追泡泡） | `js/render/motion.js` |
+| 選單三頁（收藏、小球們、存檔） | `js/codex.js` ＋ `index.html` 的 `#ovMenu` |
 | 新增表情氣泡圖示 | `js/data/emotes.js` |
 | 新增姿勢圖 | `assets/larva/` 放圖 ＋ `js/data/sprites.js` 登記 |
 | 調整游動速度、被戳的反應 | `js/render/creature.js` |

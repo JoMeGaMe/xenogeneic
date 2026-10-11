@@ -27,12 +27,12 @@ function draw(t){
   drawGuests(t,tt);
   // 影子
   const drawY=C.y+Math.sin(tt*.9)*5-bounce*Math.abs(Math.sin(tt*9))*14;C.dy=drawY;
-  const sw=Math.max(34,64-(318-C.y)*.12);
-  cx.globalAlpha=.22*a;cx.fillStyle='#000';cx.beginPath();cx.ellipse(C.x,342,sw/2,8,0,0,PI2);cx.fill();cx.globalAlpha=1;
+  const sw=Math.min(64,Math.max(34,64-(318-C.y)*.12));
+  cx.globalAlpha=.22*a;cx.fillStyle='#000';cx.beginPath();cx.ellipse(C.x,Math.max(342,C.y+38),sw/2,8,0,0,PI2);cx.fill();cx.globalAlpha=1;
   // 姿勢
   if(t-C.pt>260||(EM&&t-EM.t<120)){C.p=pickPose(t);C.pt=t}
   const sq=Math.sin(tt*2)*.03+bounce*Math.sin(tt*13)*.08,look=larvaLook(S);
-  drawLarva(cx,C.x,drawY,C.rot,sq,C.p,look,tt,a,1);
+  drawLarva(cx,C.x,drawY,C.rot,sq,C.p,look,tt,a*(frailSym()?.72:1),1);   // 虛弱徵兆：身體更透明
   // 彩色小光點
   if(S.colored)for(let i=0;i<4;i++){
     const sx=C.x+Math.cos(tt+i*1.6)*70,sy=drawY+Math.sin(tt*1.3+i*1.6)*60,on=Math.sin(tt*4+i)>0?1:0;

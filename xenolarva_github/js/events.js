@@ -1,0 +1,52 @@
+// ===== 事件：彈出框標題固定是「事件」，內文是一小段文字，可選頭像。 =====
+// 之後的隨機事件都用這個模板：在 EVENTS 加一筆，就可以用 runEvent('id') 觸發。
+//   text：內文（字串，或回傳字串的函式）　img：頭像圖片網址（可省略）
+//   apply：事件發生時要做的事（發獎勵、解鎖…）。log：同時寫進訊息區的文字（可省略）
+const EVENTS={
+  // pages：每頁 {text, img, name, note, btn｜opts[{label,next}], next}。next＝要去第幾頁（-1＝結束、不執行 apply）；沒寫就是下一頁。
+  // 事件開始時執行 start；最後一頁出現時才執行 apply（中途按 ✕ 離開＝事件沒完成）。declined＝選了 -1 時寫進訊息區的字。
+  greteMeet:{
+    pages:()=>TEXT.grete.pages.map(withImg),
+    start(){META.greteMet=true;codexSave()},         // 見過面了：之後會觸發「再次遇到」的版本
+    apply(){META.grete=true;codexSave()},           // 永久解鎖「格蕾特小助手」
+    log:()=>TEXT.grete.meet,
+    declined:()=>TEXT.grete.declined
+  },
+  greteAgain:{
+    pages:()=>[withImg({...TEXT.grete.again,opts:TEXT.grete.again.opts.map(o=>({...o,next:o.next==='intro'?1:o.next}))}),withImg(TEXT.grete.pages[TEXT.grete.pages.length-1])],
+    apply(){META.grete=true;codexSave()},
+    log:()=>TEXT.grete.meet,
+    declined:()=>TEXT.grete.declined
+  }
+};
+const withImg=p=>({...p,img:[GRETE_IMG,GRETE_IMG2][p.img]});
+// 跳出事件框。opt.preview＝true 時只預覽，不執行 start／apply。cb＝事件走完之後要做的事
+function runEvent(id,opt){
+  const ev=EVENTS[id];if(!ev)return;
+  opt=opt||{};
+  const pages=ev.pages();
+  if(!opt.preview&&ev.start)ev.start();
+  const show=i=>{
+    const p=pages[i],last=i===pages.length-1;
+    if(last&&!opt.preview){if(ev.apply)ev.apply();if(ev.log)say(ev.log(),'ev');refresh()}
+    const go=n=>{
+      if(n===-1){if(!opt.preview&&ev.declined)say(ev.declined(),'ev');refresh();return}
+      if(n>=pages.length){if(opt.cb)opt.cb();return}
+      show(n)
+    };
+    const opts=p.opts?p.opts.map((o,k)=>({id:k,label:o.label})):[{id:0,label:p.btn||'知道了'}];
+    showEvent(p.text,{img:p.img,name:p.name,note:p.note,opts,cb:k=>go(p.opts?p.opts[k].next:(p.next!==undefined?p.next:i+1))});
+  };
+  show(0);
+}
+// 事件／提示框的共用外觀（標題 + 內文框 + 可選小字、圖片、名牌 + 按鈕）。o：title img name note btn｜opts cb(id)
+function showEvent(text,o){
+  o=o||{};
+  pick(o.title||'事件',o.opts||[{id:0,label:o.btn||'知道了'}],id=>{if(o.cb)o.cb(id)},text);
+  const im=$('pAv'),nm_=$('pTag'),fig=$('pFig'),nt=$('pNote');
+  if(im&&o.img)im.src=o.img;
+  if(nm_)nm_.textContent=o.name||'';
+  if(nm_)nm_.hidden=!o.name;
+  if(fig)fig.hidden=!o.img;
+  if(nt){nt.textContent=o.note||'';nt.hidden=!o.note}
+}
