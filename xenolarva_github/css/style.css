@@ -212,3 +212,16 @@ body.pv #log{height:150px}
 .pbtn i{display:inline-block;width:12px;height:12px;border:1px solid var(--line);margin-right:6px;vertical-align:-1px}
 .cclr{margin-left:auto;padding:4px 10px;font-size:13px}
 .crow{display:flex;gap:6px;margin-top:8px}.crow .cbtn{flex:1;padding:8px 4px;font-size:14px}
+/* 聊天染色選色區：左 4×3 色票（最後一格自訂），右小球預覽（正方形，高度＝色票區）；下一排左邊「全部取消」、右邊目前選擇 */
+.cmid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:10px;align-items:start}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sgrid .sw1{width:100%;aspect-ratio:1/1;height:auto;padding:0;min-width:0}
+.sgrid .sw1.sel{border-color:#fff;box-shadow:0 0 0 2px var(--acc)}
+.scust{position:relative;display:block;aspect-ratio:1/1;border:2px solid var(--line);background:#0b2330;cursor:pointer;overflow:hidden}
+.scust input{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;background:none;cursor:pointer}
+.scust span{position:absolute;left:0;right:0;bottom:0;font-size:10px;text-align:center;background:rgba(8,26,36,.7);pointer-events:none;line-height:1.3}
+.cfr{display:flex;justify-content:center}
+.cpv{background:#0b2330;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100px;height:100px;max-width:100%}
+.cprev{width:80%;height:80%;image-rendering:pixelated}
+.cmid .cclr{width:100%;margin:0;padding:8px 4px;font-size:14px}
+.cmid .chatinfo{margin:0;line-height:1.5;font-size:13px;align-self:center;text-align:center}

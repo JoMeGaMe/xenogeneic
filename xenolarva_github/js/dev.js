@@ -42,10 +42,6 @@ function devBuild(){
   const rev=h('button',{},REVEAL?'還原收藏顯示':'揭曉所有圖鑑資料');
   rev.onclick=()=>{REVEAL=!REVEAL;rev.textContent=REVEAL?'還原收藏顯示':'揭曉所有圖鑑資料'};
   p.append(h('div',{class:'dg'},h('label',{},'圖鑑測試資料'),give,rev));
-  // 格蕾特
-  const gm=h('input',{type:'checkbox',checked:!!META.grete});
-  gm.onchange=()=>{META.grete=gm.checked;if(!META.grete&&S){S.grete=false;S.trans=false}codexSave();refresh()};
-  p.append(h('div',{class:'dg'},h('label',{},gm,' 已遇見格蕾特（解鎖小助手按鈕）')));
   // 水質、飽食（拖動立刻生效）
   const sl=(label,get,set,min,max,step)=>{
     const out=h('span',{},String(get()));
@@ -61,31 +57,18 @@ function devBuild(){
   p.append(h('div',{class:'dg'},h('label',{},'物品'),
     h('button',{onclick:()=>setInv(FOODS,9)},'補齊食物'),h('button',{onclick:()=>setInv(FOODS,0)},'清空食物'),
     h('button',{onclick:()=>setInv(['agent'],9)},'補齊換水劑'),h('button',{onclick:()=>setInv(['agent'],0)},'清空換水劑')));
-  // 格蕾特：立刻執行一次照顧、預覽事件框
+  // 格蕾特（事件與解鎖）
+  const rs=()=>{if(S){S.grete=false;S.trans=false;S.tc=S.tb='';S.chatC=[];S.chatB=[]}META.greteMet=META.grete=META.chatColor=META.chatDual=false;META.chatWins=0;codexSave();refresh()};
   p.append(h('div',{class:'dg'},h('label',{},'格蕾特'),
-    h('button',{onclick:()=>{if(!S.grete){S.grete=true;refresh()}greteDaily()}},'測試格蕾特執行（開啟並跑一次）'),
-    h('button',{onclick:()=>runEvent('greteMeet',{preview:true})},'預覽「遇見格蕾特」事件（3 頁，不解鎖）'),
-    h('button',{onclick:()=>runEvent('greteAgain',{preview:true})},'預覽「再次遇到」事件'),
-    h('button',{onclick:()=>{META.greteMet=false;META.grete=false;S.grete=false;S.trans=false;codexSave();refresh()}},'重置：回到沒見過格蕾特')));
-  // 事件測試
-  const gt=h('textarea',{rows:3,'aria-label':'提示框文字'});gt.value='這是預覽文字，用來看事件框的排版。\n圖片會在內文後面靠右。';
-  p.append(h('div',{class:'dg'},h('label',{},'格蕾特提示框測試'),gt,
-    h('button',{onclick:()=>showEvent(gt.value,{img:GRETE_IMG,name:'？？？'})},'跳出事件框（含頭像與名牌）'),
-    h('button',{onclick:()=>showEvent(gt.value)},'跳出事件框（無圖）'),
-    h('button',{onclick:()=>say(voiceLine(),'voice')},'產生一則心聲')));
+    h('button',{onclick:()=>{p.hidden=true;runEvent('greteMeet')}},'遇見格蕾特（跑事件並解鎖小助手）'),
+    h('button',{onclick:()=>{META.chatColor=true;codexSave();refresh()}},'開啟染色'),
+    h('button',{onclick:()=>{META.chatColor=true;META.chatDual=true;META.chatWins=Math.max(1,META.chatWins);codexSave();refresh()}},'開啟雙色'),
+    h('button',{onclick:rs},'全部格蕾特事件重置')));
   // 禮物與偷偷七逃
   p.append(h('div',{class:'dg'},h('label',{},'禮物／偷偷七逃'),
     h('button',{onclick:()=>giveSouv(TEMPER_SOUV[S.temp])},'收到這隻個性的禮物'),
     h('button',{onclick:()=>{const k=Object.keys(TAG_SOUV).find(t=>S.tags.includes(t));if(k)giveSouv(TAG_SOUV[k]);else say('這隻沒有標籤禮物可送。','sys')}},'收到標籤禮物'),
     h('button',{onclick:()=>{if(!S.tags.includes('sneak')){S.tags.push('sneak')}sneakDaily(true)}},'觸發偷偷七逃（補上標籤）')));
-  // 聊天染色
-  p.append(h('div',{class:'dg'},h('label',{},'聊天染色'),
-    h('button',{onclick:()=>{META.chatColor=true;codexSave();refresh()}},'解鎖聊天'),
-    h('button',{onclick:()=>{META.chatColor=true;META.chatDual=true;META.chatWins=Math.max(1,META.chatWins);codexSave();refresh()}},'解鎖聊天＋雙色'),
-    h('button',{onclick:()=>{META.chatColor=false;META.chatDual=false;META.chatWins=0;S.tc=S.tb='';S.chatC=[];S.chatB=[];codexSave();refresh()}},'重置：回到沒學過、清除染色'),
-    h('button',{onclick:()=>{S.tc=S.tb='';S.chatC=[];S.chatB=[]}},'只清除目前染色'),
-    h('button',{onclick:()=>runEvent('colorTalk',{preview:true})},'預覽「聊顏色」事件'),
-    h('button',{onclick:()=>runEvent('colorTalk2',{preview:true})},'預覽「雙色」事件')));
   // 顏色
   const hex=h('input',{type:'text',value:S.col,'aria-label':'代表色'});
   const col=h('input',{type:'color',value:parseColor(S.col)||'#58a6ff','aria-label':'選色'});

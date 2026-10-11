@@ -20,38 +20,52 @@ const sameCol=(a,b)=>{const x=hexRgb(a),y=hexRgb(b);return Math.hypot(x[0]-y[0],
 const chatUnlocked=()=>!!META.chatColor;
 
 // 聊天選單裡的區塊（玩耍選單的「聊天」下方）：
-//   一開始只有「普通聊天」；學會染色後多出色票與「推薦顏色」；學會雙色後再多出「設定核心／設定外殼／全部設定／全部取消」。
-// 用法：先點「設定核心」「設定外殼」或「全部設定」決定要設定哪裡，再點顏色。再點同一個顏色可取消那一邊。
+//   一開始只有「普通聊天」；學會染色後多出「3×4 色票（最後一格是自訂顏色）＋小球預覽」與「推薦顏色」；
+//   學會雙色後再多出「全部設定／設定核心／設定外殼」（決定下一個點的顏色要設定哪裡）。
+// 預覽：用目前選的顏色（沒選的部位用已經染上的顏色）畫出小球染色後的樣子。再點同一個顏色可取消那一邊。
 function chatBox(){
-  const box=h('div',{class:'chatbox'}),info=h('div',{class:'dim chatinfo'});
+  const box=h('div',{class:'chatbox'});
   const go=color=>{$('ovPick').classList.remove('show');actChat(color)};
-  const bPlain=h('button',{class:'cbtn',onclick:()=>go(false)},TEXT.chat.btnPlain);
-  box.append(h('div',{class:'crow'},bPlain));
+  box.append(h('div',{class:'crow'},h('button',{class:'cbtn',onclick:()=>go(false)},TEXT.chat.btnPlain)));
   if(!META.chatColor)return box;
   const dual=!!META.chatDual,show=c=>c?colName(c)+'色':'未選';
   const bColor=h('button',{class:'cbtn',onclick:()=>go(true)},TEXT.chat.btnColor);
+  const info=h('div',{class:'chatinfo dim'}),pc=h('canvas',{width:96,height:96,class:'cprev'});
+  const drawPrev=(t)=>{
+    if(nLoaded<IMGN.length)return;
+    const g=pc.getContext('2d');g.imageSmoothingEnabled=false;
+    const gr=g.createLinearGradient(0,0,0,96);gr.addColorStop(0,'#2b7f93');gr.addColorStop(1,'#12485c');g.fillStyle=gr;g.fillRect(0,0,96,96);
+    const o={...S,tc:CHAT_SEL.core||S.tc,tb:(dual&&CHAT_SEL.shell)||S.tb},tt=(t||0)/1000;
+    drawLarva(g,48,44+Math.sin(tt*.9)*2,0,Math.sin(tt*2)*.03,'idle_a',larvaLook(o),tt,1,1);
+  };
   const paint=()=>{
     const P=CHAT_SEL.part;
     box.querySelectorAll('.sw1').forEach(b=>b.classList.toggle('sel',P==='both'?(CHAT_SEL.core===b.dataset.c&&CHAT_SEL.shell===b.dataset.c):b.dataset.c===CHAT_SEL[P]));
     box.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('on',b.dataset.p===P));
-    info.textContent=dual?`核心：${show(CHAT_SEL.core)}　外殼：${show(CHAT_SEL.shell)}`:`顏色：${show(CHAT_SEL.core)}`;
+    info.textContent='';
+    if(dual)info.append(h('div',{},'核心：'+show(CHAT_SEL.core)),h('div',{},'外殼：'+show(CHAT_SEL.shell)));
+    else info.textContent='顏色：'+show(CHAT_SEL.core);
     bColor.disabled=!(CHAT_SEL.core||(dual&&CHAT_SEL.shell));
+    drawPrev(performance.now());
   };
   const choose=c=>{
     const P=dual?CHAT_SEL.part:'core',ks=P==='both'?['core','shell']:[P];
     const same=ks.every(k=>CHAT_SEL[k]===c);ks.forEach(k=>{CHAT_SEL[k]=same?null:c});paint();
   };
   const clear=()=>{CHAT_SEL.core=CHAT_SEL.shell=null;paint()};
-  if(dual){
-    box.append(h('div',{class:'crow'},...[['core','設定核心'],['shell','設定外殼']].map(([k,t])=>h('button',{class:'pbtn cbtn','data-p':k,onclick:()=>{CHAT_SEL.part=k;paint()}},t))),
-      h('div',{class:'crow'},h('button',{class:'pbtn cbtn','data-p':'both',onclick:()=>{CHAT_SEL.part='both';paint()}},'全部設定'),h('button',{class:'cbtn',onclick:clear},TEXT.chat.cancel)));
-  }else CHAT_SEL.part='core';
-  const sw=h('div',{class:'sw'});
-  COLORS.forEach((c,i)=>sw.append(h('button',{class:'sw1',style:'background:'+c,'data-c':c,title:CNAME[i],'aria-label':CNAME[i],onclick:()=>choose(c)})));
-  const cp=h('input',{type:'color',value:'#58a6ff','aria-label':'自訂顏色'});
+  if(dual)box.append(h('div',{class:'crow'},...[['both','全部設定'],['core','設定核心'],['shell','設定外殼']].map(([k,t])=>
+    h('button',{class:'pbtn cbtn','data-p':k,onclick:()=>{CHAT_SEL.part=k;paint()}},t))));
+  else CHAT_SEL.part='core';
+  const grid=h('div',{class:'sgrid'});
+  COLORS.forEach((c,i)=>grid.append(h('button',{class:'sw1',style:'background:'+c,'data-c':c,title:CNAME[i],'aria-label':CNAME[i],onclick:()=>choose(c)})));
+  const cp=h('input',{type:'color',value:'#58a6ff','aria-label':'自訂顏色',title:'自訂顏色'});
   cp.oninput=()=>choose(cp.value);
-  box.append(sw,h('div',{class:'cust'},cp,h('span',{class:'dim'},'自訂顏色'),dual?'':h('button',{class:'cclr',onclick:clear},TEXT.chat.cancel)),info,h('div',{class:'crow'},bColor));
-  paint();
+  grid.append(h('label',{class:'scust'},cp,h('span',{},'自訂')));
+  const fr=h('div',{class:'cpv'},pc),cancel=h('button',{class:'cclr',onclick:clear},TEXT.chat.cancel);
+  box.append(h('div',{class:'cmid'},grid,h('div',{class:'cfr'},fr),cancel,info),h('div',{class:'crow'},bColor));
+  const fit=()=>{const n=grid.offsetHeight;if(n>0){fr.style.width=fr.style.height=n+'px'}};     // 小球框是正方形，邊長＝色票區的高度
+  paint();setTimeout(fit,0);setTimeout(fit,80);
+  const tm=setInterval(()=>{if(!pc.isConnected||!$('ovPick').classList.contains('show')){clearInterval(tm);return}fit();drawPrev(performance.now())},120);   // 預覽裡的小球輕輕晃動
   return box;
 }
 
