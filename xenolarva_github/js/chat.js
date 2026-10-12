@@ -1,4 +1,4 @@
-// ===== 聊天染色：玩耍選單裡的「聊天」。選一個顏色聊同一個顏色的東西，累積 CHAT_RULE.need 次，小球就會染上那個顏色 =====
+// ===== 聊天染色：「聊天」鍵（v0.24.0 從玩耍選單拆出來）。選一個顏色聊同一個顏色的東西，累積 CHAT_RULE.need 次，小球就會染上那個顏色 =====
 // 單色：核心染色（身體會跟著稍微染一點）。聽格蕾特提過雙色之後，可以分別指定「核心」或「外殼」，兩邊各自累積。
 // S.tc／S.tb＝已染上的核心／外殼顏色（'' 為沒有）；S.chatC／S.chatB＝累積中的 [{c,n}]。聊天色優先於「核心染上代表色」。
 const CHAT_SEL={core:null,shell:null,part:'core'};      // 選單裡目前選的顏色（核心／外殼，null＝沒選）與正在指定哪個部位
@@ -19,7 +19,7 @@ function colName(hex){
 const sameCol=(a,b)=>{const x=hexRgb(a),y=hexRgb(b);return Math.hypot(x[0]-y[0],x[1]-y[1],x[2]-y[2])<CHAT_RULE.near};
 const chatUnlocked=()=>!!META.chatColor;
 
-// 聊天選單裡的區塊（玩耍選單的「聊天」下方）：
+// 聊天框的內容（「聊天」鍵打開）：
 //   一開始只有「普通聊天」；學會染色後多出「3×4 色票（最後一格是自訂顏色）＋小球預覽」與「推薦顏色」；
 //   學會雙色後再多出「全部設定／設定核心／設定外殼」（決定下一個點的顏色要設定哪裡）。
 // 預覽：用目前選的顏色（沒選的部位用已經染上的顏色）畫出小球染色後的樣子。再點同一個顏色可取消那一邊。
@@ -70,6 +70,8 @@ function chatBox(){
 }
 
 // 聊天（耗 1 行動，已包含在「玩耍」；不耗道具）：心情與信賴和「不喜歡也不討厭的玩具」相同。color＝true 時依選好的顏色聊
+// 「聊天」鍵：打開聊天框（普通聊天＋學會染色後的色票）
+function chatOpen(){pick(TEXT.chat.head,[{node:chatBox()}])}
 function actChat(color){
   S.ap--;S.playedToday=true;
   const before=[...S.tagsFound];

@@ -12,22 +12,25 @@ function draw(t){
   requestAnimationFrame(draw);
   const W=WORLD.w,H=500;
   cx.globalAlpha=1;
-  if(nLoaded<IMGN.length||!S){cx.fillStyle='#0f3a4c';cx.fillRect(0,0,W,H);if(IMG.bg_tank.naturalWidth)cx.drawImage(IMG.bg_tank,0,0,W,H);return}
+  if(nLoaded<IMGN.length){cx.fillStyle='#0f3a4c';cx.fillRect(0,0,W,H);if(IMG.bg_tank.naturalWidth)cx.drawImage(IMG.bg_tank,0,0,W,H);return}
   const bg=(W>500&&IMG.bg_preview&&IMG.bg_preview.naturalWidth)?IMG.bg_preview:IMG.bg_tank;   // 預覽模式專用背景（assets/larva/bg_preview.png，750×500）；沒有就把一般背景拉寬
   cx.drawImage(bg,0,0,W,H);
-  if(!PV)step(t);
+  const noC=PV||!S;                                   // 預覽模式、第 0 日（沒有小球）：不處理玩家的小球
+  if(!noC)step(t);
   stepGuests(t);
+  gameStep(t);                                        // 互動玩耍（js/minigame.js）
   const tt=t/1000;
   bounce*=0.96;
-  if(S.over==='END-07')dead=Math.min(1,dead+.004);else dead=0;
+  if(S&&S.over==='END-07')dead=Math.min(1,dead+.004);else dead=0;
   const a=1-dead;
   // 水草（程式擺動）
   plant('bg_tank_glass_1',22,452,1.5,t,0);
   plant('bg_tank_glass_2',416+WORLD.dx*2,456,1.5,t,2);
   cx.globalAlpha=1;
   META.decor.filter(id=>!META.hidden.includes(id)).forEach(id=>{const d=DECOR[id],im=IMG['deco_'+id];if(d&&im.naturalWidth)cx.drawImage(im,Math.round(d.x+WORLD.dx-im.width/2),Math.round(d.y-im.height))});
+  gameDrawBack(t);                                    // 互動玩耍：畫在小球後面的（水桶）
   drawGuests(t,tt);
-  if(!PV){
+  if(!noC){
   // 影子
   const drawY=C.y+Math.sin(tt*.9)*5-bounce*Math.abs(Math.sin(tt*9))*14;C.dy=drawY;
   const sw=Math.min(64,Math.max(34,64-(318-C.y)*.12));
@@ -50,10 +53,11 @@ function draw(t){
     cx.globalAlpha=.55;cx.strokeStyle='#e8fbfa';cx.beginPath();cx.arc(x,b.y,b.r,0,PI2);cx.stroke();
     cx.fillStyle='#fff';cx.fillRect(Math.round(x-b.r*.5),Math.round(b.y-b.r*.55),2,2);
   });
+  gameDraw(t);
   // 水質色調
-  cx.globalAlpha=Math.min(.45,S.dirt/260);cx.fillStyle='#6b8e3a';cx.fillRect(0,0,W,H);
-  if(Math.abs(S.ph-7)>1.2){cx.globalAlpha=.12;cx.fillStyle=S.ph>7?'#ffd37a':'#d77aff';cx.fillRect(0,0,W,H)}
+  if(S){cx.globalAlpha=Math.min(.45,S.dirt/260);cx.fillStyle='#6b8e3a';cx.fillRect(0,0,W,H);
+  if(Math.abs(S.ph-7)>1.2){cx.globalAlpha=.12;cx.fillStyle=S.ph>7?'#ffd37a':'#d77aff';cx.fillRect(0,0,W,H)}}
   cx.globalAlpha=1;
-  if(!PV)drawEmote(t,C.x,C.dy-46);
+  if(!noC)drawEmote(t,C.x,C.dy-46);
 }
 requestAnimationFrame(draw);

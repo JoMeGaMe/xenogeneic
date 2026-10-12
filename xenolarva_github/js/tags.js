@@ -9,8 +9,9 @@ const visibleDecor=()=>Object.keys(DECOR).filter(id=>META.decor.includes(id)&&!M
 
 // ---------- 分配 ----------
 // 回歸者：消逝過幾隻，最多就出現幾隻（已經帶過回歸者標籤的要扣掉）
-const lostCount=()=>CODEX.filter(e=>e.end==='END-07').length;
-const homeLeft=()=>lostCount()-CODEX.filter(e=>e.own.includes('homereturn')).length;
+// 消逝過幾隻＝圖鑑裡提前消逝的＋收到「道別」信的畢業小球（META.farewells）
+const lostCount=()=>CODEX.filter(e=>e.end==='END-07').length+(META.farewells||0);
+const homeLeft=()=>lostCount()-CODEX.filter(e=>e.own.includes('homereturn')).length-META.homeUsed;
 function tagOK(id,have){
   const d=TAGS[id];
   if(d.off||have.includes(id))return false;

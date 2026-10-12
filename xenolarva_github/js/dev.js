@@ -15,6 +15,16 @@ function devBuild(){
   const p=$('devp');p.textContent='';
   const close=h('button',{'aria-label':'關閉',onclick:()=>{p.hidden=true}},'✕');
   p.append(h('h4',{},'開發者模式',close));
+  // 信紙測試：用一隻假的畢業小球（或最近交還的那隻）馬上寄一封；會照常存進收藏（可以取消勾選）
+  const fake=()=>{const r=META.returned[META.returned.length-1];
+    return r?{...r,rnd:Math.min(r.rnd||0,META.rounds-1)}:{name:'測試球',temp:R(TEMPER_IDS),own:[R(Object.keys(TAGS))],pg:R(GIFTS),pt:R(TOYS),end:R(Object.keys(ENDS).slice(0,6)),rnd:META.rounds-3}};
+  p.append(h('div',{class:'dg'},h('label',{},'信紙（畢業小球）'),
+    ...[['normal','一般'],['young','未滿兩個月'],['farewell','離開前轉述']].map(([k,t])=>h('button',{onclick:()=>letterShow(letterMake(fake(),k),true)},t)),
+    h('div',{class:'dim'},`可寄信的畢業小球：${letterCands().length} 隻｜已完成 ${META.rounds} 輪`)));
+  // 裝扮：全部拿到／全部拿掉（拿掉時，正在戴的也一起脫下）
+  p.append(h('div',{class:'dg'},h('label',{},`裝扮（有 ${META.wears.length}／${Object.keys(WEARS).length} 種）`),
+    h('button',{onclick:()=>{META.wears=Object.keys(WEARS);codexSave();refresh();devBuild()}},'取得全部裝扮'),
+    h('button',{onclick:()=>{META.wears=[];if(S)S.wear='';CODEX.forEach(e=>{e.wear=''});codexSave();refresh();devBuild()}},'刪除全部裝扮')));
   if(!S){p.append(h('p',{class:'dim'},'先開始一局，這裡才能改目前的小球。'));return}
   // 個性
   const sel=h('select',{'aria-label':'個性'},...TEMPER_IDS.map(id=>h('option',{value:id,selected:id===S.temp},TEXT.temper[id].name)));

@@ -20,7 +20,7 @@ function step(t){
   }
   // 2) 沒有反應時：先看個性有沒有特別想去的地方（領地、泡泡），否則隨機漫遊
   if(!M){
-    const s=(!low)&&(dashSteer(C,t)||judgeSteer(t)||loveySteer(t)||steer(C,t,T)||socialSteer(C,t));
+    const s=gameSteer(C,t)||((!low)&&(dashSteer(C,t)||judgeSteer(t)||loveySteer(t)||steer(C,t,T)||socialSteer(C,t)));   // 互動玩耍中（js/minigame.js）優先
     if(s){C.tx=s[0];C.ty=s[1];C.steering=true}
     else{
       if(C.steering){C.steering=false;C.next=0}
@@ -159,6 +159,8 @@ function poke(x,y){
 cv.addEventListener('pointerdown',e=>{
   if(!S||S.over)return;
   const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*WORLD.w/r.width,y=(e.clientY-r.top)*500/r.height;
+  if(GAME&&GAME.tap){GAME.tap(x,y);return}                // 互動玩耍中：點水缸交給遊戲（例如選鈴鐺藏哪）
+  if(GAME){CUR.x=x;CUR.y=y;CUR.t=performance.now();return}   // 指揮棒、氣泡棒：按下去的位置也算游標
   if(PV){pvPoke(x,y);return}
   if(Math.abs(x-C.x)<52&&Math.abs(y-((C.dy||C.y)-6))<52)poke(x,y);
 });

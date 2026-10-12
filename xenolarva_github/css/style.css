@@ -45,6 +45,10 @@ input[type=text]{width:100%;padding:8px;background:#081a24;color:var(--ink);bord
  #acts{display:flex;flex-direction:column;gap:8px;margin-top:44px}       /* 上緣對齊水缸 */
  #end{margin-top:auto}                                                 /* 下緣對齊 log */
  #acts button{padding:14px 6px;font-size:16px}
+ /* 六顆行動鍵：兩欄三列（圖示在上、字在下），右側長度和左邊（水缸＋訊息區）比較平衡 */
+ #abtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ #abtns .abtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 4px 10px}
+ #abtns .abtn .ico{margin:0 0 2px}
  #log{height:112px}
 }
 
@@ -190,7 +194,7 @@ hr.sep{border:0;border-top:2px solid var(--line);margin:16px 0}
 
 .ctab td{white-space:pre-line}
 /* 預覽模式（js/preview.js）：單欄、寬 750 的水缸，三個選擇按鈕在上、翻譯與離開在下 */
-#pvbar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+#pvbar{display:grid;grid-template-columns:1.4fr 1.1fr 1fr 1fr;gap:6px;margin-bottom:8px}
 #pvbar button{padding:8px 4px;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body.pv header,body.pv #acts{display:none!important}
 body.pv .game{grid-template-columns:minmax(0,750px)!important;justify-content:center}
@@ -225,3 +229,221 @@ body.pv #log{height:150px}
 .cprev{width:80%;height:80%;image-rendering:pixelated}
 .cmid .cclr{width:100%;margin:0;padding:8px 4px;font-size:14px}
 .cmid .chatinfo{margin:0;line-height:1.5;font-size:13px;align-self:center;text-align:center}
+
+/* 第 0 日（沒有小球）、開場故事、設定 */
+#bAccept{display:none}
+body.idle #acts>*:not(#bAccept):not(#bDev){display:none!important}
+body.idle #bAccept{display:block;grid-column:1/-1;padding:14px 6px;font-size:16px}
+#introStory p{margin:0 0 10px;line-height:1.75}#introStory p.q{color:var(--acc)}
+.box.intro label{display:block;margin-top:6px}
+#ovStart .cw,#setBody .cw{margin-top:8px}
+.csample{font-weight:700;padding:2px 6px;word-break:break-all;line-height:1.3}
+.cwv{text-align:center;overflow:hidden}
+.acc{margin:8px 0}.acc label{display:block;margin-bottom:4px}
+#setBody .sl{display:block;margin:12px 0 4px;color:var(--acc);font-size:13px}.mrow{display:block;margin:6px 0}
+.rlog{margin-top:12px}.rlog div{padding:2px 0 2px 12px;font-size:13px}
+/* 開場故事用事件內文框 */
+#introStory{margin-bottom:10px}#introStory p:last-child{margin-bottom:0}
+
+/* ===== 版面（js/layout.js）：☰ 選單、按鈕圖示；寬度 < 760px 時行動區固定在底部 ===== */
+.logwrap{position:relative}
+header{position:relative}
+#bHam{display:block;font-size:18px;line-height:1;padding:4px 10px}
+#hamMenu:not([hidden]){display:flex;flex-direction:column;gap:6px;position:absolute;right:0;top:calc(100% + 4px);z-index:6;min-width:160px;background:var(--panel);border:2px solid var(--acc);padding:8px;font-weight:400}
+#hamMenu button{width:100%;padding:9px 10px;text-align:left}
+#hamMenu .hwho{font-weight:700;padding:0 4px;align-self:flex-start}
+#hamMenu .hver{font-size:11px;color:var(--dim);text-align:right;cursor:default;user-select:none}
+/* 單色圖示：形狀來自 js/data/icons.js，顏色＝文字色 */
+.ico{display:inline-block;width:18px;height:18px;flex:none;background:currentColor;vertical-align:-3px;
+  -webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat;image-rendering:pixelated}
+.abtn .ico{margin-right:6px}
+.tog .bs::before{content:'：'}
+#acts .tog .ico{width:18px;height:18px}
+/* 彈出框規則：不超出螢幕、只有直向捲軸；有分類時用橫線隔開；選單頁面固定大小 */
+.box{overflow-y:auto;overflow-x:hidden;overflow-wrap:break-word}
+.box .page{overflow-x:hidden}
+.box hr.div{border:0;border-top:2px solid var(--line);margin:12px 0 6px}
+#ex.pp{margin-bottom:10px}
+#aboutBody>:first-child,#newsBody>:first-child{margin-top:0}
+#aboutBody>:last-child,#newsBody>:last-child{margin-bottom:0}
+#aboutBody,#newsBody{white-space:normal}
+.bagrow{display:flex;justify-content:space-between;padding:4px 2px;border-bottom:1px solid #1d4a5c}
+@media (max-width:759px){
+  header{margin-bottom:6px}
+  header #pname{display:none}
+  /* 訊息區：填滿水缸與底部行動區之間剩下的高度（至少三行） */
+  .left{display:flex;flex-direction:column;min-height:calc(100vh - var(--actsH,0px) - 24px);min-height:calc(100dvh - var(--actsH,0px) - 24px)}
+  .logwrap{flex:1 1 0px;display:flex;flex-direction:column;margin-top:12px;min-height:74px}
+  #log{flex:1 1 0px;height:auto;min-height:74px;margin-top:0}
+  /* 下方行動區：固定在螢幕底部，6 欄。上排＝小助手｜翻譯｜筆記（1:1:4），下排＝換水｜餵食｜玩耍｜聊天｜出門｜物品（#abtns 在手機上 display:contents），最後結束今日 */
+  main{padding-bottom:calc(var(--actsH,0px) + 12px)}
+  body:not(.pv) #acts{position:fixed;left:0;right:0;bottom:0;z-index:4;margin:0;background:var(--bg);border-top:2px solid var(--line);
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+  #acts #bGrete{grid-column:1;grid-row:1}
+  #acts #bTrans{grid-column:2;grid-row:1}
+  #acts #notes{grid-column:3/7;grid-row:1;padding:4px 8px;font-size:12px;line-height:1.55;min-width:0}
+  #acts #notes b{font-size:11px}
+  #acts:has(#bGrete[hidden]) #notes{grid-column:1/-1}
+  #abtns{grid-column:1/-1;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}   /* 看得到幾顆就平分幾等份（小助手開著時沒有換水、餵食） */
+  #acts .tog,#acts .abtn{grid-column:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    min-height:60px;padding:4px 2px;font-size:13px;line-height:1.25}
+  #acts .abtn .ico{margin:0}
+  #acts .ico,#acts .tog .ico{width:20px;height:20px}
+  #acts .tog .dk,#acts .tog .bs::before{display:none}
+  #acts button small{display:none}
+  #acts #end,#acts #bDev{grid-column:1/-1;padding:9px 4px}
+  /* 水缸依剩下的高度縮放，讓整個畫面不用捲動 */
+  .tankwrap{width:min(100%,calc(100vh - var(--actsH,200px) - 160px));width:min(100%,calc(100dvh - var(--actsH,200px) - 160px))}
+}
+.box.menu h2{flex:none}
+.bagh{font-size:13px;color:var(--acc);margin:2px 0 2px}
+.bagrow:last-child{border-bottom:0}
+#acts .tog{gap:0}#acts .tog .ico{margin-right:6px}
+@media (max-width:759px){#acts .tog{gap:3px}#acts .tog .ico{margin:0}}
+.bagrow:has(+hr){border-bottom:0}
+/* 設定與存檔：上方兩顆按鈕固定在頁面頂端（跳到該段）*/
+.box.menu .page{position:relative}
+.jtabs{position:sticky;top:0;z-index:1;background:var(--panel);margin:0 0 4px;padding-bottom:10px}
+#pg_save section>h3:first-child{margin-top:4px}
+#setBody .sl:first-child{margin-top:0}
+/* 說明與公告：上下兩個內文框各自捲動，外層不動 */
+#pg_about:not([hidden]){display:flex;flex-direction:column;gap:4px;overflow:hidden}
+#pg_about .sl{color:var(--acc);font-size:13px;flex:none}
+#pg_about .scr{flex:1 1 0px;min-height:0;overflow-y:auto;overflow-x:hidden;margin:0 0 8px;overscroll-behavior:contain}
+#pg_about .scr:last-child{margin-bottom:0}
+/* 細捲軸（彈出框與訊息區內）；之後和地圖一起再美化 */
+.box,.box *,#log{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.box::-webkit-scrollbar,.box *::-webkit-scrollbar,#log::-webkit-scrollbar{width:6px;height:6px}
+.box::-webkit-scrollbar-thumb,.box *::-webkit-scrollbar-thumb,#log::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.box::-webkit-scrollbar-track,.box *::-webkit-scrollbar-track,#log::-webkit-scrollbar-track{background:transparent}
+.box.menu .jtabs{margin-right:0}
+#setBody .cw{max-width:380px}#setBody input[type=text]{max-width:380px}
+/* 畢業小球的信紙（js/letters.js） */
+.pp.letter p{margin:0 0 8px}
+.letter .lbody{color:#ffd59a;white-space:pre-line;margin:0 0 8px;line-height:1.75}
+.letter .lnote{font-size:12px;color:var(--dim);margin:0 0 2px}
+.letter .lnote:last-child{margin-bottom:0}
+.lpaper{display:block;width:100%;max-width:360px;margin:10px auto 0;image-rendering:pixelated}
+.lkeep{display:block;margin:10px 0 2px;font-size:13px;cursor:pointer}
+.srcL{color:#ffd59a}
+@media (max-width:420px){.cnav{gap:3px}.cnav button{font-size:11px;padding:6px 0;letter-spacing:-.5px}}
+/* 收藏品 → 信紙 */
+.lrowL{border:2px solid var(--line);background:#0b2330;padding:8px;margin-top:8px}
+.lhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lhead .lbtns{margin-left:auto;display:flex;gap:6px}
+.lrowL .letter{margin-top:8px}
+.lkind{font-size:12px;padding:0 6px;border:1px solid var(--line);color:#ffd59a}
+.lk-young{color:#9fd0ff}.lk-farewell{color:#c9b8ff}
+.box .ldrop{background:#7a2326;border-color:#e5484d;color:#ffd6d6}
+.box .ldrop.arm{background:#e5484d;color:#fff}
+.lhead .ib{white-space:nowrap;min-width:64px}
+.lhint{margin:0 0 4px}
+/* 外出地圖（js/places.js）：上面 750×500 的地圖＋名牌，下面說明 */
+.box.mapbox{max-width:790px}
+.mapwrap{position:relative;width:100%;aspect-ratio:3/2;border:2px solid var(--line);background:#123;overflow:hidden}
+.mapwrap img{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;display:block}
+.pin{position:absolute;transform:translate(-50%,-50%);width:auto;margin:0;padding:6px 10px;min-height:34px;font-size:13px;font-weight:700;white-space:nowrap;
+  background:rgba(18,57,74,.92);border:2px solid var(--line);color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.pin.home{border-color:#9be3a5}
+.pin.sel{background:var(--acc);border-color:#fff;color:#1b1b1b}
+.pin.locked{background:rgba(60,66,70,.9);border-color:#6b7479;color:#aab3b8}
+.pin.locked.sel{background:rgba(80,86,90,.95);color:#d5dadd;border-color:#aab3b8}
+.box .mapinfo{margin-top:10px;min-height:96px}
+.mapinfo p{margin:0 0 4px}.mapinfo .mname{font-weight:700;color:var(--acc)}
+.mapinfo .mtag{margin-left:8px;font-size:12px;font-weight:400;padding:0 6px;border:1px solid #6b7479;color:#aab3b8}
+.mapinfo .mfind{font-size:13px;color:#9be3a5}
+@media (max-width:420px){.pin{padding:4px 7px;min-height:30px;font-size:12px}}
+.box .mapwrap .pin{display:block;width:auto;margin:0}
+/* 地圖依視窗高度縮放，讓地圖＋說明不用捲動 */
+.mapwrap{width:min(100%,calc((80vh - 240px) * 1.5));width:min(100%,calc((80dvh - 240px) * 1.5));margin:0 auto}
+.box.mapbox{width:auto;max-width:min(790px,calc(100vw - 32px))}
+.box .mapinfo{width:min(100%,calc((80vh - 240px) * 1.5));margin:10px auto 0}
+.box.mapbox{width:min(790px,calc((80vh - 240px) * 1.5 + 40px),calc(100vw - 32px));width:min(790px,calc((80dvh - 240px) * 1.5 + 40px),calc(100vw - 32px));max-width:none}
+.box.mapbox .mapwrap,.box.mapbox .mapinfo{width:100%}
+.mapwrap img{image-rendering:auto}
+/* 出門鍵右上角：外出方式小牌子（點它切換） */
+#bOut{position:relative}
+.ochip{position:absolute;top:3px;right:3px;font-size:10px;line-height:15px;padding:0 4px;border:1px solid var(--line);background:#081a24;color:var(--acc);font-weight:400;cursor:pointer}
+.ochip:hover{border-color:var(--acc)}
+/* 事件場景：背景 2:1，角色靠右貼下緣，道具置中，名牌在角色下方 */
+.scene{position:relative;width:100%;aspect-ratio:2/1;margin:0 0 10px;border:2px solid var(--line);overflow:hidden;background:#123}
+.scene .sbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.scene .schr{position:absolute;right:8%;bottom:0;height:94%;image-rendering:pixelated}
+.scene .sitem{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);height:42%;image-rendering:pixelated}
+.scene .sname{position:absolute;right:4%;bottom:4px;padding:0 6px;font-size:12px;color:#ffb066;background:rgba(11,35,48,.85);border:2px solid var(--line)}
+.scene [hidden]{display:none}
+/* 商店：上面行李箱（3:2）＋商品，下面對話框＋頭像，最下面離開 */
+.shopbox h2{display:inline-block}
+.shoppts{margin-left:10px;font-size:13px;color:var(--acc)}
+.shopwrap img#shopImg{image-rendering:pixelated}
+.box .shopwrap .sslot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;width:auto;margin:0;padding:4px;background:none;border:0;box-shadow:none}
+.shopwrap .sicon{width:48px;height:48px;image-rendering:pixelated;filter:drop-shadow(0 2px 0 rgba(0,0,0,.4))}
+.shopwrap .stag{padding:3px 8px;font-size:12px;font-weight:700;white-space:nowrap;background:rgba(18,57,74,.92);border:2px solid var(--line);color:var(--ink)}
+.shopwrap .sslot.sel .stag{background:var(--acc);border-color:#fff;color:#1b1b1b}
+.shopwrap .sslot.sold{opacity:.45}
+.shoptalk{display:flex;gap:10px;align-items:stretch;margin-top:10px}
+.shoptalk .pp{flex:1;min-height:84px;white-space:pre-line}
+.shopface{margin:0;width:84px;flex:none}
+.shopface img{display:block;width:84px;height:84px;image-rendering:pixelated;border:2px solid var(--line);background:#0b2330}
+.shopface .pname{margin-top:4px}
+#shopLeave{margin-top:10px}
+@media (max-width:420px){.shopwrap .sicon{width:36px;height:36px}.shopwrap .stag{font-size:11px;padding:2px 5px}.shopface,.shopface img{width:64px}.shopface img{height:64px}}
+@media (max-width:759px){#acts .ochip{position:static;margin-top:1px}}
+.box.shopbox{width:min(790px,calc((80vh - 340px) * 1.5 + 40px),calc(100vw - 32px));width:min(790px,calc((80dvh - 340px) * 1.5 + 40px),calc(100vw - 32px))}
+/* 商店 v2：電腦版更寬（框最高 90% 視窗）、商品＝圖＋名牌（＋預覽）、最下面左積分右離開 */
+.box.shopbox{max-height:90vh;max-height:90dvh;width:min(860px,calc((90vh - 270px) * 1.5 + 40px),calc(100vw - 32px));width:min(860px,calc((90dvh - 270px) * 1.5 + 40px),calc(100vw - 32px))}
+.box .shopwrap .sslot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px}
+.box .shopwrap .spic{display:block;width:auto;margin:0;padding:0;background:none;border:0;box-shadow:none}
+.shopwrap .stags{display:flex;gap:4px}
+.box .shopwrap .stag{display:block;width:auto;margin:0;padding:3px 8px;font-size:12px;font-weight:700;white-space:nowrap;background:rgba(18,57,74,.92);border:2px solid var(--line);color:var(--ink)}
+.box .shopwrap .sslot.sel .stag{background:var(--acc);border-color:#fff;color:#1b1b1b}
+.box .shopwrap .sslot.sel .stag.spv{background:rgba(18,57,74,.92);border-color:var(--acc);color:var(--acc)}
+.box .shopwrap .sslot.sel .stag.spv.on{background:#fff;color:#1b1b1b}
+.shopwrap .swear{width:64px;height:auto;image-rendering:pixelated}
+.shopface canvas{display:block;width:84px;height:84px;image-rendering:pixelated;border:2px solid var(--line);background:#0b2330}
+.shopfoot{display:flex;align-items:center;gap:12px;margin-top:10px}
+.box .shopfoot #shopLeave{flex:1;margin:0}
+.shopfoot .shoppts{margin:0;font-size:14px;white-space:nowrap}
+@media (max-width:420px){.shopface canvas{width:64px;height:64px}.box .shopwrap .stag{font-size:11px;padding:2px 5px}.shopwrap .swear{width:44px}}
+.shopwrap .swear{width:84px;margin-bottom:6px}@media (max-width:420px){.shopwrap .swear{width:56px;margin-bottom:4px}}
+.shopwrap .sicon.swear{height:auto}.box .shopwrap .spic{line-height:0}
+.mapwrap .sslot img{position:static;inset:auto;display:block}
+/* 物品／裝扮面板：戴上、拿下按鈕窄一點、不換行 */
+.box .bagrow .wbtn2,.box .wrow .wbtn2{flex:none;width:auto;min-width:20%;margin:0;padding:3px 10px;white-space:nowrap}
+.bagrow{align-items:center}
+/* 小球們：名字左邊小星號、按鈕（裝扮／放入水缸／交還異生會＝紅框）、裝扮面板 */
+.box .nrow .lstar{display:block;flex:none;width:22px;height:22px;margin:0 2px 0 0;padding:0;font-size:12px;line-height:1}
+.lact .ib{white-space:nowrap}
+.box .lact .lret{border-color:#e5484d;color:#ff9a9a}
+.box .lact .lret.arm{background:#e5484d;color:#fff;white-space:normal}
+.wpanel{grid-column:1/-1;display:flex;gap:12px;border-top:1px dashed var(--line);padding-top:8px;margin-top:2px}
+.wpvbox{flex:none;text-align:center;font-size:12px}
+.wpvbox canvas{display:block;width:96px;height:96px;image-rendering:pixelated;border:2px solid var(--line);background:#081a24;margin-bottom:4px}
+.wlist{flex:1;min-width:0}.wlist p{margin:0 0 6px;font-size:12px}
+.wrow{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.box .wrow .wname{flex:1;width:auto;margin:0;text-align:left;padding:3px 8px}
+.rrow{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;padding:8px;border:2px solid var(--line);background:#0b2330;margin-top:6px;font-size:14px}
+@media (max-width:420px){.wpvbox canvas{width:72px;height:72px}}
+@media (max-width:420px){.box .lact .ib{flex:1 1 0;width:auto;margin:0;padding:6px 2px}.box .lact .lret.arm{flex-basis:100%}}
+/* 商店：正式圖（行李箱透明背景、商品 200×200 縮小顯示） */
+.shopwrap{background:#1a1e21}
+.shopwrap .sicon{width:72px;height:72px}
+.shopwrap img.sicon:not(.swear){image-rendering:auto}
+@media (max-width:420px){.shopwrap .sicon{width:46px;height:46px}}
+.scene .sitem{height:34%}
+.shopwrap .sicon{filter:drop-shadow(0 0 1px rgba(255,255,255,.95)) drop-shadow(0 0 5px rgba(255,255,255,.55))}   /* 商品外面一圈淡淡的白光 */
+#bPlay{position:relative}
+@media (max-width:759px){#acts #bPlayMode{position:static;margin-top:1px}}
+/* 手繪立繪（格蕾特、言盡，200×200 縮小顯示）：平滑縮放，不用像素化 */
+.pav,.scene .schr,.shopface img{image-rendering:auto}
+/* 裝扮商品圖＝穿戴圖（96×96 手繪），和其他商品一樣大小 */
+.shopwrap .sicon.swear{width:80px;height:80px;margin-bottom:0;image-rendering:auto}
+@media (max-width:420px){.shopwrap .sicon.swear{width:58px;height:58px}}
+/* 商店的裝扮預覽：蓋在行李箱中間（和聊天染色的預覽一樣大、一樣的底色） */
+.shopwrap .shoppv{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(6,20,28,.62)}
+.shopwrap .shoppv[hidden]{display:none}
+.shopwrap .shoppv canvas{position:static;width:min(46%,200px);height:auto;aspect-ratio:1/1;image-rendering:pixelated;border:2px solid var(--line);background:#12485c}
+.shopwrap .shoppv .pvbtns{display:flex;gap:8px}
+.shopwrap .shoppv button{padding:6px 12px;font-size:14px;width:auto}
+
+.box .shopwrap .sslot.sel{z-index:2}   /* 選取中的商品（購買／預覽名牌）蓋在其他商品上面 */

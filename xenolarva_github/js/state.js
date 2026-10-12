@@ -20,6 +20,7 @@ function newGame(pname,name,col){
 
   // 重設幼體在水缸裡的狀態
   Object.assign(C,{lastFood:0,x:250,y:180,vx:1,vy:.15,tx:1,ty:0,rot:0,rv:0,next:0,calm:0,steering:false,home:pickHome()});
+  document.body.classList.remove('idle');
   M=null;pokes=[];CHAT_SEL.core=CHAT_SEL.shell=null;CHAT_SEL.part='core';
 
   $('pname').textContent=pname;paintName($('pname'),col);$('cname').textContent=name;

@@ -16,5 +16,5 @@ function finish(code){
   $('ex').textContent=[x,...tagEnd].join('\n').replace(/幼體/g,S.name);
   const color=S.tc||S.tb?[S.tc?`核心被聊成${colName(S.tc)}色`:'',S.tb?`外殼被聊成${colName(S.tb)}色`:''].filter(Boolean).join('、'):S.colored?'已染上你的代表色':`核心為 hsl ${S.hue}° 色`;
   $('sum').textContent=`存活至第 ${S.day} 日｜個性：${TEXT.temper[S.temp].name}｜喜歡的零食：${NAME[S.pref.gift]}｜喜歡的玩具：${NAME[S.pref.toy]}｜${color}｜已收錄進圖鑑`;
-  setTimeout(()=>$('ovEnd').classList.add('show'),code==='END-07'?1800:600);
+  setTimeout(()=>{if(PV)pvExit();$('ovEnd').classList.add('show')},code==='END-07'?1800:600);   // 等結局框的這段時間如果進了觀察水缸，先離開
 }

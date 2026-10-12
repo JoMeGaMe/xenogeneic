@@ -36,3 +36,24 @@
 
 ## 預覽用單檔
 `python tools/build_single_file.py` 會產生 `game_inline.html`（含所有圖片，一個檔案就能開）。
+| 開場故事、第 0 日（沒小球）、接取委託、設定、交還協會積分 | `js/flow.js`（資料：`js/data/assoc.js`；文字：`texts.js` 的 `intro`／`idle`／`assoc`） |
+| 觀察水缸模式（750×500、最多 5 隻、可戳） | `js/preview.js`（背景 `assets/larva/bg_preview.png`） |
+| 聊天與聊天染色（單色／雙色） | `js/chat.js`、`js/data/chat.js`；事件在 `js/events.js`（`colorTalk`／`colorTalk2`） |
+| 事件框（多頁、分支） | `js/events.js` |
+| 格蕾特小助手與心聲翻譯 | `js/grete.js`、`js/data/grete.js` |
+| 禮物與偷偷七逃 | `js/souvenirs.js`、`js/data/souvenirs.js` |
+| 開發者模式（連點版本號 5 次或網址 `?dev=1`） | `js/dev.js` |
+| 離線測試（不開瀏覽器跑遊戲邏輯） | `tools/test_harness.js`（用法在檔案開頭） |
+| 打包成單一 HTML（Claude 預覽用） | `python3 tools/build_single_file.py` |
+| ☰ 選單（順序與文字）、設定與存檔頁的跳段按鈕、手機版底部固定行動區、訊息區展開 | `js/layout.js`（樣式在 `css/style.css` 最後一段；選單順序與文字 `TEXT.layout.ham`） |
+| 選單頁面（小球們／收藏品／設定與存檔／說明與公告；設定內容在 `js/flow.js` 的 `settingsBuild`） | `index.html` 的 `#ovMenu`、`js/codex.js` 的 `showTab`；說明 `js/data/about.js`；更新公告 `js/data/news.js` |
+| 按鈕上的單色圖示（16×16 像素，或換成自己的圖片路徑） | `js/data/icons.js` |
+| 截圖檢查版面（環境內建 Chromium） | `python3 tools/screenshot.py <game_inline.html 絕對路徑> <輸出資料夾>` |
+| 設定總表（產生／套回文字） | `python3 tools/textsheet.py build <專案根目錄> <舊總表.xlsx> <新總表.xlsx>`；`python3 tools/textsheet.py apply <專案根目錄> <總表.xlsx>` |
+| index.html 寫死的介面字 | 元素加 `data-t="ui.xxx"`，文字放 `TEXT.ui`（開遊戲時 ui.js 會換上） |
+| 畢業小球的信紙（寄信判定、內容、收藏重看） | `js/letters.js`（規則 `js/data/letters.js`；文字 `TEXT.letter`；信紙圖 `assets/letter.png`） |
+| 外出地圖（地點、名牌位置、掉落權重、地圖底圖） | `js/places.js`（資料 `js/data/places.js`；文字 `TEXT.place`／`TEXT.map`；底圖 `assets/map.png` 750×500）；隨機外出也從 `RANDOM_PLACES` 挑地點 |
+| 廢棄大樓的商店（言盡）：商品、價格、擺放位置 | `js/shop.js`（資料 `js/data/shop.js`；文字 `TEXT.shop`；開場事件 `EVENTS.shopIntro`） |
+| 事件頁的場景（背景＋角色＋道具） | 事件頁面加 `bg`／`chr`／`item`（assets 檔名）＝`js/events.js` 的 showEvent；圖片 `assetImg(檔名)` |
+| 裝扮道具（像素圖、戴的位置） | `js/data/wears.js`（商品在 `js/data/shop.js` 加一筆 `wear:'id'`；畫在 `js/render/larva.js` 的 drawLarva） |
+| 互動玩耍（指揮棒、氣泡棒、小鈴鐺、軟球） | `js/minigame.js`（文字 `TEXT.game`；開始＝`gameStart`，由 actPlay 在「遊玩」方式時呼叫）；表情氣泡圖案 `js/data/emotes.js` |

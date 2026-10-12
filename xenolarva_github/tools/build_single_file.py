@@ -4,8 +4,8 @@ import re, base64, glob, os, json
 html = open('index.html', encoding='utf-8').read()
 css = open('css/style.css', encoding='utf-8').read()
 html = re.sub(r'<link rel="stylesheet" href="css/style.css[^"]*">', lambda m: '<style>\n' + css + '</style>', html)
-assets = {os.path.basename(f)[:-4]: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()
-          for f in glob.glob('assets/larva/*.png')+['assets/grete.png','assets/grete_2.png']}
+assets = {os.path.basename(f)[:-4]: ('data:image/jpeg;base64,' if f.endswith('.jpg') else 'data:image/png;base64,') + base64.b64encode(open(f, 'rb').read()).decode()
+          for f in glob.glob('assets/larva/*.png')+glob.glob('assets/*.png')+glob.glob('assets/*.jpg')}
 def inline(m):
     path = m.group(1).split('?')[0]
     code = open(path, encoding='utf-8').read()

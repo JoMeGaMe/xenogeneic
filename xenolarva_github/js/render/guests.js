@@ -66,7 +66,7 @@ function stepGuests(t){
     if(g.phase!=='live'){flyStep(g,t);return}
     const T=TEMPERS[g.e.temp];
     // 躲開 → 個性特別行為（領地、追泡泡、睡覺）→ 對其他小球的互動（見 social.js）→ 一般漫遊
-    const tgt=dashSteer(g,t)||pkSteer(g,t)||steer(g,t,T)||socialSteer(g,t);
+    const tgt=gameSteer(g,t)||dashSteer(g,t)||pkSteer(g,t)||steer(g,t,T)||socialSteer(g,t);   // 互動玩耍中（js/minigame.js）優先
     if(tgt){g.tx=tgt[0];g.ty=tgt[1];g.steering=true}
     else{
       if(g.steering){g.steering=false;g.next=0}
@@ -81,6 +81,7 @@ function stepGuests(t){
 // ---------- 互相碰撞 ----------
 const isStubborn=o=>!!TEMPERS[o===C?S.temp:o.e.temp].territory;
 function collide(t){
+  if(GAME&&!GAME.done&&['wand','bell','bucket'].includes(GAME.kind))return;   // 互動玩耍（追指揮棒、找鈴鐺、搶水桶）時暫時不互撞
   const bodies=[...(PV||(S&&S.over)?[]:[C]),...GUESTS.filter(g=>g.phase==='live')];
   const R2=68;                                                // 兩隻靠得比這個近就算碰到
   for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
@@ -137,6 +138,7 @@ function drawGuests(t,tt){
     const sq=Math.sin(tt*2+i)*.03+g.bn*Math.sin(tt*13)*.08;
     if(live){cx.globalAlpha=.2;cx.fillStyle='#000';cx.beginPath();cx.ellipse(g.x,Math.max(342,g.y+38),26,7,0,0,PI2);cx.fill()}   // 影子
     drawLarva(cx,g.x,dy,g.rot,sq,g.p,g.look,tt+i*1.3,.95*g.al,.9);
+    if(g.em&&!drawBubble(g.em,t,g.x,dy-42))g.em=null;                 // 同伴的表情氣泡
     cx.globalAlpha=g.al;cx.font='bold 13px sans-serif';cx.textAlign='center';cx.lineWidth=3;
     cx.strokeStyle='rgba(8,26,36,.8)';cx.strokeText(g.name,g.x,dy+58);cx.fillStyle='#e6f6f2';cx.fillText(g.name,g.x,dy+58);
     cx.globalAlpha=1;
@@ -156,6 +158,7 @@ function pokeGuest(g,t,x,y){
   if(kind==='spin')g.rv=(Math.random()<.5?-1:1)*.5;
   if(kind==='hide'){g.vx+=(g.x<x?-1:1)*1.6}
   say(TEXT.poke[kind].replace(/幼體/g,nm(g.name)));
+  emoteOn(g,{come:'heart',hide:'q',wave:'ex',turn:'x',spin:'star',stretch:'q',touch:'heart'}[kind]||'ex');   // 被戳時也冒氣泡（和玩家養的那隻一樣）
   return true;
 }
 // 被戳之後這段時間要去哪裡（回傳 [tx,ty]；沒有就 null）

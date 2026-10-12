@@ -36,25 +36,47 @@ function refresh(){
   const wq=$('wq');wq.hidden=!(S.inv.kit>0);wq.textContent=`水質 ${waterW()}`;
 
   // 格蕾特小助手：遇見之後才出現。開著時，換水與餵食收起來，改成多一個翻譯開關
-  const gr=!!META.grete&&!S.over;
+  const gr=!!META.grete&&!S.over,L=TEXT.layout;
+  // 按鈕內容：圖示＋名字（電腦版多顯示 dk 的字）＋開／關。手機版三行直排，電腦版一行
+  const togHTML=(ic,name,on)=>icoHTML(ic)+`<span class="bt">${name}</span><span class="bs">${on?L.on:L.off}</span>`;
   $('bGrete').hidden=!gr;$('bGrete').className='tog'+(S.grete?' on':'');$('bGrete').setAttribute('aria-pressed',String(!!S.grete));
-  $('bGrete').textContent='格蕾特小助手：'+(S.grete?'開':'關');
-  $('bTrans').hidden=!(gr&&S.grete);$('bTrans').className='tog'+(S.trans?' on':'');$('bTrans').setAttribute('aria-pressed',String(!!S.trans));
-  $('bTrans').textContent='翻譯（心聲）：'+(S.trans?'開':'關');
+  $('bGrete').innerHTML=togHTML('grete',`<span class="dk">${L.gDesk}</span>${L.grete}`,S.grete);
+  // 翻譯：要小助手開著才能用（關著時顯示「關」並停用）
+  $('bTrans').hidden=!gr;$('bTrans').disabled=!S.grete;$('bTrans').className='tog'+(S.trans?' on':'');$('bTrans').setAttribute('aria-pressed',String(!!S.trans));
+  $('bTrans').innerHTML=togHTML('trans',`${L.trans}<span class="dk">${L.tDesk}</span>`,S.grete&&S.trans);
   $('bWater').hidden=$('bFeed').hidden=gr&&!!S.grete;
   const off=!!S.over;
   $('bWater').disabled=off||S.inv.agent<1;
   $('bFeed').disabled=off||!FOODS.some(k=>S.inv[k]>0);
   $('bPlay').disabled=off||S.ap<1||false;
+  $('bChat').disabled=off||S.ap<1;
   $('bOut').disabled=off||S.ap<1;
   $('end').disabled=off;
 }
 
+// ---------- 單色圖示（資料在 js/data/icons.js）：用 CSS 遮罩，顏色跟著文字色 ----------
+const ICON_URL={};
+function icoUrl(id){
+  if(ICON_URL[id])return ICON_URL[id];
+  const v=ICONS[id];if(!v)return '';
+  if(typeof v==='string')return ICON_URL[id]='url("'+v+'")';
+  let d='';v.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==='#')d+=`M${x} ${y}h1v1h-1z`}));
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="${d}"/></svg>`;
+  return ICON_URL[id]='url("data:image/svg+xml,'+encodeURIComponent(svg)+'")';
+}
+const icoHTML=id=>`<i class="ico" style='--ico:${icoUrl(id)}' aria-hidden="true"></i>`;
+function paintIcons(root){(root||document).querySelectorAll('.ico[data-i]').forEach(e=>{e.style.setProperty('--ico',icoUrl(e.dataset.i));e.setAttribute('aria-hidden','true')})}
+paintIcons();
+
+// ---------- index.html 裡寫死的介面文字：有 data-t="路徑" 的元素，換成 TEXT 裡的文字（文字都在 texts.js，方便從設定總表改）----------
+const textAt=p=>p.split('.').reduce((o,k)=>o&&o[k],TEXT);
+document.querySelectorAll('[data-t]').forEach(e=>{const v=textAt(e.dataset.t);if(typeof v==='string')e.textContent=v});
+
 // 彈出選單：title 標題、opts 選項 [{id,label,off}]、cb(id) 選了之後做的事
 function pick(title,opts,cb,body){
   $('pt').textContent=title;$('pp').textContent=body||'';$('pp').hidden=!body;
-  $('pNote').hidden=true;
-  if(!body)$('pFig').hidden=true
+  $('pNote').hidden=true;$('pScene').hidden=true;
+  $('pFig').hidden=true;$('pTag').hidden=true;   // 頭像與名牌只有事件會用（showEvent 再打開）
   $('po').innerHTML='';
   opts.forEach(o=>{
     if(o.rule){$('po').appendChild(document.createElement('hr'));if(o.label){const d=document.createElement('div');d.className='phead';d.textContent=o.label;$('po').appendChild(d)}return}

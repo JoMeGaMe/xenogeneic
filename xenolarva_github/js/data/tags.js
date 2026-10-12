@@ -19,5 +19,5 @@ const TAGS={
 };
 // 互相矛盾、不會同時出現的標籤
 const TAG_CLASH=[['glutton','frail'],['playful','scholar'],['frail','sneak']];
-// 每隻小球的標籤數量：60% 沒有、35% 一個、5% 兩個
-const TAG_ODDS={none:.60,one:.35};
+// 每隻小球的標籤數量：50% 沒有、45% 一個、5% 兩個（v0.18.0 起一個標籤 +10%）
+const TAG_ODDS={none:.50,one:.45};

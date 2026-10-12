@@ -13,54 +13,56 @@
   window.addEventListener('error',function(e){var t=e.target;
     if(t&&t.tagName==='SCRIPT'){show('檔案載入失敗 '+(t.getAttribute('src')||''));return}
     if(t&&t!==window)return;
+    if(/ResizeObserver loop/.test(e.message||''))return;   // 瀏覽器的無害警告（版面重算時），不算錯誤
     show((e.message||'未知錯誤')+' @'+String(e.filename||'').split('/').pop()+':'+e.lineno)},true);
   window.addEventListener('unhandledrejection',function(e){show(String(e.reason))});
 })();
 </script>
-<link rel="stylesheet" href="css/style.css?v=26">
+<link rel="stylesheet" href="css/style.css?v=52">
 </head>
 <body>
 <main><div class="game"><div class="left">
-<header><span><span id="ver" class="ver"></span><button id="bWatch" class="mbtn wbtn">觀察水缸</button><span id="day">第 1 日 / 7</span><span class="pips" id="pips" title="今日剩餘行動次數"></span></span><span id="cname"></span><span class="hr"><span id="pname"></span><button id="bMenu" class="mbtn">說明／圖鑑</button></span></header>
-<div id="pvbar" hidden><button id="pvSel"></button><button id="pvTrans" class="tog" aria-pressed="false">翻譯（心聲）：關</button><button id="pvExit">離開</button></div>
+<header><span><span id="ver" class="ver"></span><button id="bWatch" class="mbtn wbtn" hidden>觀察水缸</button><span id="day">第 1 日 / 7</span><span class="pips" id="pips" title="今日剩餘行動次數"></span></span><span id="cname"></span><span class="hr"><span id="pname"></span><button id="bSet" class="mbtn" hidden>設定</button><button id="bMenu" class="mbtn" hidden>說明／圖鑑</button><button id="bHam" class="mbtn ham" aria-label="選單" aria-expanded="false" aria-controls="hamMenu">☰</button></span><div id="hamMenu" hidden></div></header>
+<div id="pvbar" hidden><button id="pvSel"></button><button id="pvTrans" class="tog" aria-pressed="false">翻譯：關</button><button id="pvPlay" data-t="ui.pvPlay">玩耍</button><button id="pvExit" data-t="ui.pvExit">離開</button></div>
 <div class="tankwrap"><canvas id="tank" width="500" height="500" aria-label="水缸與異種幼體"></canvas><div id="toast" role="status" aria-live="polite"></div><div id="wq" hidden></div></div>
-<div id="log" role="log" aria-live="polite"></div>
+<div class="logwrap"><div id="log" role="log" aria-live="polite"></div></div>
 </div>
 <div id="acts">
 <div id="notes"></div>
-<button id="bGrete" class="tog" hidden>格蕾特小助手</button>
-<button id="bTrans" class="tog" hidden>翻譯（心聲）</button>
-<button id="bWater">換水<small>不耗行動</small></button>
-<button id="bFeed">餵食<small>不耗行動</small></button>
-<button id="bPlay">玩耍<small>耗 1 行動</small></button>
-<button id="bOut">出門<small>耗 1 行動</small></button>
-<button id="bBag">物品<small>查看庫存</small></button>
-<button id="end">結束今日</button>
+<button id="bGrete" class="tog" hidden></button>
+<button id="bTrans" class="tog" hidden></button>
+<div id="abtns">
+<button id="bWater" class="abtn"><i class="ico" data-i="water"></i><span data-t="ui.water">換水</span><small data-t="ui.free">不耗行動</small></button>
+<button id="bFeed" class="abtn"><i class="ico" data-i="feed"></i><span data-t="ui.feed">餵食</span><small data-t="ui.free">不耗行動</small></button>
+<button id="bPlay" class="abtn"><i class="ico" data-i="play"></i><span data-t="ui.play">玩耍</span><small data-t="ui.cost">耗 1 行動</small><span class="ochip" id="bPlayMode" role="button" tabindex="0"></span></button>
+<button id="bChat" class="abtn"><i class="ico" data-i="chat"></i><span data-t="ui.chat">聊天</span><small data-t="ui.cost">耗 1 行動</small></button>
+<button id="bOut" class="abtn"><i class="ico" data-i="out"></i><span data-t="ui.out">出門</span><small data-t="ui.cost">耗 1 行動</small><span class="ochip" id="bOutMode" role="button" tabindex="0"></span></button>
+<button id="bBag" class="abtn"><i class="ico" data-i="bag"></i><span data-t="ui.bag">物品</span><small data-t="ui.bagSub">查看庫存</small></button>
+</div>
+<button id="end" data-t="ui.end">結束今日</button>
+<button id="bAccept" data-t="idle.accept">接取新委託</button>
 <button id="bDev" hidden>開發者模式</button>
 </div>
 </div>
 </main>
 <div id="devp" hidden></div>
-<div class="ov show" id="ovStart"><div class="box">
-<h2>異種幼體養成模擬器</h2>
-<p>一顆透明的小果凍剛出生了。用七天照顧牠、觀察牠，看看牠會長成什麼樣子。</p>
-<label for="pn">你的名字</label>
-<input type="text" id="pn" maxlength="8" value="玩家">
-<label for="nm" style="display:block;margin-top:10px">幼體的名字</label>
-<input type="text" id="nm" maxlength="8" value="小球">
-<p style="margin-top:10px">你的代表色。你的名字會用這個顏色顯示，等幼體足夠親近你，核心也會染上同一種顏色。</p>
-<div class="sw" id="sw"></div>
-<div class="cust"><input type="color" id="cp" value="#58a6ff" aria-label="自訂顏色"><input type="text" id="hex" placeholder="#RRGGBB 或 255,128,0" aria-label="色碼或 RGB"></div>
-<button id="go">開始養成</button>
-<button id="sMenu">說明／圖鑑</button>
-<button id="sPv">觀察水缸</button>
+<div class="ov" id="ovStart"><div class="box intro">
+<h2 data-t="ui.title">異種幼體養成模擬器</h2>
+<div id="introStory" class="pp"></div>
+<label for="pn" data-t="ui.sign">簽名</label>
+<input type="text" id="pn" maxlength="8" placeholder="玩家">
+<p class="dim" style="margin:10px 0 0" data-t="ui.ink">筆跡顏色</p>
+<div id="introCol"></div>
+<button id="go" data-t="ui.go">開始工作</button>
 </div></div>
-<div class="ov" id="ovPick"><div class="box"><button id="pc" class="xbtn" aria-label="關閉">✕</button><h2 id="pt"></h2><p id="pp" class="pp"></p><p id="pNote" class="pnote" hidden></p><figure id="pFig" class="pfig" hidden><img id="pAv" class="pav" alt=""><div id="pTag" class="pname" hidden></div></figure><div id="po"></div></div></div>
-<div class="ov" id="ovWatch"><div class="box menu"><button id="watchClose" class="xbtn" aria-label="關閉">✕</button><h3 style="margin-top:0">觀察水缸：選擇小球</h3><p class="dim" id="wstat"></p><div class="page" id="wlist"></div></div></div>
-<div class="ov" id="ovBag"><div class="box"><button id="bagClose" class="xbtn" aria-label="關閉">✕</button><h2>物品</h2><div id="bagBody"></div></div></div>
-<div class="ov" id="ovEnd"><div class="box"><h2 id="et"></h2><p id="ex"></p><p id="sum"></p><button id="again">重新開始</button><button id="eLarvae">查看小球們</button></div></div>
+<div class="ov" id="ovPick"><div class="box"><button id="pc" class="xbtn" aria-label="關閉">✕</button><h2 id="pt"></h2><div id="pScene" class="scene" hidden><img class="sbg" alt=""><img class="sitem" alt=""><img class="schr" alt=""><span class="sname"></span></div><p id="pp" class="pp"></p><p id="pNote" class="pnote" hidden></p><figure id="pFig" class="pfig" hidden><img id="pAv" class="pav" alt=""><div id="pTag" class="pname" hidden></div></figure><div id="po"></div></div></div>
+<div class="ov" id="ovWatch"><div class="box menu"><button id="watchClose" class="xbtn" aria-label="關閉">✕</button><h3 style="margin-top:0" data-t="ui.watchPick">觀察水缸：選擇小球</h3><p class="dim" id="wstat"></p><div class="page" id="wlist"></div></div></div>
+<div class="ov" id="ovMap"><div class="box wide mapbox"><button id="mapClose" class="xbtn" aria-label="關閉">✕</button><h2 id="mapTitle"></h2><div class="mapwrap" id="mapWrap"><img id="mapImg" alt=""></div><div class="pp mapinfo" id="mapInfo"></div></div></div>
+<div class="ov" id="ovShop"><div class="box wide mapbox shopbox"><button id="shopClose" class="xbtn" aria-label="關閉">✕</button><h2 id="shopTitle"></h2><div class="mapwrap shopwrap" id="shopWrap"><img id="shopImg" alt=""><div id="shopPvBox" class="shoppv" hidden><canvas id="shopPv" width="96" height="96"></canvas><div class="pvbtns"><button id="shopPvBuy"></button><button id="shopPvBack"></button></div></div></div><div class="shoptalk"><div class="pp" id="shopTalk"></div><figure class="shopface"><img id="shopFace" alt=""><div class="pname" id="shopWho"></div></figure></div><div class="shopfoot"><span id="shopPts" class="shoppts"></span><button id="shopLeave"></button></div></div></div>
+<div class="ov" id="ovBag"><div class="box"><button id="bagClose" class="xbtn" aria-label="關閉">✕</button><h2 data-t="ui.bag">物品</h2><div id="bagBody"></div></div></div>
+<div class="ov" id="ovEnd"><div class="box"><h2 id="et"></h2><p id="ex" class="pp"></p><p id="sum"></p><button id="again">等待新委託</button><button id="eLarvae" data-t="ui.seeLarvae">查看小球們</button></div></div>
 <div class="ov" id="ovMenu"><div class="box wide menu"><button id="menuClose" class="xbtn" aria-label="關閉">✕</button>
-<div class="tabs" id="mtabs" role="tablist"><button data-tab="larvae" class="on">小球們</button><button data-tab="coll">收藏</button><button data-tab="info">說明與存檔</button></div>
+<h2 id="menuTitle"></h2>
 <div class="page" id="pg_larvae">
 <div class="lbar"><div class="filter" id="lfilter"></div><span class="dim" id="lstat"></span></div>
 <p id="lmsg" class="dim" role="status"></p>
@@ -70,56 +72,72 @@
 <div class="collwrap"><div class="filter cnav" id="cfilter"></div>
 <div id="collBody"></div></div>
 </div>
-<div class="page" id="pg_info" hidden>
-<h3>存檔</h3>
-<p class="dim">進度存在這個瀏覽器裡。換裝置時，請在舊裝置按「下載進度」，再到新裝置按「上傳進度」（會合併，不會覆蓋）。</p>
-<div class="row2"><button id="cDown">下載進度</button><label class="fbtn">上傳進度<input type="file" id="cUp" accept=".json,application/json" hidden></label></div>
+<div class="page" id="pg_save" hidden>
+<div class="tabs jtabs" id="saveTabs"><button data-to="secSet" data-t="ui.set">設定</button><button data-to="secSave" data-t="ui.save">存檔</button></div>
+<section id="secSet"><h3 data-t="ui.set">設定</h3><div id="setBody"></div></section>
+<hr class="div">
+<section id="secSave"><h3 data-t="ui.save">存檔</h3>
+<p class="dim" data-t="ui.saveHint">進度存在這個瀏覽器裡。換裝置時，請在舊裝置按「下載進度」，再到新裝置按「上傳進度」（會合併，不會覆蓋）。</p>
+<div class="row2"><button id="cDown" data-t="ui.down">下載進度</button><label class="fbtn"><span data-t="ui.up">上傳進度</span><input type="file" id="cUp" accept=".json,application/json" hidden></label></div>
 <p id="cmsg" class="dim" role="status"></p>
-<details><summary class="dim">文字進度碼（備用）</summary><textarea id="saveText" aria-label="進度碼"></textarea><button id="cImport">匯入上方文字</button></details>
-<div class="savefoot"><button id="cWipe" class="danger">清除存檔</button></div>
-<hr class="sep">
-<div id="aboutBody"></div>
+<details><summary class="dim" data-t="ui.code">文字進度碼（備用）</summary><textarea id="saveText" aria-label="進度碼"></textarea><button id="cImport" data-t="ui.import">匯入上方文字</button></details>
+<div class="savefoot"><button id="cWipe" class="danger" data-t="ui.wipe">清除存檔</button></div>
+</section>
 </div>
+<div class="page" id="pg_about" hidden><div class="sl" data-t="ui.about">說明</div><div id="aboutBody" class="pp scr"></div><div class="sl" data-t="ui.news">更新公告</div><div id="newsBody" class="pp scr"></div></div>
 </div></div>
 
-<script src="js/utils.js?v=26"></script>
-<script src="js/data/assets-inline.js?v=26"></script>
+<script src="js/utils.js?v=52"></script>
+<script src="js/data/assets-inline.js?v=52"></script>
 <script src="js/data/version.js"></script>
-<script src="js/data/grete.js?v=26"></script>
-<script src="js/data/chat.js?v=26"></script>
-<script src="js/data/souvenirs.js?v=26"></script>
-<script src="js/data/texts.js?v=26"></script>
-<script src="js/data/temperaments.js?v=26"></script>
-<script src="js/data/tags.js?v=26"></script>
-<script src="js/data/items.js?v=26"></script>
-<script src="js/data/endings.js?v=26"></script>
-<script src="js/data/emotes.js?v=26"></script>
-<script src="js/data/about.js?v=26"></script>
-<script src="js/data/decor.js?v=26"></script>
-<script src="js/data/sprites.js?v=26"></script>
-<script src="js/state.js?v=26"></script>
-<script src="js/ui.js?v=26"></script>
-<script src="js/actions.js?v=26"></script>
-<script src="js/tags.js?v=26"></script>
-<script src="js/grete.js?v=26"></script>
-<script src="js/events.js?v=26"></script>
-<script src="js/chat.js?v=26"></script>
-<script src="js/souvenirs.js?v=26"></script>
-<script src="js/settle.js?v=26"></script>
-<script src="js/endings.js?v=26"></script>
-<script src="js/codex.js?v=26"></script>
-<script src="js/render/canvas.js?v=26"></script>
-<script src="js/render/sprites.js?v=26"></script>
-<script src="js/render/larva.js?v=26"></script>
-<script src="js/render/emote.js?v=26"></script>
-<script src="js/render/motion.js?v=26"></script>
-<script src="js/render/social.js?v=26"></script>
-<script src="js/render/creature.js?v=26"></script>
-<script src="js/render/guests.js?v=26"></script>
-<script src="js/render/scene.js?v=26"></script>
-<script src="js/main.js?v=26"></script>
-<script src="js/preview.js?v=26"></script>
-<script src="js/dev.js?v=26"></script>
+<script src="js/data/grete.js?v=52"></script>
+<script src="js/data/chat.js?v=52"></script>
+<script src="js/data/assoc.js?v=52"></script>
+<script src="js/data/souvenirs.js?v=52"></script>
+<script src="js/data/texts.js?v=52"></script>
+<script src="js/data/temperaments.js?v=52"></script>
+<script src="js/data/tags.js?v=52"></script>
+<script src="js/data/items.js?v=52"></script>
+<script src="js/data/endings.js?v=52"></script>
+<script src="js/data/emotes.js?v=52"></script>
+<script src="js/data/about.js?v=52"></script>
+<script src="js/data/icons.js?v=52"></script>
+<script src="js/data/news.js?v=52"></script>
+<script src="js/data/letters.js?v=52"></script>
+<script src="js/data/places.js?v=52"></script>
+<script src="js/data/shop.js?v=52"></script>
+<script src="js/data/wears.js?v=52"></script>
+<script src="js/data/decor.js?v=52"></script>
+<script src="js/data/sprites.js?v=52"></script>
+<script src="js/state.js?v=52"></script>
+<script src="js/ui.js?v=52"></script>
+<script src="js/actions.js?v=52"></script>
+<script src="js/tags.js?v=52"></script>
+<script src="js/grete.js?v=52"></script>
+<script src="js/events.js?v=52"></script>
+<script src="js/chat.js?v=52"></script>
+<script src="js/souvenirs.js?v=52"></script>
+<script src="js/settle.js?v=52"></script>
+<script src="js/endings.js?v=52"></script>
+<script src="js/codex.js?v=52"></script>
+<script src="js/render/canvas.js?v=52"></script>
+<script src="js/render/sprites.js?v=52"></script>
+<script src="js/render/larva.js?v=52"></script>
+<script src="js/render/emote.js?v=52"></script>
+<script src="js/render/motion.js?v=52"></script>
+<script src="js/render/social.js?v=52"></script>
+<script src="js/render/creature.js?v=52"></script>
+<script src="js/render/guests.js?v=52"></script>
+<script src="js/minigame.js?v=52"></script>
+<script src="js/render/scene.js?v=52"></script>
+<script src="js/letters.js?v=52"></script>
+<script src="js/places.js?v=52"></script>
+<script src="js/shop.js?v=52"></script>
+<script src="js/flow.js?v=52"></script>
+<script src="js/main.js?v=52"></script>
+<script src="js/preview.js?v=52"></script>
+<script src="js/dev.js?v=52"></script>
+<script src="js/layout.js?v=52"></script>
 
 </body>
 </html>

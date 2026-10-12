@@ -3,6 +3,11 @@
 //   text：內文（字串，或回傳字串的函式）　img：頭像圖片網址（可省略）
 //   apply：事件發生時要做的事（發獎勵、解鎖…）。log：同時寫進訊息區的文字（可省略）
 const EVENTS={
+  // 第一次去廢棄大樓：遇見言盡，走完最後一頁（進入商店）才算見過（js/shop.js）
+  shopIntro:{
+    pages:()=>TEXT.shop.intro.map(p=>({...p,opts:p.opts&&p.opts.map(o=>({...o,next:undefined}))})),
+    apply(){META.shopMet=true;codexSave()}
+  },
   // pages：每頁 {text, img, name, note, btn｜opts[{label,next}], next}。next＝要去第幾頁（-1＝結束、不執行 apply）；沒寫就是下一頁。
   // 事件開始時執行 start；最後一頁出現時才執行 apply（中途按 ✕ 離開＝事件沒完成）。declined＝選了 -1 時寫進訊息區的字。
   greteMeet:{
@@ -46,7 +51,7 @@ function runEvent(id,opt){
       show(n)
     };
     const opts=p.opts?p.opts.map((o,k)=>({id:k,label:o.label})):[{id:0,label:p.btn||'知道了'}];
-    showEvent(p.text,{img:p.img,name:p.name,note:p.note,opts,cb:k=>go(p.opts?p.opts[k].next:(p.next!==undefined?p.next:i+1))});
+    showEvent(p.text,{img:p.img,name:p.name,note:p.note,scene:p.bg?{bg:p.bg,chr:p.chr,item:p.item,name:p.name}:null,opts,cb:k=>go(p.opts&&p.opts[k].next!==undefined?p.opts[k].next:(p.next!==undefined?p.next:i+1))});   // 選項沒寫 next＝下一頁
   };
   show(0);
 }
@@ -60,4 +65,14 @@ function showEvent(text,o){
   if(nm_)nm_.hidden=!o.name;
   if(fig)fig.hidden=!o.img;
   if(nt){nt.textContent=o.note||'';nt.hidden=!o.note}
+  // 場景：背景（360×180，2:1）上疊角色（靠右、腳貼下緣）與道具（置中），名牌在角色下方。有場景時不用右邊的頭像框
+  const sc=$('pScene');sc.hidden=!o.scene;
+  if(o.scene){
+    const set=(c,k)=>{const e=sc.querySelector(c);e.hidden=!k;if(k)e.src=assetImg(k)};
+    set('.sbg',o.scene.bg);set('.schr',o.scene.chr);set('.sitem',o.scene.item);
+    const n=sc.querySelector('.sname');n.textContent=o.scene.name||'';n.hidden=!(o.scene.name&&o.scene.chr);
+    if(fig)fig.hidden=true;if(nm_)nm_.hidden=true;
+  }
 }
+// 圖片檔名（assets/ 底下，不含副檔名）→ 網址；單檔預覽版用打包好的 ASSETS
+const assetImg=k=>(typeof ASSETS!=='undefined'&&ASSETS[k])||('assets/'+k+'.png');

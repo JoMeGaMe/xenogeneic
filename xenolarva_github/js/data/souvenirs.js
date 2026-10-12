@@ -6,7 +6,8 @@ const SOUV_SRC={
   bubbleSurprise:['temper','curious'],  bubbleCling:['temper','clingy'],
   gem:['tag','judge'], toy:['tag','playful'], halfFood:['tag','glutton'], massage:['tag','touchy'],
   shed:['tag','frail'], shell:['tag','lovey'], pebble:['tag','clean'],
-  note:['tag','scholar'], oldPiece:['tag','homereturn'], outSand:['tag','sneak'], outFeather:['tag','sneak'], outBead:['tag','sneak'], outGrass:['tag','sneak'], outGlass:['tag','sneak'], outCoin:['tag','sneak']   // 偷偷七逃：每次隨機帶回其中一種
+  note:['tag','scholar'], oldPiece:['tag','homereturn'], outSand:['tag','sneak'], outFeather:['tag','sneak'], outBead:['tag','sneak'], outGrass:['tag','sneak'], outGlass:['tag','sneak'], outCoin:['tag','sneak'],   // 偷偷七逃：每次隨機帶回其中一種
+  letter:['grad','letter']   // 畢業小球的信紙（js/letters.js；不是在養的小球送的）
 };
 // 送禮的規則：每天換日時判斷。信賴要夠高才會送（26＝正常照顧、第 3 日差不多就會到的程度，大約是剛脫離「戒備」）；個性禮物與標籤禮物各自擲骰（每天最多 2 份）
 const SOUV_RULE={trust:26,temper:.3,tag:.2,maxPerDay:2,

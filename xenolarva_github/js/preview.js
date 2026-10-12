@@ -27,8 +27,8 @@ const pvState=trans=>({day:1,ap:0,life:90,sat:60,dirt:0,ph:7,trust:60,pname:'',n
 
 function pvBar(){
   const n=watchEntries().length,on=!!(S&&S.trans),t=$('pvTrans');
-  $('pvSel').textContent=`選擇小球（${n}/${WATCH_MAX}）`;
-  t.className='tog'+(on?' on':'');t.setAttribute('aria-pressed',String(on));t.textContent='翻譯（心聲）：'+(on?'開':'關');
+  $('pvSel').textContent=`選擇小球 ${n}/${WATCH_MAX}`;
+  t.className='tog'+(on?' on':'');t.setAttribute('aria-pressed',String(on));t.textContent='翻譯：'+(on?'開':'關');t.title='翻譯（心聲）';
 }
 // 依選擇更新水缸：新選的飄進來、取消的飄出去
 function pvApply(announce){
@@ -68,11 +68,11 @@ function watchToggle(id,on){
 function watchOpen(){const b=$('wlist');watchRender();$('ovWatch').classList.add('show')}
 
 function pvEnter(){
-  if(PV)return;
+  if(PV||$('ovEnd').classList.contains('show'))return;        // 結局框開著時不進來（避免在觀察水缸裡結束這一輪）
   if(!pvList().length){toast(PV_TXT.noList);return}
   ['ovMenu','ovPick','ovBag'].forEach(i=>$(i).classList.remove('show'));$('devp').hidden=true;
   PVS={S,C:Object.assign({},C),GUESTS,M,pokes,SN,EM,log:$('log').innerHTML,start:$('ovStart').classList.contains('show')};
-  PV=true;S=pvState(false);GUESTS=[];M=null;pokes=[];SN=null;EM=null;
+  gameStop();PV=true;S=pvState(false);GUESTS=[];M=null;pokes=[];SN=null;EM=null;
   $('ovStart').classList.remove('show');
   document.body.classList.add('pv');$('pvbar').hidden=false;
   setWorld(750);
@@ -84,7 +84,7 @@ function pvEnter(){
 }
 function pvExit(){
   if(!PV)return;
-  const B=PVS;PV=false;PVS=null;
+  const B=PVS;gameStop();PV=false;PVS=null;
   $('ovWatch').classList.remove('show');
   document.body.classList.remove('pv');$('pvbar').hidden=true;
   setWorld(500);
@@ -113,4 +113,11 @@ $('pvSel').onclick=watchOpen;
 $('watchClose').onclick=()=>$('ovWatch').classList.remove('show');
 $('pvTrans').onclick=()=>{S.trans=!S.trans;say(S.trans?PV_TXT.transOn:PV_TXT.transOff,'sys');pvBar()};
 $('pvExit').onclick=pvExit;
-$('sPv').onclick=pvEnter;$('bWatch').onclick=pvEnter;
+// 觀察水缸的「玩耍」：五種玩具都能玩（不用持有、不耗什麼、不影響日常），一定是「遊玩」方式
+const PV_TOYS=['bubble','bell','ball','wand','bucket'];
+function pvPlay(){
+  if(!GUESTS.some(g=>g.phase!=='out')){toast(PV_TXT.none);return}
+  pick(TEXT.play.pick,[{head:TEXT.play.toyHead},...PV_TOYS.map(t=>({id:t,label:NAME[t]}))],t=>gameStart(t),TEXT.play.pvHead);
+}
+$('pvPlay').onclick=pvPlay;
+$('bWatch').onclick=pvEnter;

@@ -57,9 +57,8 @@ function feedItem(k){
 
 // ---------- 玩耍（耗 1 行動）----------
 function actPlay(){
-  const toys=TOYS.filter(t=>S.inv[t]>0).map(t=>({id:t,label:NAME[t]}));
-  const opts=[{head:toys.length?TEXT.play.toyHead:TEXT.play.noToy},...toys];
-  opts.push({rule:1,label:TEXT.chat.head},{node:chatBox()});     // 聊天：分隔線＋選色＋兩顆聊天按鈕
+  const toys=[...TOYS.filter(t=>S.inv[t]>0),...META.tools].map(t=>({id:t,label:NAME[t]}));   // 玩具＋永久道具（指揮棒）
+  const opts=toys.length?[{head:TEXT.play.toyHead},...toys]:[];   // 聊天改成獨立的「聊天」鍵（js/chat.js 的 chatOpen）
   pick(TEXT.play.pick,opts,t=>{
     S.ap--;S.playedToday=true;
     const v={item:NAME[t]},before=[...S.tagsFound],pl=hasTag('playful');
@@ -76,17 +75,25 @@ function actPlay(){
     tagReact('play',v,before);
     if(TEMPERS[S.temp].explorer)S.explore++;     // 探索型個性：累積探索次數（結局用）
     refresh();
-  });
+    if(META.playMode==='play')gameStart(t);      // 玩耍方式＝遊玩：在水缸裡真的玩一場（js/minigame.js）
+  },toys.length?'':TEXT.play.noToy);
 }
 
 // ---------- 出門（耗 1 行動）----------
-// 帶回 3 件東西（海草湯、換水劑、零食、玩具）；有機會撿到「水質檢測儀」和「背景裝飾」，兩者都永久保留。
-const LOOT_POOL=['food','food','agent','agent','sweet','salty','bitter'];   // 一般物品
-const LOOT_TOY=.35;                                          // 每件戰利品是玩具（泡泡、鈴鐺、球 三選一）的機率
-function actOut(){
+// 出門鍵：外出方式「隨機」＝從 RANDOM_PLACES 挑一個地點；「地圖」＝打開地圖自己選（js/places.js）
+function goOut(){if(META.outMode==='map')mapOpen();else actOut(R(RANDOM_PLACES))}
+// 依地點的權重擲一件戰利品的種類（js/data/places.js 的 loot）
+function lootPick(w){
+  let n=Math.random()*Object.values(w).reduce((a,b)=>a+b,0);
+  for(const k in w){n-=w[k];if(n<0)return k==='snack'?R(GIFTS):k==='toy'?R(TOYS):k}
+  return 'food';
+}
+// 在 place 帶回 OUT_ITEMS 件東西（海草湯、換水劑、零食、玩具）；有機會撿到「水質檢測儀」和「背景裝飾」，兩者都永久保留。
+function actOut(place){
+  place=PLACES[place]&&PLACES[place].loot?place:RANDOM_PLACES[0];
   S.ap--;S.outs++;S.explore++;
   const got={};
-  for(let i=0;i<3;i++){const k=Math.random()<LOOT_TOY?R(TOYS):R(LOOT_POOL);got[k]=(got[k]||0)+1}
+  for(let i=0;i<OUT_ITEMS;i++){const k=lootPick(PLACES[place].loot);got[k]=(got[k]||0)+1}
   if(S.inv.kit<1&&(S.outs>=3||Math.random()<0.25))got.kit=1;      // 水質檢測儀：第 3 次出門起必拿到，之前有 25% 機率
 
   const list=[];
@@ -104,7 +111,8 @@ function actOut(){
   codexSave();
 
   emote(list.length||deco?'ex':'q');
-  say(list.length?fmt(TEXT.out.back,{list:list.join('、')}):TEXT.out.empty);
+  const pn=TEXT.place[place].name;
+  say(list.length?fmt(TEXT.out.back,{list:list.join('、'),place:pn}):fmt(TEXT.out.empty,{place:pn}));
   if(got.kit)say(TEXT.out.kit,'ev');
   if(deco)say(fmt(TEXT.out.deco,{deco:DECOR[deco].name}),'ev');
   // 遇見格蕾特：每次 20%，第 4 次出門起一定會遇見；遇見後永久解鎖「小助手」
@@ -118,15 +126,26 @@ function actOut(){
 }
 
 // ---------- 查看物品 ----------
-// 物品欄：分類｜名稱｜數量 的列表（不分頁），右上 ✕ 關閉
+// 物品欄：依分類列出（分類之間用橫線隔開）｜名稱 ×數量，右上 ✕ 關閉
 function actBag(){
-  const rows=[];
-  ITEM_GROUPS.forEach(([label,ids])=>ids.forEach(id=>{if(S.inv[id]>0)rows.push([label,NAME[id],S.inv[id]])}));
-  META.decor.forEach(id=>rows.push(['裝飾',DECOR[id].name,1]));
+  const groups=ITEM_GROUPS.map(([label,ids])=>[label,ids.filter(id=>S.inv[id]>0).map(id=>[NAME[id],S.inv[id]])]);
+  groups.push(['裝飾',META.decor.map(id=>[DECOR[id].name,1])]);
   const box=$('bagBody');box.textContent='';
-  if(!rows.length)box.append(h('p',{class:'dim'},TEXT.bag.empty));
-  else box.append(h('table',{class:'ctab'},
-    h('thead',{},h('tr',{},h('th',{},'分類'),h('th',{},'名稱'),h('th',{class:'num'},'數量'))),
-    h('tbody',{},...rows.map(r=>h('tr',{},h('td',{},r[0]),h('td',{},r[1]),h('td',{class:'num'},'×'+r[2]))))));
+  const shown=groups.filter(g=>g[1].length);
+  if(!shown.length&&!META.wears.length)box.append(h('p',{class:'dim'},TEXT.bag.empty));
+  if(META.wears.length)shown.push([TEXT.bag.wearHead,[],true]);
+  shown.forEach(([label,rows,wear],i)=>{
+    if(wear){
+      if(i)box.append(h('hr',{class:'div'}));
+      box.append(h('div',{class:'bagh'},label),...META.wears.map(id=>{
+        const on=S.wear===id,nm=wearName(id);
+        return h('div',{class:'bagrow'},h('span',{},nm),h('button',{class:'ib wbtn2'+(on?' on':''),onclick:()=>{
+          S.wear=on?'':id;say(fmt(on?TEXT.bag.woreOff:TEXT.bag.woreOn,{item:nm}),'sys');actBag()}},on?TEXT.bag.wearOff:TEXT.bag.wearOn));
+      }));
+      return;
+    }
+    if(i)box.append(h('hr',{class:'div'}));
+    box.append(h('div',{class:'bagh'},label),...rows.map(r=>h('div',{class:'bagrow'},h('span',{},r[0]),h('span',{class:'num'},'×'+r[1]))));
+  });
   $('ovBag').classList.add('show');
 }
