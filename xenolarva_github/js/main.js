@@ -6,7 +6,7 @@ $('bOut').onclick=()=>goOut();$('bBag').onclick=()=>actBag();
 (()=>{let armed=0,tm=null;const b=$('end');
   const reset=()=>{armed=0;clearTimeout(tm);b.textContent=TEXT.ui.end;b.classList.remove('arm')};
   b.onclick=()=>{
-    if(!armed){armed=1;b.textContent=S.ap>0?`再按一次結束今日（還有 ${S.ap} 次行動）`:'再按一次結束今日';b.classList.add('arm');tm=setTimeout(reset,4000);return}
+    if(!armed){armed=1;b.textContent=S.ap>0?fmt(TEXT.misc.endArmAp,{n:S.ap}):TEXT.misc.endArm;b.classList.add('arm');tm=setTimeout(reset,4000);return}
     reset();gameStop();settle();
   };
 })();
@@ -28,9 +28,9 @@ $('cImport').onclick=()=>codexMerge($('saveText').value);
 $('ver').textContent='v'+VERSION;
 // 清除存檔：第一次按先變成「再按一次確認」，4 秒內再按才真的清除
 (()=>{let t=0,tm=null;const b=$('cWipe');
-  const reset=()=>{t=0;b.textContent='清除存檔';b.className='danger'};
+  const reset=()=>{t=0;b.textContent=TEXT.misc.wipe;b.className='danger'};
   b.onclick=()=>{
-    if(!t){t=1;b.textContent='再按一次確認（無法復原）';b.className='danger arm';tm=setTimeout(reset,4000);return}
+    if(!t){t=1;b.textContent=TEXT.misc.wipeArm;b.className='danger arm';tm=setTimeout(reset,4000);return}
     clearTimeout(tm);reset();codexWipe();
   };
 })();

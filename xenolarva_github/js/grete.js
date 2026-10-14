@@ -5,7 +5,7 @@
 
 // 跳出格蕾特的提示框（有頭像就顯示頭像）。cb＝按下「知道了」之後要做的事
 function gretePrompt(text,cb){
-  showEvent(text,{title:'格蕾特',img:GRETE_IMG,name:'格蕾特',cb});
+  showEvent(text,{title:TEXT.misc.grete,img:GRETE_IMG,name:TEXT.misc.grete,cb});
 }
 function gretOff(){S.grete=false;S.trans=false;refresh()}
 
@@ -17,7 +17,7 @@ function greteDaily(){
   const needWater=S.dirt>R_.waterDirt||Math.abs(S.ph-7)>R_.waterPh;
   if(needWater){
     if(S.inv.agent<1)lack.push(TEXT.grete.shortWater);
-    else{say(TEXT.grete.water,'ev');actWater();S.waterToday=Math.max(0,S.waterToday-1)}   // 她換的不算玩家的次數
+    else{say(TEXT.grete.water,'ev');const w=S.waterToday;S.waterToday=0;actWater();S.waterToday=w}   // 她換的不算玩家的次數（也不會因為玩家今天換過而被當成換太多次）
   }
   // 2) 餵食：先餵喜歡的零食 → 海草湯 →（真的很餓才）其他零食；不喜歡的零食不餵
   if(S.sat<R_.feedBelow){
@@ -37,11 +37,11 @@ function greteDaily(){
   return true;
 }
 
-// 心聲：翻譯開著時戳小球。約 55% 什麼都沒在想（格蕾特說）；其餘是主腦（本體）與觸肢副腦的對話，不加格蕾特前綴。
+// 心聲：翻譯開著時戳小球。約 45% 什麼都沒在想（格蕾特說）；其餘是主腦（本體）與觸肢副腦的對話，不加格蕾特前綴。
 // 學者、回歸者：第一次聽見心聲時揭曉（VOICE_FOUND 由 creature.js 的 poke 讀取）
 let VOICE_FOUND=null;
 function voiceLine(sub){
-  if(Math.random()<.55)return TEXT.grete.nothing;
+  if(Math.random()<.45)return TEXT.grete.nothing;
   // sub＝說話的是誰（預覽模式戳其他小球時用）；沒給就是玩家養的這隻
   const w=sub||{temp:S.temp,tags:S.tags,found:S.tagsFound,sat:S.sat,dirt:S.dirt,life:S.life,trust:S.trust,self:C};
   const V=TEXT.voice,v={},r=Math.random();

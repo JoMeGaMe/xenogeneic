@@ -18,9 +18,10 @@
   window.addEventListener('unhandledrejection',function(e){show(String(e.reason))});
 })();
 </script>
-<link rel="stylesheet" href="css/style.css?v=52">
+<link rel="stylesheet" href="css/style.css?v=90">
 </head>
 <body>
+<div id="achBanner" role="status" aria-live="polite"></div>
 <main><div class="game"><div class="left">
 <header><span><span id="ver" class="ver"></span><button id="bWatch" class="mbtn wbtn" hidden>觀察水缸</button><span id="day">第 1 日 / 7</span><span class="pips" id="pips" title="今日剩餘行動次數"></span></span><span id="cname"></span><span class="hr"><span id="pname"></span><button id="bSet" class="mbtn" hidden>設定</button><button id="bMenu" class="mbtn" hidden>說明／圖鑑</button><button id="bHam" class="mbtn ham" aria-label="選單" aria-expanded="false" aria-controls="hamMenu">☰</button></span><div id="hamMenu" hidden></div></header>
 <div id="pvbar" hidden><button id="pvSel"></button><button id="pvTrans" class="tog" aria-pressed="false">翻譯：關</button><button id="pvPlay" data-t="ui.pvPlay">玩耍</button><button id="pvExit" data-t="ui.pvExit">離開</button></div>
@@ -53,14 +54,17 @@
 <input type="text" id="pn" maxlength="8" placeholder="玩家">
 <p class="dim" style="margin:10px 0 0" data-t="ui.ink">筆跡顏色</p>
 <div id="introCol"></div>
-<button id="go" data-t="ui.go">開始工作</button>
+<button id="go" class="main" data-t="ui.go">開始工作</button>
 </div></div>
 <div class="ov" id="ovPick"><div class="box"><button id="pc" class="xbtn" aria-label="關閉">✕</button><h2 id="pt"></h2><div id="pScene" class="scene" hidden><img class="sbg" alt=""><img class="sitem" alt=""><img class="schr" alt=""><span class="sname"></span></div><p id="pp" class="pp"></p><p id="pNote" class="pnote" hidden></p><figure id="pFig" class="pfig" hidden><img id="pAv" class="pav" alt=""><div id="pTag" class="pname" hidden></div></figure><div id="po"></div></div></div>
-<div class="ov" id="ovWatch"><div class="box menu"><button id="watchClose" class="xbtn" aria-label="關閉">✕</button><h3 style="margin-top:0" data-t="ui.watchPick">觀察水缸：選擇小球</h3><p class="dim" id="wstat"></p><div class="page" id="wlist"></div></div></div>
+<div class="ov" id="ovWatch"><div class="box menu"><button id="watchClose" class="xbtn" aria-label="關閉">✕</button><h2 data-t="ui.watchPick">選擇小球</h2><p class="dim" id="wstat"></p><div class="page" id="wlist"></div></div></div>
 <div class="ov" id="ovMap"><div class="box wide mapbox"><button id="mapClose" class="xbtn" aria-label="關閉">✕</button><h2 id="mapTitle"></h2><div class="mapwrap" id="mapWrap"><img id="mapImg" alt=""></div><div class="pp mapinfo" id="mapInfo"></div></div></div>
-<div class="ov" id="ovShop"><div class="box wide mapbox shopbox"><button id="shopClose" class="xbtn" aria-label="關閉">✕</button><h2 id="shopTitle"></h2><div class="mapwrap shopwrap" id="shopWrap"><img id="shopImg" alt=""><div id="shopPvBox" class="shoppv" hidden><canvas id="shopPv" width="96" height="96"></canvas><div class="pvbtns"><button id="shopPvBuy"></button><button id="shopPvBack"></button></div></div></div><div class="shoptalk"><div class="pp" id="shopTalk"></div><figure class="shopface"><img id="shopFace" alt=""><div class="pname" id="shopWho"></div></figure></div><div class="shopfoot"><span id="shopPts" class="shoppts"></span><button id="shopLeave"></button></div></div></div>
+<div class="ov" id="ovHall"><div class="box wide mapbox hallbox"><button id="hallClose" class="xbtn" aria-label="關閉">✕</button><h2 id="hallTitle"></h2><div class="hallgrid"><div class="hlift" id="hallLift"></div><div class="hallscene"><img id="hallBg" class="hbg" alt=""><canvas id="hallLand" class="hland" width="720" height="360"></canvas><img id="hallChr" class="hchr" alt=""><span id="hallWho" class="sname"></span><span id="hallWhere" class="hwhere"></span></div><div class="pp htalk" id="hallTalk"></div><div class="hacts" id="hallActs"></div><span id="hallHeart" class="hheart"></span><button id="hallLeave"></button></div></div></div>
+<div class="ov" id="ovAch"><div class="box menu achbox"><button id="achClose" class="xbtn" aria-label="關閉">✕</button><h2 id="achTitle"></h2><div class="achtop"><span id="achHead" class="hheart"></span><button id="achAll" class="main" class="ib"></button></div><div class="page" id="achBody"></div></div></div>
+<div class="ov" id="ovSpecial"><div class="box menu achbox"><button id="spClose" class="xbtn" aria-label="關閉">✕</button><h2 id="spTitle"></h2><p id="spHint" class="dim sphint"></p><div class="page" id="spBody"></div></div></div>
+<div class="ov" id="ovShop"><div class="box wide mapbox shopbox"><button id="shopClose" class="xbtn" aria-label="關閉">✕</button><h2 id="shopTitle"></h2><div class="mapwrap shopwrap" id="shopWrap"><img id="shopImg" alt=""><div id="shopPvBox" class="shoppv" hidden><canvas id="shopPv" width="96" height="96"></canvas><div class="pvbtns"><button id="shopPvBuy" class="main"></button><button id="shopPvBack"></button></div></div></div><div class="hallscene shopscene" id="shopScene" hidden><img id="shopSBg" class="hbg" alt=""><img id="shopSCase" class="scase" alt=""><canvas id="shopLand" class="hland" width="720" height="480"></canvas><img id="shopChr" class="hchr" alt=""><span id="shopWho" class="sname"></span></div><div class="shoptalk"><div class="pp" id="shopTalk"></div></div><div class="shopfoot"><span id="shopPts" class="shoppts"></span><button id="shopChat"></button><button id="shopLeave"></button></div></div></div>
 <div class="ov" id="ovBag"><div class="box"><button id="bagClose" class="xbtn" aria-label="關閉">✕</button><h2 data-t="ui.bag">物品</h2><div id="bagBody"></div></div></div>
-<div class="ov" id="ovEnd"><div class="box"><h2 id="et"></h2><p id="ex" class="pp"></p><p id="sum"></p><button id="again">等待新委託</button><button id="eLarvae" data-t="ui.seeLarvae">查看小球們</button></div></div>
+<div class="ov" id="ovEnd"><div class="box"><h2 id="et"></h2><p id="ex" class="pp"></p><div id="sum"></div><button id="again" class="main">等待新委託</button><button id="eLarvae" data-t="ui.seeLarvae">查看小球們</button></div></div>
 <div class="ov" id="ovMenu"><div class="box wide menu"><button id="menuClose" class="xbtn" aria-label="關閉">✕</button>
 <h2 id="menuTitle"></h2>
 <div class="page" id="pg_larvae">
@@ -84,60 +88,63 @@
 <div class="savefoot"><button id="cWipe" class="danger" data-t="ui.wipe">清除存檔</button></div>
 </section>
 </div>
-<div class="page" id="pg_about" hidden><div class="sl" data-t="ui.about">說明</div><div id="aboutBody" class="pp scr"></div><div class="sl" data-t="ui.news">更新公告</div><div id="newsBody" class="pp scr"></div></div>
+<div class="page" id="pg_about" hidden><h3 class="t2" data-t="ui.about">說明</h3><div id="aboutBody" class="pp scr"></div><h3 class="t2" data-t="ui.news">更新公告</h3><div id="newsBody" class="pp scr"></div></div>
 </div></div>
 
-<script src="js/utils.js?v=52"></script>
-<script src="js/data/assets-inline.js?v=52"></script>
+<script src="js/utils.js?v=90"></script>
+<script src="js/data/assets-inline.js?v=90"></script>
 <script src="js/data/version.js"></script>
-<script src="js/data/grete.js?v=52"></script>
-<script src="js/data/chat.js?v=52"></script>
-<script src="js/data/assoc.js?v=52"></script>
-<script src="js/data/souvenirs.js?v=52"></script>
-<script src="js/data/texts.js?v=52"></script>
-<script src="js/data/temperaments.js?v=52"></script>
-<script src="js/data/tags.js?v=52"></script>
-<script src="js/data/items.js?v=52"></script>
-<script src="js/data/endings.js?v=52"></script>
-<script src="js/data/emotes.js?v=52"></script>
-<script src="js/data/about.js?v=52"></script>
-<script src="js/data/icons.js?v=52"></script>
-<script src="js/data/news.js?v=52"></script>
-<script src="js/data/letters.js?v=52"></script>
-<script src="js/data/places.js?v=52"></script>
-<script src="js/data/shop.js?v=52"></script>
-<script src="js/data/wears.js?v=52"></script>
-<script src="js/data/decor.js?v=52"></script>
-<script src="js/data/sprites.js?v=52"></script>
-<script src="js/state.js?v=52"></script>
-<script src="js/ui.js?v=52"></script>
-<script src="js/actions.js?v=52"></script>
-<script src="js/tags.js?v=52"></script>
-<script src="js/grete.js?v=52"></script>
-<script src="js/events.js?v=52"></script>
-<script src="js/chat.js?v=52"></script>
-<script src="js/souvenirs.js?v=52"></script>
-<script src="js/settle.js?v=52"></script>
-<script src="js/endings.js?v=52"></script>
-<script src="js/codex.js?v=52"></script>
-<script src="js/render/canvas.js?v=52"></script>
-<script src="js/render/sprites.js?v=52"></script>
-<script src="js/render/larva.js?v=52"></script>
-<script src="js/render/emote.js?v=52"></script>
-<script src="js/render/motion.js?v=52"></script>
-<script src="js/render/social.js?v=52"></script>
-<script src="js/render/creature.js?v=52"></script>
-<script src="js/render/guests.js?v=52"></script>
-<script src="js/minigame.js?v=52"></script>
-<script src="js/render/scene.js?v=52"></script>
-<script src="js/letters.js?v=52"></script>
-<script src="js/places.js?v=52"></script>
-<script src="js/shop.js?v=52"></script>
-<script src="js/flow.js?v=52"></script>
-<script src="js/main.js?v=52"></script>
-<script src="js/preview.js?v=52"></script>
-<script src="js/dev.js?v=52"></script>
-<script src="js/layout.js?v=52"></script>
+<script src="js/data/grete.js?v=90"></script>
+<script src="js/data/chat.js?v=90"></script>
+<script src="js/data/assoc.js?v=90"></script>
+<script src="js/data/souvenirs.js?v=90"></script>
+<script src="js/data/texts.js?v=90"></script>
+<script src="js/data/temperaments.js?v=90"></script>
+<script src="js/data/tags.js?v=90"></script>
+<script src="js/data/items.js?v=90"></script>
+<script src="js/data/endings.js?v=90"></script>
+<script src="js/data/emotes.js?v=90"></script>
+<script src="js/data/about.js?v=90"></script>
+<script src="js/data/icons.js?v=90"></script>
+<script src="js/data/news.js?v=90"></script>
+<script src="js/data/letters.js?v=90"></script>
+<script src="js/data/places.js?v=90"></script>
+<script src="js/data/shop.js?v=90"></script>
+<script src="js/data/hall.js?v=90"></script>
+<script src="js/data/wears.js?v=90"></script>
+<script src="js/data/decor.js?v=90"></script>
+<script src="js/data/sprites.js?v=90"></script>
+<script src="js/state.js?v=90"></script>
+<script src="js/ui.js?v=90"></script>
+<script src="js/actions.js?v=90"></script>
+<script src="js/tags.js?v=90"></script>
+<script src="js/grete.js?v=90"></script>
+<script src="js/events.js?v=90"></script>
+<script src="js/chat.js?v=90"></script>
+<script src="js/souvenirs.js?v=90"></script>
+<script src="js/settle.js?v=90"></script>
+<script src="js/endings.js?v=90"></script>
+<script src="js/codex.js?v=90"></script>
+<script src="js/render/canvas.js?v=90"></script>
+<script src="js/render/sprites.js?v=90"></script>
+<script src="js/render/larva.js?v=90"></script>
+<script src="js/render/emote.js?v=90"></script>
+<script src="js/render/motion.js?v=90"></script>
+<script src="js/render/social.js?v=90"></script>
+<script src="js/render/creature.js?v=90"></script>
+<script src="js/render/guests.js?v=90"></script>
+<script src="js/render/land.js?v=90"></script>
+<script src="js/minigame.js?v=90"></script>
+<script src="js/render/scene.js?v=90"></script>
+<script src="js/letters.js?v=90"></script>
+<script src="js/places.js?v=90"></script>
+<script src="js/shop.js?v=90"></script>
+<script src="js/hall.js?v=90"></script>
+<script src="js/flow.js?v=90"></script>
+<script src="js/main.js?v=90"></script>
+<script src="js/preview.js?v=90"></script>
+<script src="js/dev.js?v=90"></script>
+<script src="js/layout.js?v=90"></script>
 
 </body>
 </html>

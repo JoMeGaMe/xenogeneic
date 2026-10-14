@@ -2,12 +2,7 @@
 // 做法：暫時把 S（遊戲狀態）換成一份空白的假狀態，玩家養的那隻（C）不參與（PV 為 true 時各處都會略過 C），
 // 選到的小球（最多 5 隻，來自圖鑑）全部當成 GUESTS 放進水缸。離開時把原本的 S、C、同伴、訊息區、水缸大小全部還原。
 // 選擇名單另外存（WATCH_KEY），和說明／圖鑑裡的「放入水缸」勾選互不影響。水缸寬 750×500，背景 assets/larva/bg_preview.png。
-const PV_TXT={
-  noList:'圖鑑裡還沒有可以觀察的小球。先完成一個周目，之後養過的小球就能放進來。',
-  hi:'進入觀察水缸。這裡沒有日期與行動次數，可以戳每一隻小球、看牠們怎麼互動。',
-  join:'【{name}】飄進了水缸。',leave:'【{name}】飄出了水缸。',
-  transOn:'翻譯：開（戳小球時，有機會聽見心聲）',transOff:'翻譯：關',none:'水缸裡還沒有小球，按左上角的按鈕選擇。'
-};
+const PV_TXT=TEXT.pv;                              // 文字在 js/data/texts.js 的 TEXT.pv
 const WATCH_KEY='xenolarva.watch.v1',WATCH_MAX=5;
 let WATCH_IDS=[];try{WATCH_IDS=JSON.parse(localStorage.getItem(WATCH_KEY)||'[]').map(String)}catch(e){}
 const watchSave=()=>{try{localStorage.setItem(WATCH_KEY,JSON.stringify(WATCH_IDS))}catch(e){}};
@@ -27,8 +22,8 @@ const pvState=trans=>({day:1,ap:0,life:90,sat:60,dirt:0,ph:7,trust:60,pname:'',n
 
 function pvBar(){
   const n=watchEntries().length,on=!!(S&&S.trans),t=$('pvTrans');
-  $('pvSel').textContent=`選擇小球 ${n}/${WATCH_MAX}`;
-  t.className='tog'+(on?' on':'');t.setAttribute('aria-pressed',String(on));t.textContent='翻譯：'+(on?'開':'關');t.title='翻譯（心聲）';
+  $('pvSel').textContent=fmt(PV_TXT.sel,{n,max:WATCH_MAX});
+  t.className='tog'+(on?' on':'');t.setAttribute('aria-pressed',String(on));t.textContent=fmt(PV_TXT.trans,{s:on?PV_TXT.on:PV_TXT.off});t.title=PV_TXT.transTitle;
 }
 // 依選擇更新水缸：新選的飄進來、取消的飄出去
 function pvApply(announce){
@@ -47,16 +42,15 @@ function watchRow(e){
   const on=WATCH_IDS.includes(e.id);
   const mid=h('div',{class:'lmid'},h('div',{class:'nrow'},h('strong',{class:'nm'},e.name)),
     h('div',{},ENDS[e.end][0],' ｜ ',tipSpan(e.temp)),
-    h('div',{class:'dim'},`第 ${e.day} 日｜${e.at||'—'}｜${e.pname||'—'}`),
-    h('div',{class:'dim'},'標籤：'+(e.tags.length?e.tags.map(t=>TEXT.tags[t].name).join('、'):'—')),
-    h('div',{class:'dim'},`喜歡：${NAME[e.pg]}｜${NAME[e.pt]}`));
-  const act=h('div',{class:'lact'},h('button',{class:'ib'+(on?' on':''),'aria-pressed':String(on),onclick:()=>watchToggle(e.id,!on)},on?'取消觀察':'放入觀察'));
+    ...rowInfo(e),
+    h('div',{class:'dim'},fmt(TEXT.misc.rowLike,{g:NAME[e.pg],t:NAME[e.pt]})));
+  const act=h('div',{class:'lact'},h('button',{class:'ib'+(on?' on':''),'aria-pressed':String(on),onclick:()=>watchToggle(e.id,!on)},on?PV_TXT.watchOff:PV_TXT.watchOn));
   return h('div',{class:'lrow'},c,mid,act);
 }
 function watchRender(){
   const box=$('wlist');box.textContent='';
   const list=[...pvList()].reverse().sort((a,b)=>(b.star?1:0)-(a.star?1:0));
-  $('wstat').textContent=`已選 ${watchEntries().length}／${WATCH_MAX} 隻（超過時，最早選的會先離開）。這裡的選擇只用在觀察水缸，和日常模式的「放入水缸」無關。`;
+  $('wstat').textContent=fmt(PV_TXT.stat,{n:watchEntries().length,max:WATCH_MAX});
   if(!list.length)box.append(h('p',{class:'dim'},PV_TXT.noList));
   list.forEach(e=>box.append(watchRow(e)));
 }

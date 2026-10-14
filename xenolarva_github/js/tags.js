@@ -49,6 +49,7 @@ function tagReact(kind,v,ids,chance){
   (ids||S.tagsFound).forEach(id=>{
     let t=TEXT.tags[id][kind];
     if(kind==='day'&&TEXT.tags[id].dayNone&&!visibleDecor().length)t=TEXT.tags[id].dayNone;
+    if(kind==='day'&&TEXT.tags[id].daySleepy&&TEMPERS[S.temp].sleepy)t=TEXT.tags[id].daySleepy;   // 高高在上的睏睏：浮在水面睡
     if(!t||(chance!=null&&Math.random()>chance))return;
     if(t.includes('{deco}')){
       const ds=visibleDecor();if(!ds.length)return;
@@ -79,7 +80,7 @@ function judgeSteer(t){
 }
 
 // ---------- 人類愛好者：偶爾停下來「看」你、追游標 ----------
-const CUR={x:0,y:0,t:-1e9};               // 游標最後在水缸上的位置與時間（creature.js 更新）
+const CUR={x:0,y:0,t:-1e9,vx:0,vy:0};               // 游標最後在水缸上的位置與時間（creature.js 更新）
 const LV={on:false,until:0,next:0,heart:false};
 function loveySteer(t){
   if(!hasTag('lovey'))return null;

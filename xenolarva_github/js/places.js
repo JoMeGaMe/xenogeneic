@@ -33,6 +33,7 @@ function mapTap(id){
   mapClose();                                                // 第二下：出發
   if(P.home)return;                                          // 回家＝不出門
   if(P.shop){shopGo();return}                                // 廢棄大樓＝言盡的商店（js/shop.js）
+  if(P.hall){hallGo();return}                                // 異生會大樓（js/hall.js）
   actOut(id);
 }
 $('mapClose').onclick=mapClose;

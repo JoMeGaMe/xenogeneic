@@ -4,8 +4,20 @@ import re, base64, glob, os, json
 html = open('index.html', encoding='utf-8').read()
 css = open('css/style.css', encoding='utf-8').read()
 html = re.sub(r'<link rel="stylesheet" href="css/style.css[^"]*">', lambda m: '<style>\n' + css + '</style>', html)
-assets = {os.path.basename(f)[:-4]: ('data:image/jpeg;base64,' if f.endswith('.jpg') else 'data:image/png;base64,') + base64.b64encode(open(f, 'rb').read()).decode()
-          for f in glob.glob('assets/larva/*.png')+glob.glob('assets/*.png')+glob.glob('assets/*.jpg')}
+# 手繪的大背景（不透明、不是像素風）：單一 HTML 裡改存成 JPEG，檔案小很多（原始 png 不動，GitHub 版照樣用 png）
+JPEG_IN_SINGLE = ('hall_', 'place_', 'letter_')
+def enc(f):
+    n = os.path.basename(f)[:-4]
+    if f.endswith('.png') and n.startswith(JPEG_IN_SINGLE):
+        try:
+            from PIL import Image
+            import io
+            b = io.BytesIO(); Image.open(f).convert('RGB').save(b, 'JPEG', quality=88, optimize=True)
+            return 'data:image/jpeg;base64,' + base64.b64encode(b.getvalue()).decode()
+        except ImportError:
+            pass
+    return ('data:image/jpeg;base64,' if f.endswith('.jpg') else 'data:image/png;base64,') + base64.b64encode(open(f, 'rb').read()).decode()
+assets = {os.path.basename(f)[:-4]: enc(f) for f in glob.glob('assets/larva/*.png')+glob.glob('assets/*.png')+glob.glob('assets/*.jpg')}
 def inline(m):
     path = m.group(1).split('?')[0]
     code = open(path, encoding='utf-8').read()

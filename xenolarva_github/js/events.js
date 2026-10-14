@@ -50,7 +50,7 @@ function runEvent(id,opt){
       if(n>=pages.length){if(opt.cb)opt.cb();return}
       show(n)
     };
-    const opts=p.opts?p.opts.map((o,k)=>({id:k,label:o.label})):[{id:0,label:p.btn||'知道了'}];
+    const opts=p.opts?p.opts.map((o,k)=>({id:k,label:o.label})):[{id:0,label:p.btn||TEXT.misc.ok}];
     showEvent(p.text,{img:p.img,name:p.name,note:p.note,scene:p.bg?{bg:p.bg,chr:p.chr,item:p.item,name:p.name}:null,opts,cb:k=>go(p.opts&&p.opts[k].next!==undefined?p.opts[k].next:(p.next!==undefined?p.next:i+1))});   // 選項沒寫 next＝下一頁
   };
   show(0);
@@ -58,7 +58,7 @@ function runEvent(id,opt){
 // 事件／提示框的共用外觀（標題 + 內文框 + 可選小字、圖片、名牌 + 按鈕）。o：title img name note btn｜opts cb(id)
 function showEvent(text,o){
   o=o||{};
-  pick(o.title||'事件',o.opts||[{id:0,label:o.btn||'知道了'}],id=>{if(o.cb)o.cb(id)},text);
+  pick(o.title||TEXT.misc.evTitle,o.opts||[{id:0,label:o.btn||TEXT.misc.ok}],id=>{if(o.cb)o.cb(id)},text);
   const im=$('pAv'),nm_=$('pTag'),fig=$('pFig'),nt=$('pNote');
   if(im&&o.img)im.src=o.img;
   if(nm_)nm_.textContent=o.name||'';

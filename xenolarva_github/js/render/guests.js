@@ -93,6 +93,7 @@ function collide(t){
       if(!da){a.x-=nx*ov*2;a.y-=ny*ov*2}else if(!db){b.x+=nx*ov*2;b.y+=ny*ov*2}
       bump(a,b,nx,ny,t);bump(b,a,-nx,-ny,t);continue;
     }
+    if(!HIT||t-HIT.t>400)HIT={x:(a.x+b.x)/2,y:(a.y+b.y)/2,t,a,b};   // 記下相撞的位置（守序、好奇會過來）
     a.x-=nx*ov;a.y-=ny*ov;b.x+=nx*ov;b.y+=ny*ov;             // 分開
     const vn=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
     if(vn<0){a.vx+=vn*nx;a.vy+=vn*ny;b.vx-=vn*nx;b.vy-=vn*ny}
@@ -127,7 +128,7 @@ function guestPose(g,i,t){
   if(g.phase!=='live')return t%700<350?'open_a':'open_b';    // 飄動時觸肢張開
   if(g.pk&&t<g.pk.until)return ['hide','turn'].includes(g.pk.kind)?'curl':['wave','stretch','touch'].includes(g.pk.kind)||(g.pk.kind==='come'&&Math.hypot(g.pk.x-g.x,g.pk.y-g.y)<40)?'reach_'+(t%440<220?'a':'b'):'flat_'+(t%440<220?'a':'b');   // 被戳的反應
   if(Math.hypot(g.vx,g.vy)>.6)return 'flat_'+(t%440<220?'a':'b');
-  if(TEMPERS[g.e.temp].sleepy&&g.y>=296&&Math.hypot(g.vx,g.vy)<.35)return 'rest';   // 睏睏貼底睡覺
+  if(TEMPERS[g.e.temp].sleepy&&(g.y>=296||(isHigh(g)&&g.y<110))&&Math.hypot(g.vx,g.vy)<.35)return 'rest';   // 睏睏貼底睡覺（高高在上＝浮在水面睡）
   return IDLE_CYCLE[Math.floor(t/450+i*3)%IDLE_CYCLE.length];
 }
 function drawGuests(t,tt){
@@ -151,7 +152,7 @@ function pokeGuest(g,t,x,y){
   if(g.phase!=='live'||t-(g.lp||0)<500)return false;
   g.lp=t;g.bn=Math.max(g.bn,.9);
   let kind=TEMPERS[g.e.temp].poke;
-  if(g.e.own.includes('touchy')&&['hide','turn'].includes(kind))kind='touch';
+  if((g.e.own.includes('touchy')||g.e.own.includes('homereturn'))&&['hide','turn'].includes(kind))kind='touch';   // 和玩家養的那隻一樣：喜歡觸碰、回歸者不會躲開
   const dur={come:3000,hide:5000,wave:2200,turn:3500,spin:1800,stretch:3200,touch:2500}[kind]||2000;
   g.pk={kind,x:Math.max(60,Math.min(WALL.r-20,x)),y:Math.max(60,Math.min(300,y)),until:t+dur};
   g.next=0;

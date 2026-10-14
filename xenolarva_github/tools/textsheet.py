@@ -25,7 +25,7 @@ SOURCES = [  # (檔案, 變數名, key 前綴)
 def parse_var(src, name, prefix):
     m = re.search(r'\bconst\s+' + re.escape(name) + r'\s*=\s*', src)
     if not m: raise SystemExit(f'找不到 const {name}')
-    strings, arrays = [], []
+    strings, arrays, raws = [], [], []
     n = len(src)
 
     def ws(i):
@@ -91,7 +91,8 @@ def parse_var(src, name, prefix):
             elif ch == ',' and depth == 0: break
             elif ch in '\'"`': _, j = pstr(j); continue
             j += 1
-        return {'t': 'x', 'v': src[i:j].strip(), 's': i, 'e': j}, j
+        node = {'t': 'x', 'v': src[i:j].strip(), 's': i, 'e': j, 'path': path}
+        raws.append(node); return node, j
 
     root = prefix.rstrip('.') if prefix and not prefix.endswith('.') else ''
     if prefix.endswith('.'):
@@ -99,7 +100,7 @@ def parse_var(src, name, prefix):
         _, _ = val(m.end(), prefix[:-1])
     else:
         _, _ = val(m.end(), prefix)
-    return strings, arrays
+    return strings, arrays, raws
 
 def is_dialog(a):
     return a['elems'] and all(e['t'] == 'a' and e['elems'] and all(p['t'] == 'a' and len(p['elems']) == 2 and all(x['t'] == 's' for x in p['elems']) for p in e['elems']) for e in a['elems'])
@@ -116,7 +117,8 @@ def collect(root):
     rows, index = [], {}
     for fn, var, prefix in SOURCES:
         src = open(os.path.join(root, fn), encoding='utf-8').read()
-        strings, arrays = parse_var(src, var, prefix)
+        strings, arrays, raws = parse_var(src, var, prefix)
+        byPath = {s['path']: s for s in strings}; rawPath = {x['path']: x for x in raws}
         dialog_spans = []
         items = []   # (start, row)
         for a in arrays:
@@ -137,7 +139,14 @@ def collect(root):
             if any(a <= s['s'] < b for a, b in dialog_spans): continue
             if CODE_RE.match(s['v']): continue
             if var == 'DECOR' and not s['path'].endswith('.name'): continue
-            items.append((s['s'], {'key': s['path'], 'v': s['v'], 'kind': 'str'}))
+            row = {'key': s['path'], 'v': s['v'], 'kind': 'str'}
+            if s['path'].endswith('.text'):                         # 事件頁：同一頁的人物／背景／道具圖
+                P_ = s['path'][:-5]; ch = byPath.get(P_ + '.chr'); im = rawPath.get(P_ + '.img')
+                row['pic'] = {k: byPath[P_ + '.' + k]['v'] for k in ('chr', 'bg', 'item') if P_ + '.' + k in byPath}
+                if im and im['v'] in ('0', '1'): row['pic']['chr'] = ['grete_1', 'grete_2'][int(im['v'])]
+                if ch: index[s['path'] + '#pic'] = {'file': fn, 's': ch['s'], 'e': ch['e'], 'kind': 'pic'}
+                elif im and im['v'] in ('0', '1'): index[s['path'] + '#pic'] = {'file': fn, 's': im['s'], 'e': im['e'], 'kind': 'picnum'}
+            items.append((s['s'], row))
             parent = next((a for a in arrays if is_strlist(a) and any(e is s for e in a['elems'])), None)
             index[s['path']] = {'file': fn, 's': s['s'], 'e': s['e'], 'kind': 'str', 'list': parent}
         items.sort(key=lambda x: x[0])
@@ -170,7 +179,7 @@ def classify(k):
         if k.startswith('shop.intro'): return ('事件', '言盡的商店：第一次去')
         if k.startswith('shop.items') and last == 'name': return ('物品與禮物', '商店商品')
         if last in ('arrive', 'bought'): return ('Log', '商店')
-        if last in ('title', 'points', 'leave', 'who', 'tagBuy', 'tagPreview', 'price', 'sold'): return ('介面', '商店')
+        if last in ('title', 'points', 'leave', 'who', 'tagBuy', 'tagPreview', 'price', 'sold', 'tabRand', 'tabFixed', 'have2', 'chatBtn', 'goodsBtn'): return ('介面', '商店')
         return ('事件', '言盡的商店：對話')
     if top == 'letter':
         if last == 'log': return ('Log', '畢業小球的信紙')
@@ -187,21 +196,38 @@ def classify(k):
         return ('Log', '格蕾特')
     if top == 'chatEv':
         return ('事件', '聊顏色（格蕾特）' if '.talk' in k else '雙色（格蕾特）')
+    if top == 'misc':
+        if last in ('mergeOk', 'mergeBad', 'wiped', 'wipe', 'wipeArm'): return ('介面', '存檔')
+        if k.startswith('misc.sum'): return ('事件', '結局畫面的摘要')
+        if last in ('giftToast',): return ('Log', '禮物')
+        return ('介面', '零散的介面文字')
+    if top == 'pv': return ('介面', '觀察水缸') if last not in ('join', 'leave', 'hi', 'transOn', 'transOff') else ('Log', '觀察水缸')
     if top in ('ui', 'layout', 'CNAME'): return ('介面', {'ui': '按鈕與標題', 'layout': '☰ 選單與開關', 'CNAME': '顏色名稱（色票）'}[top])
     if top == 'assoc': return ('Log', '協會') if last == 'done' else ('介面', '協會')
     if top == 'feed': return ('介面', '餵食選單') if last in ('pick', 'headMain', 'headSnack') else ('Log', '餵食')
     if top == 'play': return ('介面', '玩耍選單') if last in ('pick', 'toyHead', 'noToy', 'pvHead') else ('Log', '玩耍')
     if top == 'chat': return ('介面', '玩耍選單') if last in ('head', 'btnPlain', 'btnColor', 'cancel') else ('Log', '聊天')
     if top == 'bag': return ('介面', '物品')
+    if top == 'hall':
+        if any(x in k for x in ('.floors.', '.floorName.', '.who.')): return ('介面', '異生會大樓')
+        if k.startswith('hall.poke'): return ('事件', '異生會大樓：戳一下')
+        if last in ('arrive', 'upLog', 'upShop'): return ('Log', '異生會大樓')
+        if last in ('title', 'leave', 'floors', 'floorName', 'who', 'needLv', 'btnAch', 'btnUp', 'status', 'next', 'maxLv', 'btnSpecial', 'btnUrgent'): return ('介面', '異生會大樓')
+        return ('事件', '異生會大樓')
+    if top == 'special':
+        if last in ('log', 'start'): return ('Log', '特殊委託')
+        if last in ('btnList', 'title', 'hint', 'book', 'booked', 'locked', 'noTag', 'tagHead'): return ('介面', '特殊委託')
+        return ('事件', '特殊委託（賽倫絲）')
+    if top == 'ach': return ('Log', '成就') if last in ('got', 'gotWear', 'log', 'logMany') else ('介面', '成就')
     return ('Log', {'start': '開局', 'water': '換水', 'out': '出門', 'settle': '換日', 'hint': '觀察線索（沒有檢測儀時）',
                     'poke': '被戳', 'voice': '心聲（翻譯）', 'social': '小球之間', 'guest': '圖鑑同伴'}.get(top, top))
 
 SHEETS = ['個性', '標籤', '物品與禮物', 'Log', '事件', '介面']
 GROUP_ORDER = {
     'Log': ['開局', '第 0 日', '換水', '餵食', '玩耍', '聊天', '出門', '被戳', '換日', '觀察線索（沒有檢測儀時）', '個性：每天的狀態與喜好',
-            '標籤：發現與反應', '禮物：送出時', '格蕾特', '心聲（翻譯）', '小球之間', '圖鑑同伴', '協會', '商店', '互動玩耍', '畢業小球的信紙'],
-    '事件': ['開場故事', '接取新委託', '遇見格蕾特', '再次遇到格蕾特', '聊顏色（格蕾特）', '雙色（格蕾特）', '言盡的商店：第一次去', '言盡的商店：對話', '結局', '結局：標籤的結語', '畢業小球的信紙'],
-    '介面': ['按鈕與標題', '☰ 選單與開關', '小球們頁', '外出地圖', '商店', '餵食選單', '玩耍選單', '物品', '協會', '收藏品：信紙', '顏色名稱（色票）'],
+            '標籤：發現與反應', '禮物：送出時', '格蕾特', '心聲（翻譯）', '小球之間', '圖鑑同伴', '協會', '商店', '互動玩耍', '畢業小球的信紙', '異生會大樓', '成就', '特殊委託'],
+    '事件': ['開場故事', '接取新委託', '遇見格蕾特', '再次遇到格蕾特', '聊顏色（格蕾特）', '雙色（格蕾特）', '言盡的商店：第一次去', '言盡的商店：對話', '結局', '結局：標籤的結語', '畢業小球的信紙', '異生會大樓', '異生會大樓：戳一下', '特殊委託（賽倫絲）'],
+    '介面': ['按鈕與標題', '☰ 選單與開關', '小球們頁', '外出地圖', '商店', '餵食選單', '玩耍選單', '物品', '協會', '收藏品：信紙', '顏色名稱（色票）', '異生會大樓', '成就', '特殊委託'],
 }
 
 FIELD = {'name': '名字', 'desc': '說明', 'mood': '每天開始時的狀態', 'feedFav': '餵到喜歡的零食', 'playFav': '玩到喜歡的玩具',
@@ -221,6 +247,7 @@ FIELD.update({
     # 介面
     'ham': '☰ 選單項目', 'title': '遊戲名稱（開場框標題）', 'sign': '開場：簽名欄標題', 'ink': '開場：筆跡顏色標題', 'go': '開場：開始按鈕',
     'water': '按鈕：換水', 'out': '按鈕：出門', 'bag': '按鈕／標題：物品', 'free': '按鈕小字（不耗行動）', 'cost': '按鈕小字（耗行動）', 'bagSub': '按鈕小字（物品）',
+    'tabDress': '小球們：打扮分頁', 'dressCats': '打扮：裝扮分類', 'dressNone': '打扮：不戴', 'dressDone': '打扮：打扮好了按鈕', 'dressCur': '打扮：這一輪的小球', 'dressNoLarva': '打扮：沒有小球', 'dressOn': '打扮：換上訊息', 'dressOff': '打扮：拿下訊息', 'dressHint': '打扮：說明',
     'pvBuy': '商店預覽：購買按鈕', 'pvBack': '商店預覽：關掉按鈕',
     'pvExit': '觀察水缸：離開按鈕', 'pvPlay': '觀察水缸：玩耍按鈕', 'pvHead': '觀察水缸：玩耍框說明', 'noToy': '玩耍框：沒有玩具時的說明',
     'chat': '按鈕：聊天', 'watchPick': '觀察水缸：選擇小球標題', 'seeLarvae': '結局框：查看小球們按鈕',
@@ -280,6 +307,48 @@ def who_and_what(k, T):
     if top == 'place': what = {'name': '名牌（地點名稱）', 'desc': '說明', 'find': '比較容易撿到什麼'}.get(words[-1], what)
     if top == 'map': what = {'title': '地圖標題', 'go': '選取後的名牌：前往', 'back': '選取住所後的名牌：回家', 'locked': '還沒開放的標示'}.get(words[-1], what)
     if top == 'NAME': what = '名字'
+    if top == 'special': what = {'who': '說明文裡的「誰」（代入 {who}）', 'why': '說明文（通用，{who}＝誰）', 'whyTag': '說明文（依標籤）', 'whyTemp': '說明文（依個性）'}.get(seg[1], what)
+    if top == 'special' and seg[1] == 'whyTag' and len(seg) > 2: who = T.get(f'tags.{seg[2]}.name', seg[2])
+    if top == 'special' and seg[1] == 'whyTemp' and len(seg) > 2: who = T.get(f'temper.{seg[2]}.name', seg[2])
+    if top == 'hall' and seg[1] == 'who': what = '名牌（角色名）'
+    if top == 'hall' and seg[1] == 'larvaGot': who, what = '背景的小球', '戳背景的小球送你道具（{item}＝道具名）'
+    if top == 'hall' and seg[1] == 'larvaSay' and len(seg) > 2: who, what = T.get(f'hall.who.{seg[2]}', seg[2]), '小球送道具時，這層的人說的話（接在「獲得…」下一行；沒人站著就不說）'
+    if top == 'chat' and len(seg) > 1:
+        CH = {'style': '雜誌染色・聊天框「外殼」列的標題', 'styleOne': '雜誌染色・按鈕：單色', 'styleV': '雜誌染色・按鈕：上下', 'styleH': '雜誌染色・按鈕：左右',
+              'soft': '雜誌染色・按鈕：柔和（漸層）', 'split': '雜誌染色・按鈕：分色', 'magTalk': '雜誌染色・兩邊都選了顏色時（{mag} 雜誌名、{a}{b} 哪兩邊、{c}{c2} 顏色）',
+              'magTalkOne': '雜誌染色・只選一邊時（{mag}、{a} 哪一邊、{c}）', 'magReact': '雜誌染色・小球的反應（隨機）', 'done2': '雜誌染色・一邊染好（{a} 哪一邊、{c}）',
+              'doneTwo': '雜誌染色・兩邊都染好，變成兩色（{a}{c}{b}{c2}）', 'styleSet': '雜誌染色・只換樣式時（{s}＝例如「柔和的上下兩色」）', 'toastTwo': '雜誌染色・變成兩色時的浮動提示'}
+        if seg[1] in CH:
+            n = re.search(r'（第 \d+ 則）$', what)
+            who, what = '雜誌染色', CH[seg[1]] + (n.group(0) if n and seg[1] == 'magReact' else '')
+        if seg[1] == 'side' and len(seg) > 2:
+            who, what = '雜誌染色', ('上下' if seg[2] == 'v' else '左右') + '的兩邊名稱（' + ('第 1 個＝上／左' if k.endswith('[0]') else '第 2 個＝下／右' if k.endswith('[1]') else '不要新增') + '）'
+    if top == 'shop' and len(seg) > 1 and seg[1] in ('chat', 'sceneLarva', 'chatBtn', 'goodsBtn', 'larvaGive'):
+        n = re.search(r'（第 \d+ 則）$', what); n = n.group(0) if n else ''
+        who, what = '言盡', {'chat': '閒聊畫面：打開時言盡說的話（隨機）', 'sceneLarva': '閒聊畫面：戳背景的小球（隨機）', 'chatBtn': '按鈕：閒聊', 'goodsBtn': '按鈕：從閒聊回到商品', 'larvaGive': '閒聊畫面：小球送東西時言盡說的話（接在「獲得…」下一行）'}[seg[1]] + n
+    if top == 'misc' and len(seg) > 1:
+        MS = {'defPlayer': '沒填名字時的玩家名', 'defLarva': '小球名字的預設值', 'dayLabel': '左上角的日期（{d}＝第幾日）', 'notes': '筆記欄的標題', 'notesTemp': '筆記欄：個性', 'notesLike': '筆記欄：喜好',
+              'unknown': '筆記欄：還不知道的喜好', 'water': '水缸角落的水質（{w}）', 'waterNum': '水質數值（{d} 污、{p} 酸鹼）', 'waterUnknown': '沒有檢測儀時的水質', 'custom': '色票最後一格（自訂）',
+              'customColor': '自訂顏色（說明文字）', 'nick': '暱稱輸入框（說明文字）', 'evTitle': '事件框的標題', 'ok': '事件框的預設按鈕', 'grete': '格蕾特提示框的標題與名牌', 'giftToast': '收到禮物時的浮動提示（{name}）',
+              'endArm': '結束今日：按第一下之後', 'endArmAp': '結束今日：按第一下之後（還有行動時，{n}）', 'wipeArm': '清除存檔：按第一下之後', 'wipe': '清除存檔按鈕',
+              'sumTime': '摘要表：時間', 'sumDays': '摘要表：存活天數（{day}）', 'sumLike': '摘要表：喜歡', 'sumColor': '摘要表：色彩', 'sumTwo': '摘要表：雜誌兩色的第二色',
+              'sumByChat': '摘要表：顏色是聊天染的', 'sumDyed': '摘要表：核心染上代表色', 'sumNatural': '摘要表：核心是自然的顏色', 'sumPlain': '摘要表：外殼沒有染色', 'sumV': '摘要表：上下', 'sumH': '摘要表：左右', 'sumSaved': '摘要表下面的備註',
+              'colorSuffix': '聊天框：顏色名後面的字', 'none': '聊天框：還沒選顏色', 'partAll': '聊天框：全部設定', 'partCore': '聊天框：設定核心', 'partShell': '聊天框：設定外殼', 'core': '聊天框：核心',
+              'shell': '聊天框：外殼', 'infoColor': '聊天框：單色時的顏色欄', 'things': '聊天染色：顏色沒有對應東西時', 'styleName': '雜誌染色：樣式名稱（{soft}{style}）',
+              'colName': '收藏品表頭：名稱', 'colDesc': '收藏品表頭：說明', 'colKind': '收藏品表頭：種類', 'colShow': '收藏品表頭：顯示', 'colSrc': '收藏品表頭：來源', 'colCount': '收藏品表頭：數量', 'showInTank': '裝飾勾選框（說明文字）',
+              'rename': '改名按鈕（說明文字）', 'newName': '改名輸入框（說明文字）', 'saveName': '儲存名字（說明文字）', 'cancelName': '取消改名（說明文字）', 'rowInfo': '小球那一列：第幾日｜日期｜照顧者',
+              'rowTags': '小球那一列：標籤', 'rowLike': '小球那一列：喜好（{g}{t}）', 'guestOn': '小球們：放入水缸', 'guestOff': '小球們：離開水缸', 'noLarva': '小球們：還沒有小球',
+              'mergeOk': '上傳進度成功（{n}）', 'mergeBad': '上傳進度失敗', 'wiped': '清除存檔之後'}
+        if seg[1] in MS: what = MS[seg[1]]
+        if seg[1] == 'collTabs' and len(seg) > 2: what = '收藏品分頁名稱'
+    if top == 'pv' and len(seg) > 1:
+        PS = {'noList': '圖鑑裡沒有可觀察的小球', 'hi': '進入觀察水缸', 'join': '小球飄進來（{name}）', 'leave': '小球飄出去（{name}）', 'transOn': '翻譯打開', 'transOff': '翻譯關掉', 'none': '水缸裡還沒有小球',
+              'sel': '左上的按鈕（{n}{max}）', 'trans': '翻譯按鈕（{s}＝開／關）', 'on': '開', 'off': '關', 'transTitle': '翻譯按鈕（說明文字）', 'watchOn': '選擇小球：放入觀察', 'watchOff': '選擇小球：取消觀察', 'stat': '選擇小球：已選幾隻（{n}{max}）'}
+        if seg[1] in PS: who, what = '觀察水缸', PS[seg[1]]
+    if top == 'bag' and len(seg) > 1 and seg[1] == 'decorHead': what = '物品欄：裝飾的分類標題'
+    if top == 'hall' and seg[1] == 'knownHi': who, what = '交還過的小球', '在大樓背景出現，戳的第一下（通用；{name}＝小球名字）'
+    if top == 'hall' and seg[1] == 'knownHiTemp' and len(seg) > 2: who, what = T.get(f'temper.{seg[2]}.name', seg[2]), '交還過的小球，戳的第一下（依個性，沒寫的用通用）'
+    if top == 'hall' and seg[1] == 'larvaPoke': who, what = '背景的小球', '戳背景的小球（沒有送道具時）' + (re.search(r'（.*）$', what).group(0) if re.search(r'（第 \d+ 則）$', what) else '')
     if top in ('item', 'decor') and len(words) == 1: what = '說明（收藏頁）'
     if top == 'pages' or ('pages' in k and words and words[-1] == 'name'): what = what.replace('名字', '名牌（圖片下方）')
     if re.search(r'pages\[(\d+)\]', k): what = f"第 {int(re.search(r'pages\[(\d+)\]', k).group(1)) + 1} 頁・" + what
@@ -316,7 +385,7 @@ def old_context(path):
 # ---------------------------------------------------------------- 參考資料（數值）：用 node 跑遊戲資料檔取得
 def game_data(root):
     snip = os.path.join(root, '.textsheet_tmp.js')
-    open(snip, 'w').write("console.log('@@'+JSON.stringify({TEMPERS,TAGS,TAG_ODDS,TAG_CLASH,SOUV_SRC,SOUV_RULE,ASSOC}));process.exit(0);")
+    open(snip, 'w').write("console.log('@@'+JSON.stringify({TEMPERS,TAGS,TAG_ODDS,TAG_CLASH,SOUV_SRC,SOUV_RULE,ASSOC,HALL_FLOORS}));process.exit(0);")
     try:
         out = subprocess.run(['node', os.path.join(root, 'tools/test_harness.js'), root, snip], capture_output=True, text=True).stdout
     finally:
@@ -330,13 +399,32 @@ C_HEAD = PatternFill('solid', fgColor='1F4E5F'); C_GROUP = PatternFill('solid', 
 C_NEW = PatternFill('solid', fgColor='FFF2CC'); C_ADD = PatternFill('solid', fgColor='EEF7E8'); C_REF = PatternFill('solid', fgColor='F3F3F3')
 THIN = Border(bottom=Side(style='thin', color='D0D7DB'))
 WRAP = Alignment(wrap_text=True, vertical='top')
-COLS = [('分組', 16), ('對象', 12), ('情境', 22), ('目前文字', 58), ('代入字', 14), ('程式位置（key）', 24), ('你的新文字', 58)]
+COLS = [('分組', 16), ('對象', 12), ('情境', 22), ('目前文字', 58), ('代入字', 14), ('程式位置（key）', 24), ('你的新文字', 58), ('使用的圖片', 20), ('換人物圖（填檔名）', 20)]
+PIC_NAME = {'chr': '人物', 'bg': '背景', 'item': '道具'}
 
 def title(ws, t, sub):
     ws['A1'] = t; ws['A1'].font = Font(name=F, bold=True, size=14)
     ws['A2'] = sub; ws['A2'].font = Font(name=F, size=10, color='555555'); ws['A2'].alignment = Alignment(wrap_text=False)
 
-def text_table(ws, rows, start, T, ctx):
+# 不在事件頁、但畫面上有人物的台詞：寫出用哪張圖（只顯示，要換請改 js/data/hall.js 的 pokeAlt）
+def pic_of(k, D):
+    m = re.match(r'^hall\.poke\.(\w+)\[(\d+)\]$', k)
+    if m and D and 'HALL_FLOORS' in D:
+        F_ = D['HALL_FLOORS'].get(m.group(1)) or {}; ch = F_.get('chr') or []; i = int(m.group(2))
+        if not ch: return None
+        if F_.get('pokeAlt') is not None: return f"人物：{ch[1] if i in F_['pokeAlt'] and len(ch) > 1 else ch[0]}"
+        return f"人物：{'／'.join(ch)}（輪流）"
+    m = re.match(r'^shop\.poke\[(\d+)\]$', k)
+    if m: return '人物：' + ('yanjin_2' if int(m.group(1)) == 2 else 'yanjin_1') + '（閒聊畫面）'
+    if re.match(r'^shop\.(chat\[|sceneLarva\[|larvaGive$)', k): return '人物：yanjin_1\n背景：ruins_1（閒聊畫面）'
+    if k.startswith('special.') and k.split('.')[1] in ('idle', 'reserved'): return '人物：silence_1（預約後 silence_2）' if k.split('.')[1] == 'reserved' else '人物：silence_1'
+    if re.match(r'^hall\.(joan\[|up\.|upNo$|upMax$)', k): return '人物：joan_1'
+    m = re.match(r'^hall\.larvaSay\.(\w+)$', k)
+    if m and D and 'HALL_FLOORS' in D: return '人物：' + ((D['HALL_FLOORS'].get(m.group(1)) or {}).get('chr') or ['—'])[0]
+    if re.match(r'^hall\.lobbyGrete', k): return '人物：grete_1'
+    return None
+
+def text_table(ws, rows, start, T, ctx, D=None):
     for i, (h, w) in enumerate(COLS, 1):
         c = ws.cell(start, i, h); c.font = Font(name=F, bold=True, color='FFFFFF'); c.fill = C_HEAD; c.alignment = WRAP
         ws.column_dimensions[get_column_letter(i)].width = w
@@ -350,14 +438,20 @@ def text_table(ws, rows, start, T, ctx):
         who, what = who_and_what(row['key'], T)
         o = ctx.get(row['key'])
         if o and (o[0] in SHEETS or o[1] == group): o = None          # 舊總表裡誤填成分頁名／分組名的說明不要沿用
-        if o and o[0] and o[0] not in ('全部', '-'): who = o[0]
-        if o and o[1] and not re.search(r'・[A-Za-z]+$', str(o[1])) and not re.fullmatch(r'[A-Za-z]+', str(o[1])): what = o[1]
+        if o and o[1] and '言盡的名牌' in str(o[1]) and not row['key'].startswith('shop.'): o = None   # 舊總表誤標（special.who 等）不要沿用
+        if o and o[0] and o[0] not in ('全部', '-') and not row['key'].startswith('souv.'): who = o[0]   # 禮物的對象＝禮物現在的名字（改名後要跟著變）
+        if o and o[1] and not re.search(r'・[A-Za-z]+$', str(o[1])) and not re.fullmatch(r'[A-Za-z][A-Za-z0-9]*(（第 \d+ 則）)?', str(o[1])): what = o[1]
         vals = [group, who, what, row['v'], '、'.join(dict.fromkeys(re.findall(r'\{\w+\}', row['v']))), row['key'], None]
         for i, v in enumerate(vals, 1):
             c = ws.cell(r, i, v); c.alignment = WRAP; c.border = THIN
             c.font = Font(name=F, size=10, color='888888') if i in (1, 5, 6) else Font(name=F, size=11)
         ws.cell(r, 7).fill = C_ADD if row['key'].endswith('[+]') else C_NEW
-        if row['kind'] == 'dialog': ws.cell(r, 3).value = (what + '｜對話：每行「說話者：內容」')
+        pic = row.get('pic') or pic_of(row['key'], D)
+        if pic:
+            c = ws.cell(r, 8, '\n'.join(f'{PIC_NAME[k]}：{v}' for k, v in pic.items() if k in PIC_NAME) if isinstance(pic, dict) else pic)
+            c.alignment = WRAP; c.border = THIN; c.font = Font(name=F, size=10, color='555555')
+            if isinstance(pic, dict) and 'chr' in pic: ws.cell(r, 9).fill = C_NEW; ws.cell(r, 9).border = THIN   # 黃底＝可以換人物圖
+        if row['kind'] == 'dialog': ws.cell(r, 3).value = (str(what).replace('｜對話：每行「說話者：內容」', '') + '｜對話：每行「說話者：內容」')   # 舊總表帶回來的說明已經有這段，先拿掉再加一次（不然每次 build 會越疊越長）
         r += 1
     return r
 
@@ -427,8 +521,9 @@ def build(root, oldpath, outpath):
         ('新增一則', '淺綠色的「（新增一則）」列：寫在右邊就會加進那個清單（遊戲會隨機挑一則）。要一次加好幾則，用「空一行」隔開。'),
         ('刪除一則', '在清單裡某一則的新文字欄寫「（刪除）」。'),
         ('心聲對話', '心聲一格是一整段對話，每行「說話者：內容」，例如「觸肢A：好餓」。說話者可以是本體、觸肢A、觸肢B、觸肢們。'),
+        ('使用的圖片', '人物說話的那幾列，右邊會寫這句用哪張圖（人物、背景、道具；檔名＝assets 資料夾裡的圖，不含 .png）。事件頁的人物圖可以換：在黃色的「換人物圖（填檔名）」欄填檔名，例如 joan_2。大樓被戳的台詞、言盡的頭像這些只顯示，要換請直接告訴 Claude。'),
         ('灰色欄', '「分組」「代入字」「程式位置（key）」是給程式對照用的，請不要改。'),
-        ('不在這份總表的', '說明頁與更新公告（js/data/about.js、news.js，有排版），開發者面板、收藏頁表頭等少數字還寫在程式裡；想改直接告訴 Claude。'),
+        ('不在這份總表的', '說明頁與更新公告（js/data/about.js、news.js，有排版），開發者面板、物品分類名稱等少數字還寫在程式裡；想改直接告訴 Claude。'),
     ]
     r = 4
     for a, b in guide:
@@ -465,7 +560,7 @@ def build(root, oldpath, outpath):
                 e = ent(x)
                 if e not in ids: ids.append(e)
             srows.sort(key=lambda x: ids.index(ent(x)))
-        end = text_table(ws, srows, 4, T, ctx)
+        end = text_table(ws, srows, 4, T, ctx, D)
         r = end + 2
         if s == '個性':
             data = []
@@ -534,6 +629,22 @@ def apply(root, xlsx):
         row0, vals = head
         ck, cn = vals.index('程式位置（key）'), vals.index('你的新文字')
         cc = vals.index('目前文字') if '目前文字' in vals else None
+        cp = vals.index('換人物圖（填檔名）') if '換人物圖（填檔名）' in vals else None
+        if cp is not None:                                                     # 換事件頁的人物圖（填 assets 裡的檔名，不含 .png）
+            for r in ws.iter_rows(min_row=row0 + 1, values_only=True):
+                if not any(v is not None and str(v).strip() for v in r): break
+                k = r[ck] if ck < len(r) else None; pic = r[cp] if cp < len(r) else None
+                if not k or pic is None or not str(pic).strip(): continue
+                pic = str(pic).strip().removesuffix('.png')
+                info = index.get(str(k) + '#pic')
+                if not info: problems.append(f'{ws.title}｜{k}：這一列沒有人物圖可以換'); continue
+                if not (os.path.exists(os.path.join(root, 'assets', pic + '.png')) or os.path.exists(os.path.join(root, 'assets', pic + '.jpg'))):
+                    problems.append(f'{ws.title}｜{k}：assets 裡找不到 {pic}.png'); continue
+                if info['kind'] == 'picnum':
+                    if pic not in ('grete_1', 'grete_2'): problems.append(f'{ws.title}｜{k}：格蕾特的事件只能用 grete_1 或 grete_2'); continue
+                    lit = '0' if pic == 'grete_1' else '1'
+                else: lit = jsq(pic)
+                edits.setdefault(info['file'], []).append((info['s'], info['e'], lit)); done.append(f'{ws.title}｜{k}（人物圖 → {pic}）')
         for r in ws.iter_rows(min_row=row0 + 1, values_only=True):
             if not any(v is not None and str(v).strip() for v in r): break     # 文字表結束（下面是灰底參考資料）
             k = r[ck] if ck < len(r) else None; new = r[cn] if cn < len(r) else None
@@ -568,7 +679,10 @@ def apply(root, xlsx):
                 elif info['kind'] == 'dialog':
                     edits.setdefault(fn, []).append((info['s'], info['e'], dialog_lit(new)))
                 else:   # 新增一則（空一行隔開好幾則）
-                    parts = [p.strip('\n') for p in re.split(r'\n\s*\n', new) if p.strip()]
+                    if info['kind'] == 'str+' and not re.search(r'\n\s*\n', new):   # 一行一則（短句清單，例如說明文、人物）
+                        parts = [p.strip() for p in new.split('\n') if p.strip()]
+                    else:   # 空一行隔開好幾則
+                        parts = [p.strip('\n') for p in re.split(r'\n\s*\n', new) if p.strip()]
                     lits = [dialog_lit(p) if info['kind'] == 'dialog+' else jsq(p) for p in parts]
                     lst = info['list']
                     pre = ',' if lst['elems'] else ''

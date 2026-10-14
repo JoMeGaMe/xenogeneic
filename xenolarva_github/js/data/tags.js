@@ -15,9 +15,12 @@ const TAGS={
   clean:     {weight:30},
   scholar:   {weight:10},                           // 第一次聽到心聲時揭曉
   homereturn:{weight:5, needsLost:true},            // 同上；另外需要有消逝過的小球才會出現
-  sneak:     {weight:10}                            // 偷偷七逃：換日時偶爾從缸邊游進來，才發現牠溜出去過
+  sneak:     {weight:10},                           // 偷偷七逃：換日時偶爾從缸邊游進來，才發現牠溜出去過
+  vain:      {weight:30},                           // 愛美：戴著裝扮的日子信賴＋，沒戴會無聊（v0.28）
+  smalleat:  {weight:30},                           // 不愛吃：肚子餓得慢，但每次吃得少（v0.28）
+  high:      {weight:30}                            // 高高在上：喜歡待在水缸上半部；睏睏的話會浮在水面睡（v0.28）
 };
 // 互相矛盾、不會同時出現的標籤
-const TAG_CLASH=[['glutton','frail'],['playful','scholar'],['frail','sneak']];
+const TAG_CLASH=[['glutton','frail'],['playful','scholar'],['frail','sneak'],['glutton','smalleat']];
 // 每隻小球的標籤數量：50% 沒有、45% 一個、5% 兩個（v0.18.0 起一個標籤 +10%）
 const TAG_ODDS={none:.50,one:.45};

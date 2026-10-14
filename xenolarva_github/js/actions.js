@@ -33,7 +33,8 @@ function actFeed(){
 function feedItem(k){
   S.inv[k]--;S.history.push('feed');
   const glut=hasTag('glutton'),snack=GIFTS.includes(k),before=S.tagsFound.filter(id=>snack||id!=='glutton');
-  const amt=k==='food'?35:15,full=S.sat>(glut?70:85),v={item:NAME[k]};   // 貪吃鬼更容易吃撐、什麼零食都不推開
+  const amt=Math.round((k==='food'?35:15)*(hasTag('smalleat')?.6:1)),full=   // 不愛吃：每次吃得少
+    S.sat>(glut?70:85),v={item:NAME[k]};   // 貪吃鬼更容易吃撐、什麼零食都不推開
   if(k===S.pref.dislike&&!glut&&S.sat<=40){          // 不喜歡的零食：餓得受不了才勉強吃
     S.sat=clamp(S.sat+10);emote('q');say(fmt(TEXT.feed.dislikeEat,v));
   }else if(k===S.pref.dislike&&!glut){               // 不喜歡的零食：推開（還是會消耗）
@@ -51,13 +52,14 @@ function feedItem(k){
     emote('star');say(fmt(TEXT.feed.ok,v));
   }
   if(glut&&snack)discoverTag('glutton');
+  if(hasTag('smalleat'))discoverTag('smalleat');
   tagReact('feed',v,before);
   refresh();
 }
 
 // ---------- 玩耍（耗 1 行動）----------
 function actPlay(){
-  const toys=[...TOYS.filter(t=>S.inv[t]>0),...META.tools].map(t=>({id:t,label:NAME[t]}));   // 玩具＋永久道具（指揮棒）
+  const toys=[...TOYS.filter(t=>S.inv[t]>0),...META.tools.filter(t=>PLAY_TOOLS.includes(t))].map(t=>({id:t,label:NAME[t]}));   // 玩具＋永久道具（指揮棒）
   const opts=toys.length?[{head:TEXT.play.toyHead},...toys]:[];   // 聊天改成獨立的「聊天」鍵（js/chat.js 的 chatOpen）
   pick(TEXT.play.pick,opts,t=>{
     S.ap--;S.playedToday=true;
@@ -92,6 +94,7 @@ function lootPick(w){
 function actOut(place){
   place=PLACES[place]&&PLACES[place].loot?place:RANDOM_PLACES[0];
   S.ap--;S.outs++;S.explore++;
+  if(!META.visited.includes(place))META.visited.push(place);   // 去過的地點（成就）
   const got={};
   for(let i=0;i<OUT_ITEMS;i++){const k=lootPick(PLACES[place].loot);got[k]=(got[k]||0)+1}
   if(S.inv.kit<1&&(S.outs>=3||Math.random()<0.25))got.kit=1;      // 水質檢測儀：第 3 次出門起必拿到，之前有 25% 機率
@@ -129,21 +132,11 @@ function actOut(place){
 // 物品欄：依分類列出（分類之間用橫線隔開）｜名稱 ×數量，右上 ✕ 關閉
 function actBag(){
   const groups=ITEM_GROUPS.map(([label,ids])=>[label,ids.filter(id=>S.inv[id]>0).map(id=>[NAME[id],S.inv[id]])]);
-  groups.push(['裝飾',META.decor.map(id=>[DECOR[id].name,1])]);
+  groups.push([TEXT.bag.decorHead,META.decor.map(id=>[DECOR[id].name,1])]);
   const box=$('bagBody');box.textContent='';
   const shown=groups.filter(g=>g[1].length);
-  if(!shown.length&&!META.wears.length)box.append(h('p',{class:'dim'},TEXT.bag.empty));
-  if(META.wears.length)shown.push([TEXT.bag.wearHead,[],true]);
-  shown.forEach(([label,rows,wear],i)=>{
-    if(wear){
-      if(i)box.append(h('hr',{class:'div'}));
-      box.append(h('div',{class:'bagh'},label),...META.wears.map(id=>{
-        const on=S.wear===id,nm=wearName(id);
-        return h('div',{class:'bagrow'},h('span',{},nm),h('button',{class:'ib wbtn2'+(on?' on':''),onclick:()=>{
-          S.wear=on?'':id;say(fmt(on?TEXT.bag.woreOff:TEXT.bag.woreOn,{item:nm}),'sys');actBag()}},on?TEXT.bag.wearOff:TEXT.bag.wearOn));
-      }));
-      return;
-    }
+  if(!shown.length)box.append(h('p',{class:'dim'},TEXT.bag.empty));
+  shown.forEach(([label,rows],i)=>{                  // 裝扮改到「小球們 → 打扮」
     if(i)box.append(h('hr',{class:'div'}));
     box.append(h('div',{class:'bagh'},label),...rows.map(r=>h('div',{class:'bagrow'},h('span',{},r[0]),h('span',{class:'num'},'×'+r[1]))));
   });

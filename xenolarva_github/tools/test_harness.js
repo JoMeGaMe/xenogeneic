@@ -8,7 +8,7 @@ const P=()=>new Proxy(function(){},{get:(t,k)=>k==='length'?0:k===Symbol.toPrimi
 const store={};
 const ctx={document:P(),localStorage:{getItem:k=>store[k]||null,setItem:(k,v)=>store[k]=v},innerWidth:800,innerHeight:600,
  Image:function(){setTimeout(()=>this.onload&&this.onload(),0)},performance:{now:()=>Date.now()},Blob:function(){},URL:{createObjectURL:()=>'x',revokeObjectURL(){}},
- requestAnimationFrame:()=>0,cancelAnimationFrame(){},setTimeout,setInterval:()=>0,clearInterval(){},console,process,Math,JSON,Date,Array,Object,String,Number,Set,Promise};
+ requestAnimationFrame:()=>0,cancelAnimationFrame(){},setTimeout,clearTimeout,setInterval:()=>0,clearInterval(){},console,process,Math,JSON,Date,Array,Object,String,Number,Set,Promise};
 ctx.addEventListener=()=>{};ctx.window=ctx;vm.createContext(ctx);
 const html=fs.readFileSync(root+'/index.html','utf8');
 const files=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1].split('?')[0]);

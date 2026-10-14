@@ -18,7 +18,7 @@ function letterCheck(){
   let r=null,kind=null;
   for(const c of letterCands()){kind=letterRoll(c);if(kind){r=c;break}}
   if(!r)return false;
-  r.gift=true;
+  r.gift=true;r.lkind=kind;                 // lkind：寄了哪種信（之後大樓背景用）
   const L=letterMake(r,kind);
   META.souv.letter=(META.souv.letter||0)+1;
   META.letterGot[L.kind]=(META.letterGot[L.kind]||0)+1;   // 每種信各收到幾封（成就用）
@@ -35,9 +35,9 @@ function letterMake(r,kind){
   const weeks=Math.max(1,letterWeeks(r));
   kind=kind||'normal';
   const pickV=x=>Array.isArray(x)?R(x):x;   // 近況、祝福可以有好幾種寫法，隨機挑一個
-  const v={player:META.pname||'玩家',name:r.name,weeks,staff:R(T.staff),bless:pickV(T.bless[r.end]||T.blessAny)};
+  const v={player:META.pname||TEXT.misc.defPlayer,name:r.name,weeks,staff:R(T.staff),bless:pickV(T.bless[r.end]||T.blessAny)};
   const base={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),from:r.name,at:new Date().toISOString().slice(0,10),kind,note:fmt(T.note,v)};
-  if(kind==='farewell')return {...base,intro:T.farewellIntro,body:fmt(T.farewellBody,v),note2:T.farewellNote2,img:false};
+  if(kind==='farewell')return {...base,intro:T.farewellIntro,body:fmt(T.farewellBody,v),note2:T.farewellNote2,img:true};
   // 近況：從這隻的個性、標籤、喜好裡隨機挑一個（舊紀錄沒有這些資料時用通用的）
   const opts=[];
   if(r.temp&&T.recentTemper[r.temp])opts.push(pickV(T.recentTemper[r.temp]));
@@ -57,10 +57,8 @@ const letterKind=L=>TEXT.letter.kinds[L.kind]||TEXT.letter.kinds.normal;
 function letterShow(L,fresh){
   const T=TEXT.letter;
   const nodes=[{node:letterBox(L)}];
-  if(L.img){
-    const img=h('img',{class:'lpaper',src:LETTER_IMG,alt:''});img.onerror=()=>{img.hidden=true};
-    nodes.push({node:img});
-  }
+  // 圖：依種類的一張 CG（劇情上每種都有後勤的翻譯稿；問候、期許另外附小球手寫的信紙，但畫面只放這張 CG）
+  {const cg=h('img',{class:'lpaper',src:assetImg(LETTER_IMGS[L.kind]||LETTER_IMGS.normal),alt:''});cg.onerror=()=>{cg.src=LETTER_IMG};nodes.push({node:cg})}
   if(fresh){
     const keep=on=>{META.letters=META.letters.filter(x=>x.id!==L.id);if(on)META.letters.push(L);codexSave()};
     keep(true);

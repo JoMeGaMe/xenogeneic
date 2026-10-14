@@ -24,16 +24,16 @@ function nextToast(){
 function refresh(){
   if(PV)return;                                          // 預覽模式沒有這些面板
   paintName($('cname'),S.colored?S.col:'');
-  $('day').textContent=`第 ${Math.min(S.day,7)} 日 / 7`;
+  $('day').textContent=fmt(TEXT.misc.dayLabel,{d:Math.min(S.day,7)});
   $('pips').innerHTML=[0,1].map(i=>`<span class="${i<S.ap?'on':''}"></span>`).join('');
 
   // 筆記：個性（加上已發現的標籤，用「／」連起來；滑鼠移上去或點一下會顯示說明）、喜好（發現前顯示 ？）
   const T=TEXT.temper[S.temp];
   const tip=(txt,desc,cls)=>`<span class="tipc ${cls||''}" data-tip="${esc(desc)}" tabindex="0">${esc(txt)}</span>`;
   const traits=[tip(T.name,T.desc),...S.tagsFound.map(id=>tip(TEXT.tags[id].name,TEXT.tags[id].desc,'tagc'))].join(' / ');
-  $('notes').innerHTML=`<b>筆記</b><div>個性：${traits}</div><div>喜好：${S.found.gift?esc(NAME[S.pref.gift]):'？'} / ${S.found.toy?esc(NAME[S.pref.toy]):'？'}</div>`;
+  const X=TEXT.misc;$('notes').innerHTML=`<b>${esc(X.notes)}</b><div>${esc(X.notesTemp)}${traits}</div><div>${esc(X.notesLike)}${S.found.gift?esc(NAME[S.pref.gift]):esc(X.unknown)} / ${S.found.toy?esc(NAME[S.pref.toy]):esc(X.unknown)}</div>`;
   // 水質：有檢測儀才會在水缸角落顯示數值（飽食不顯示，太餓時小球會冒出刀叉泡泡）
-  const wq=$('wq');wq.hidden=!(S.inv.kit>0);wq.textContent=`水質 ${waterW()}`;
+  const wq=$('wq');wq.hidden=!(S.inv.kit>0);wq.textContent=fmt(TEXT.misc.water,{w:waterW()});
 
   // 格蕾特小助手：遇見之後才出現。開著時，換水與餵食收起來，改成多一個翻譯開關
   const gr=!!META.grete&&!S.over,L=TEXT.layout;
@@ -48,7 +48,7 @@ function refresh(){
   const off=!!S.over;
   $('bWater').disabled=off||S.inv.agent<1;
   $('bFeed').disabled=off||!FOODS.some(k=>S.inv[k]>0);
-  $('bPlay').disabled=off||S.ap<1||false;
+  $('bPlay').disabled=off||S.ap<1;
   $('bChat').disabled=off||S.ap<1;
   $('bOut').disabled=off||S.ap<1;
   $('end').disabled=off;
@@ -83,7 +83,7 @@ function pick(title,opts,cb,body){
     if(o.node){$('po').appendChild(o.node);return}
     if(o.head){const d=document.createElement('div');d.className='phead';d.textContent=o.head;$('po').appendChild(d);return}
     const b=document.createElement('button');
-    b.textContent=o.label;b.disabled=!!o.off;
+    b.textContent=o.label;b.disabled=!!o.off;if(o.main)b.className='main';   // main＝這個框最主要的一下（黃底）
     b.onclick=()=>{$('ovPick').classList.remove('show');cb(o.id)};
     $('po').appendChild(b);
   });

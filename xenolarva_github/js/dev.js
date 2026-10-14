@@ -68,11 +68,12 @@ function devBuild(){
     h('button',{onclick:()=>setInv(FOODS,9)},'補齊食物'),h('button',{onclick:()=>setInv(FOODS,0)},'清空食物'),
     h('button',{onclick:()=>setInv(['agent'],9)},'補齊換水劑'),h('button',{onclick:()=>setInv(['agent'],0)},'清空換水劑')));
   // 格蕾特（事件與解鎖）
-  const rs=()=>{if(S){S.grete=false;S.trans=false;S.tc=S.tb='';S.chatC=[];S.chatB=[]}META.greteMet=META.grete=META.chatColor=META.chatDual=false;META.chatWins=0;codexSave();refresh()};
+  const rs=()=>{if(S){S.grete=false;S.trans=false;S.tc=S.tb=S.tb2=S.tbm='';S.chatC=[];S.chatB=[];S.chatB2=[]}META.greteMet=META.grete=META.chatColor=META.chatDual=false;META.chatWins=0;codexSave();refresh()};
   p.append(h('div',{class:'dg'},h('label',{},'格蕾特'),
     h('button',{onclick:()=>{p.hidden=true;runEvent('greteMeet')}},'遇見格蕾特（跑事件並解鎖小助手）'),
     h('button',{onclick:()=>{META.chatColor=true;codexSave();refresh()}},'開啟染色'),
     h('button',{onclick:()=>{META.chatColor=true;META.chatDual=true;META.chatWins=Math.max(1,META.chatWins);codexSave();refresh()}},'開啟雙色'),
+    h('button',{onclick:()=>{['magV','magH'].forEach(k=>{if(!META.tools.includes(k))META.tools.push(k)});codexSave();refresh()}},'雜誌全拿'),
     h('button',{onclick:rs},'全部格蕾特事件重置')));
   // 禮物與偷偷七逃
   p.append(h('div',{class:'dg'},h('label',{},'禮物／偷偷七逃'),

@@ -16,8 +16,8 @@ const gameSpeed=o=>.9+TEMPERS[o===C?S.temp:o.e.temp].speed*.6;
 const gameSay=(s,cls)=>say(s.replace(/幼體/g,GAME&&GAME.who?gameName(GAME.who):nm(S.name)),cls||'ev');   // 文字裡的「幼體」＝玩的那隻
 // 這隻喜不喜歡這個玩具：最喜歡的玩具（養的那隻 S.pref.toy；同伴 e.pt）或有「貪玩」標籤＝喜歡。
 // 指揮棒、小水桶（商店買的永久道具）不會是「最喜歡的玩具」，改看個性：
-//   指揮棒＝黏人、好奇、活潑喜歡追；小水桶＝害羞、頑固、睏睏喜歡躲（剛好相反）
-const GAME_LIKE={wand:['clingy','curious','lively'],bucket:['shy','stubborn','sleepy']};
+//   指揮棒＝黏人、好奇、活潑、守序喜歡追；小水桶＝害羞、頑固、睏睏、易染喜歡躲（剛好相反）
+const GAME_LIKE={wand:['clingy','curious','lively','helper'],bucket:['shy','stubborn','sleepy','mimic']};   // 守序（helper）＝指揮棒派、易染（mimic）＝水桶派（使用者 v0.29.10）
 function gameLikes(o,toy){
   const fav=o===C?S.pref.toy:o.e.pt,tags=o===C?S.tags:o.e.own,temp=o===C?S.temp:o.e.temp;
   if(toy===fav||tags.includes('playful'))return true;
@@ -51,6 +51,8 @@ function gameStart(toy){
   }else return;
   cv.style.touchAction='none';                          // 手機：在水缸上拖曳不會捲動畫面
 }
+// 有小球拿到小皇冠：記一次（成就「今天的王者」）
+function gameCrown(){META.crowns=(META.crowns||0)+1;codexSave()}
 function gameStop(){GAME=null;cv.style.touchAction=''}
 // 結束：寫訊息，留一下下讓氣泡、球停在畫面上
 function gameEnd(t,msg){
@@ -77,13 +79,13 @@ function gameStep(t){
   if(!GAME)return;
   if(GAME.done){if(t-GAME.doneAt>GAME_RULE.linger)gameStop();return}
   if(!S||S.over){gameStop();return}
-  const G=TEXT.game;
+  const G=TEXT.game,dt=Math.min(3,GAME.lt?(t-GAME.lt)/16.7:1);GAME.lt=t;   // dt：以 60fps 為 1（高更新率的螢幕不會變快）
   if(GAME.kind==='wand'){
     const p=wandPos(t);
     const touch=t-GAME.t0>GAME_RULE.grace?gameBodies().filter(o=>Math.hypot(o.x-p.x,(o===C?(C.dy||C.y):o.y)-p.y)<36):[];
     touch.filter(o=>!gameLikes(o,'wand')&&!GAME.meh.has(o)).forEach(o=>{GAME.meh.add(o);emoteOn(o,'swirl');gameSay(fmt(G.wand.meh,{name:gameName(o)}))});   // 不喜歡：碰到了也懊惱
     const w=touch.find(o=>gameLikes(o,'wand'));
-    if(w){emoteOn(w,'crown');gameEnd(t,fmt(G.wand.win,{name:gameName(w)}));return}
+    if(w){emoteOn(w,'crown');gameCrown();gameEnd(t,fmt(G.wand.win,{name:gameName(w)}));return}
     if(t>GAME.until)gameEnd(t,G.wand.none);
   }
   else if(GAME.kind==='bubble'){
@@ -92,7 +94,7 @@ function gameStep(t){
       GAME.last=t;
       for(let i=0;i<2;i++)GAME.parts.push({x:CUR.x+(Math.random()-.5)*14,y:CUR.y,r:3+Math.random()*6,vx:(Math.random()-.5)*.6,vy:-1.4-Math.random()*1.2});
     }
-    GAME.parts.forEach(b=>{b.x+=b.vx;b.y+=b.vy;b.vx*=.98});
+    GAME.parts.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.vx*=Math.pow(.98,dt)});
     GAME.parts=GAME.parts.filter(b=>b.y>16).slice(-160);
     // 泡泡從身體下面往上衝過去：被氣流捲得轉圈
     gameBodies().forEach(o=>{
@@ -116,7 +118,7 @@ function gameStep(t){
       if(t>GAME.until)gameEnd(t,G.bucket.none);
     }
     if(GAME.phase==='cover'&&t-GAME.coverAt>BUCKET_COVER.lift){             // 抖完：水桶消失，冒小皇冠
-      const w=GAME.win;GAME.phase='reveal';emoteOn(w,'crown');gameEnd(t,fmt(G.bucket.win,{name:gameName(w)}));
+      const w=GAME.win;GAME.phase='reveal';emoteOn(w,'crown');gameCrown();gameEnd(t,fmt(G.bucket.win,{name:gameName(w)}));
     }
   }
   else if(GAME.kind==='bell'){
@@ -127,7 +129,7 @@ function gameStep(t){
       const arrived=bodies.every(o=>{const sp=GAME.spots[GAME.guess.get(o)];return Math.abs(o.x-sp.x)<34&&Math.abs(o.y-Math.min(floorOf(o),Math.max(WALL.t,sp.y)))<40});
       if(arrived||t>GAME.until){
         const found=bodies.filter(o=>GAME.guess.get(o)===GAME.hidden),win=found.filter(o=>gameLikes(o,'bell')),meh=found.filter(o=>!gameLikes(o,'bell'));
-        bodies.forEach(o=>emoteOn(o,win.includes(o)?'crown':meh.includes(o)?'dots':'q'));
+        bodies.forEach(o=>emoteOn(o,win.includes(o)?'crown':meh.includes(o)?'dots':'q'));if(win.length)gameCrown();
         GAME.phase='reveal';
         gameEnd(t,win.length?fmt(G.bell.win,{names:win.map(gameName).join('、')}):meh.length?'':G.bell.lose);
         if(meh.length)gameSay(fmt(G.bell.meh,{names:meh.map(gameName).join('、')}));
@@ -135,7 +137,7 @@ function gameStep(t){
     }
   }
   else if(GAME.kind==='ball'){
-    const b=GAME.ball,dt=1;
+    const b=GAME.ball;
     b.vy+=.14*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;
     if(b.x<WALL.l-10){b.x=WALL.l-10;b.vx=Math.abs(b.vx)}else if(b.x>WALL.r+10){b.x=WALL.r+10;b.vx=-Math.abs(b.vx)}
     const W=GAME.who,hx=W.x,hy=(W===C?(C.dy||C.y):W.y)-40,hop=()=>{if(W===C)bounce=1;else W.bn=1};

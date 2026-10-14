@@ -4,8 +4,10 @@ const SOUV_SRC={
   weedWave:['temper','lively'],  weedHead:['temper','shy'],
   stoneTerritory:['temper','stubborn'], stoneSleep:['temper','sleepy'],
   bubbleSurprise:['temper','curious'],  bubbleCling:['temper','clingy'],
+  stoneRoute:['temper','helper'], bubbleCopy:['temper','mimic'],
   gem:['tag','judge'], toy:['tag','playful'], halfFood:['tag','glutton'], massage:['tag','touchy'],
   shed:['tag','frail'], shell:['tag','lovey'], pebble:['tag','clean'],
+  mirror:['tag','vain'], saved:['tag','smalleat'], surface:['tag','high'],
   note:['tag','scholar'], oldPiece:['tag','homereturn'], outSand:['tag','sneak'], outFeather:['tag','sneak'], outBead:['tag','sneak'], outGrass:['tag','sneak'], outGlass:['tag','sneak'], outCoin:['tag','sneak'],   // 偷偷七逃：每次隨機帶回其中一種
   letter:['grad','letter']   // 畢業小球的信紙（js/letters.js；不是在養的小球送的）
 };

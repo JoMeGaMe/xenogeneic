@@ -11,13 +11,15 @@
 //   null      沒有互動
 // 頑固的「領地」（撞開靠近的人、退回角落）寫在 motion.js 的 steer；睏睏不主動理人，所以整列都是 null。
 const REL={
-  //          黏人      害羞    好奇        頑固       活潑        睏睏
-  clingy:  {clingy:'bounce',shy:'chase',curious:'play',    stubborn:'tryPush',lively:'play',    sleepy:null},
-  shy:     {clingy:'flee',  shy:null,   curious:'flee',    stubborn:'flee',   lively:'flee',    sleepy:'nestle'},
-  curious: {clingy:'play',  shy:'chase',curious:'together',stubborn:'tryPush',lively:'play',    sleepy:null},
-  stubborn:{clingy:null,    shy:null,   curious:null,      stubborn:null,     lively:null,      sleepy:null},
-  lively:  {clingy:'play',  shy:'chase',curious:'play',    stubborn:'tryPush',lively:'together',sleepy:null},
-  sleepy:  {clingy:null,    shy:null,   curious:null,      stubborn:null,     lively:null,      sleepy:null}
+  //          黏人      害羞    好奇        頑固       活潑        睏睏      守序        易染
+  clingy:  {clingy:'bounce',shy:'chase',curious:'play',    stubborn:'tryPush',lively:'play',    sleepy:null,helper:'play',    mimic:'play'},
+  shy:     {clingy:'flee',  shy:null,   curious:'flee',    stubborn:'flee',   lively:'flee',    sleepy:'nestle',helper:null,mimic:'flee'},
+  curious: {clingy:'play',  shy:'chase',curious:'together',stubborn:'tryPush',lively:'play',    sleepy:null,helper:'play',    mimic:'play'},
+  stubborn:{clingy:null,    shy:null,   curious:null,      stubborn:null,     lively:null,      sleepy:null,helper:null,      mimic:null},
+  lively:  {clingy:'play',  shy:'chase',curious:'play',    stubborn:'tryPush',lively:'together',sleepy:null,helper:'play',    mimic:'chase'},
+  sleepy:  {clingy:null,    shy:null,   curious:null,      stubborn:null,     lively:null,      sleepy:null,helper:null,      mimic:null},
+  helper:  {clingy:'together',shy:null, curious:'together',stubborn:null,     lively:null,      sleepy:null,helper:'together',mimic:'together'},   // 守序：主要是巡邏和勸架（motion.js）
+  mimic:   {clingy:null,    shy:null,   curious:null,      stubborn:null,     lively:null,      sleepy:null,helper:null,      mimic:null}         // 易染：學動作寫在 motion.js
 };
 // p＝每次「決定要做什麼」時發生的機率｜dur＝持續毫秒｜cd＝同一隻要隔多久才會再來一次
 const ACT={
@@ -26,7 +28,7 @@ const ACT={
   nestle:{p:.35,dur:9000,cd:6000}
 };
 // 相性好的組合：互動機率 ×1.6（文字上也會多一句）。要新增相性就加一組。
-const FRIENDS=[['shy','sleepy'],['lively','curious'],['clingy','stubborn']];
+const FRIENDS=[['shy','sleepy'],['lively','curious'],['clingy','stubborn'],['helper','mimic']];
 const isFriend=(a,b)=>FRIENDS.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a));
 const idOf=o=>o===C?S.temp:o.e.temp;
 // 目標點不能在水缸邊界外（否則會一直頂著牆原地打轉）

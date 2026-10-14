@@ -1,5 +1,5 @@
-const mixc=(c,t,k)=>c.map((v,i)=>Math.round(v+(t[i]-v)*k));
 // 通用小工具：取元素、隨機、顏色轉換、名字上色。沒有遊戲規則。
+const mixc=(c,t,k)=>c.map((v,i)=>Math.round(v+(t[i]-v)*k));   // 兩個 RGB 之間混色（k：0～1）
 const $=id=>document.getElementById(id), R=a=>a[Math.floor(Math.random()*a.length)];
 const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 function parseColor(v){v=v.trim();let m;

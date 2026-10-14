@@ -48,7 +48,7 @@ function pickPose(t){
   if(S.over||S.life<40||S.dirt>60||S.sat<=20||frailSym())return 'droop';   // 不舒服
   const spd=Math.hypot(C.vx,C.vy);
   if(spd>.6)return 'flat_'+f;                            // 游動中
-  if(C.y>=300&&spd<.35)return 'rest';                    // 貼在底部休息
+  if((C.y>=300||(T.sleepy&&hasTag('high')&&C.y<110))&&spd<.35)return 'rest';   // 貼在底部休息（睏睏＋高高在上：浮在水面睡）
   // 害羞（信賴低）或頑固（在自己的角落）偶爾縮起來
   if(((T.shyPose&&S.trust<35)||T.territory)&&Math.floor(t/5000)%3===0)return 'curl';
   if(S.trust>50&&Math.floor(t/6000)%3===0)return 'reach_'+f;   // 信賴高：偶爾揮手
@@ -140,7 +140,7 @@ function poke(x,y){
   if(SN||t-C.lastPoke<500)return;                        // 戳太快不算；溜出去的時候戳不到
   C.lastPoke=t;pokes=pokes.filter(v=>t-v<10000);pokes.push(t);bounce=1;
   const touchy=hasTag('touchy');
-  if(pokes.length>=(touchy?9:6)){                        // 喜歡觸碰的小球比較不容易煩                                   // 10 秒內戳 6 次：煩躁，扣一點信賴
+  if(pokes.length>=(touchy?9:6)){                        // 10 秒內戳 6 次：煩躁，扣一點信賴（喜歡觸碰的小球 9 次）
     S.trust=clamp(S.trust-2);emote('x');say(TEXT.poke.tooMany,'bad');pokes=[];refresh();return;
   }
   let kind=S.trust<=25?'flee':TEMPERS[S.temp].poke;      // 信賴太低一律先退開
@@ -166,6 +166,8 @@ cv.addEventListener('pointerdown',e=>{
 });
 // 記下游標在水缸上的位置（人類愛好者會追）
 cv.addEventListener('pointermove',e=>{
-  const r=cv.getBoundingClientRect();CUR.x=(e.clientX-r.left)*WORLD.w/r.width;CUR.y=(e.clientY-r.top)*500/r.height;CUR.t=performance.now();
+  const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*WORLD.w/r.width,y=(e.clientY-r.top)*500/r.height,now=performance.now(),k=Math.max(1,(now-CUR.t)/16.7);
+  if(now-CUR.t<200){CUR.vx=CUR.vx*.7+(x-CUR.x)/k*.3;CUR.vy=CUR.vy*.7+(y-CUR.y)/k*.3}else{CUR.vx=0;CUR.vy=0}   // 游標的移動速度（易染會學）
+  CUR.x=x;CUR.y=y;CUR.t=now;
 });
 cv.style.cursor='pointer';

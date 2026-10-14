@@ -7,7 +7,7 @@ const OUTSIDE_IDS=Object.keys(SOUV_SRC).filter(k=>SOUV_SRC[k][1]==='sneak');   /
 function giveSouv(id,v){
   META.souv[id]=(META.souv[id]||0)+1;codexSave();
   const t=TEXT.souv[id];
-  say(fmt(t.give,v||{}),'ev');toast('收到禮物：'+t.name);
+  say(fmt(t.give,v||{}),'ev');toast(fmt(TEXT.misc.giftToast,{name:t.name}));
 }
 // 每天換日：依信賴與個性、標籤決定今天有沒有收到禮物
 function souvDaily(){

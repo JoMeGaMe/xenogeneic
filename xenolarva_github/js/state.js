@@ -13,7 +13,9 @@ function newGame(pname,name,col){
     waterToday:0,history:[],found:{gift:false,toy:false},
     tags:rollTags(),tagsFound:[],                 // tags：擁有的特殊標籤（開局依機率分配）；tagsFound：已被發現的
     playedToday:false,noPlay:0,touchGain:0,grete:false,trans:false,
-    tc:'',tb:'',chatC:[],chatB:[]};      // 標籤用：今天有沒有玩、連續幾天沒玩、今天被戳加了幾次信賴
+    tc:'',tb:'',tb2:'',tbm:'',tbs:'soft',chatC:[],chatB:[],chatB2:[]};      // 標籤用：今天有沒有玩、連續幾天沒玩、今天被戳加了幾次信賴
+  const sp=META.special;                            // 特殊委託（2F 賽倫絲）：預約好的個性、標籤、顏色
+  if(sp){S.temp=sp.temp;S.tags=[...sp.tags];S.hue=sp.hue;S.pre=.4;S.special=true;META.special=null}   // pre：已經被照顧過，一開始就帶顏色（和名單縮圖一樣）
   if(S.tags.includes('homereturn'))S.trust+=15;     // 回歸者：覺得一切都很熟悉，一開始就比較信任你
   tagsReset();
   Object.keys(S.inv).forEach(k=>{if(S.inv[k]>0)seeItem(k)});codexSave();   // 開局就有的物品也記進物品圖鑑
@@ -21,27 +23,25 @@ function newGame(pname,name,col){
   // 重設幼體在水缸裡的狀態
   Object.assign(C,{lastFood:0,x:250,y:180,vx:1,vy:.15,tx:1,ty:0,rot:0,rv:0,next:0,calm:0,steering:false,home:pickHome()});
   document.body.classList.remove('idle');
-  M=null;pokes=[];CHAT_SEL.core=CHAT_SEL.shell=null;CHAT_SEL.part='core';
+  M=null;pokes=[];CHAT_SEL.core=CHAT_SEL.shell=CHAT_SEL.shell2=null;CHAT_SEL.part='core';CHAT_SEL.style='';
 
   $('pname').textContent=pname;paintName($('pname'),col);$('cname').textContent=name;
   $('log').innerHTML='';
   say(TEXT.start.born,'sys');
   say(TEXT.start.tip,'sys');
+  if(sp)say(fmt(TEXT.special.start,{why:sp.why}),'ev');
   refresh();
   GUESTS=[];syncGuests(false);                    // 勾選的圖鑑同伴會從邊緣飄進來
 }
 
 // ---------- 把數值轉成玩家看得懂的文字 ----------
-const lifeW=()=>S.life>75?'穩定':S.life>50?'注意':S.life>25?'衰弱':'危險';
-const satW=()=>S.sat>75?'飽足':S.sat>35?'正常':'飢餓';
-const trustW=()=>S.trust>75?'依偎':S.trust>50?'親近':S.trust>25?'好奇':'警戒';
 // 虛弱的小球對水質更挑剔（門檻比較低）
 const waterBad=()=>hasTag('frail')?(S.dirt>50||Math.abs(S.ph-7)>1):(S.dirt>60||Math.abs(S.ph-7)>1.2);
 const waterSevere=()=>hasTag('frail')?(S.dirt>75||Math.abs(S.ph-7)>1.6):(S.dirt>85||Math.abs(S.ph-7)>2);
 // 水質：有檢測儀才顯示精確數值，沒有就顯示「未知」，要從行為線索判斷
 function waterW(){
-  if(S.inv.kit>0)return `污${Math.round(S.dirt)} pH${S.ph.toFixed(1)}`;
-  return '未知';
+  if(S.inv.kit>0)return fmt(TEXT.misc.waterNum,{d:Math.round(S.dirt),p:S.ph.toFixed(1)});
+  return TEXT.misc.waterUnknown;
 }
 // 沒有儀器時的觀察線索（每日結算時顯示）
 function hints(){

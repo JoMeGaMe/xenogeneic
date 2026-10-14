@@ -12,5 +12,8 @@ const ASSOC={returnPts:10,
     touchy:1,     // 喜歡觸碰
     playful:1,    // 貪玩
     lovey:1,      // 人類愛好者
+    vain:1,       // 愛美
+    smalleat:2,   // 不愛吃：每次吃得少，要多餵幾次
+    high:1,       // 高高在上
     homereturn:0  // 回歸者：開局就有信賴，比較好養
   }};

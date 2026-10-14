@@ -8,8 +8,10 @@ function plant(n,x,yBottom,sc,t,ph){
     cx.drawImage(im,0,y,w,sl,Math.round(x+off),Math.round(yBottom-(h-y)*sc),w*sc,sl*sc+1);
   }
 }
+let drawLast=0;
 function draw(t){
   requestAnimationFrame(draw);
+  const fdt=Math.min(3,drawLast?(t-drawLast)/16.7:1);drawLast=t;   // 以 60fps 為 1
   const W=WORLD.w,H=500;
   cx.globalAlpha=1;
   if(nLoaded<IMGN.length){cx.fillStyle='#0f3a4c';cx.fillRect(0,0,W,H);if(IMG.bg_tank.naturalWidth)cx.drawImage(IMG.bg_tank,0,0,W,H);return}
@@ -20,8 +22,8 @@ function draw(t){
   stepGuests(t);
   gameStep(t);                                        // 互動玩耍（js/minigame.js）
   const tt=t/1000;
-  bounce*=0.96;
-  if(S&&S.over==='END-07')dead=Math.min(1,dead+.004);else dead=0;
+  bounce*=Math.pow(.96,fdt);
+  if(S&&S.over==='END-07')dead=Math.min(1,dead+.004*fdt);else dead=0;
   const a=1-dead;
   // 水草（程式擺動）
   plant('bg_tank_glass_1',22,452,1.5,t,0);
@@ -48,7 +50,7 @@ function draw(t){
   // 泡泡（程式）
   cx.lineWidth=2;
   BUB.forEach(b=>{
-    b.y-=b.sp;if(b.y<30){b.y=330+Math.random()*30;b.x=30+Math.random()*(W-60)}
+    b.y-=b.sp*fdt;if(b.y<30){b.y=330+Math.random()*30;b.x=30+Math.random()*(W-60)}
     const x=b.x+Math.sin(tt*1.2+b.ph)*6;
     cx.globalAlpha=.55;cx.strokeStyle='#e8fbfa';cx.beginPath();cx.arc(x,b.y,b.r,0,PI2);cx.stroke();
     cx.fillStyle='#fff';cx.fillRect(Math.round(x-b.r*.5),Math.round(b.y-b.r*.55),2,2);

@@ -6,13 +6,13 @@ function colorWidget(get,set,nameOf){
   const wrap=h('div',{class:'cmid cw'}),grid=h('div',{class:'sgrid'}),sample=h('span',{class:'csample'}),fr=h('div',{class:'cpv cwv'},sample);
   const repaint=()=>{
     grid.querySelectorAll('.sw1').forEach(b=>b.classList.toggle('sel',b.dataset.c===get()));
-    sample.textContent=nameOf()||'玩家';paintName(sample,get());
+    sample.textContent=nameOf()||TEXT.misc.defPlayer;paintName(sample,get());
   };
   const pick_=c=>{if(c){set(c);repaint()}};
   COLORS.forEach((c,i)=>grid.append(h('button',{class:'sw1',style:'background:'+c,'data-c':c,title:CNAME[i],'aria-label':CNAME[i],onclick:()=>pick_(c)})));
-  const cp=h('input',{type:'color',value:get(),'aria-label':'自訂顏色',title:'自訂顏色'});
+  const cp=h('input',{type:'color',value:get(),'aria-label':TEXT.misc.customColor,title:TEXT.misc.customColor});
   cp.oninput=()=>pick_(parseColor(cp.value));
-  grid.append(h('label',{class:'scust'},cp,h('span',{},'自訂')));
+  grid.append(h('label',{class:'scust'},cp,h('span',{},TEXT.misc.custom)));
   wrap.append(grid,h('div',{class:'cfr'},fr));
   const fit=()=>{const n=grid.offsetHeight;if(n>0){fr.style.width=fr.style.height=n+'px'}};
   setTimeout(fit,0);setTimeout(fit,100);setTimeout(fit,400);
@@ -34,7 +34,7 @@ function introOpen(){
   $('ovStart').classList.add('show');
 }
 $('go').onclick=()=>{
-  META.pname=($('pn').value.trim()||'玩家').slice(0,8);META.pcol=selColor;META.intro=true;codexSave();
+  META.pname=($('pn').value.trim()||TEXT.misc.defPlayer).slice(0,8);META.pcol=selColor;META.intro=true;codexSave();
   $('ovStart').classList.remove('show');
   toIdle();
 };
@@ -45,7 +45,7 @@ function toIdle(){
   S=null;GUESTS=[];M=null;SN=null;EM=null;pokes=[];
   document.body.classList.add('idle');
   ['ovEnd','ovPick','ovBag'].forEach(i=>$(i).classList.remove('show'));
-  $('day').textContent='第 0 日 / 7';$('pips').innerHTML='';
+  $('day').textContent=fmt(TEXT.misc.dayLabel,{d:0});$('pips').innerHTML='';
   $('cname').textContent='';paintName($('cname'),'');
   $('pname').textContent=META.pname||'';paintName($('pname'),META.pcol||'');
   $('wq').hidden=true;
@@ -53,10 +53,10 @@ function toIdle(){
 }
 // 接取新委託：取名字後，小球出現並進入第 1 日
 function acceptOpen(){
-  const inp=h('input',{type:'text',maxLength:8,value:'小球','aria-label':TEXT.idle.nameLabel});
-  pick(TEXT.idle.accept,[{node:h('div',{class:'acc'},h('label',{},TEXT.idle.nameLabel),inp)},{id:'ok',label:TEXT.idle.ok}],()=>{
-    newGame(META.pname||'玩家',inp.value.trim()||'小球',META.pcol||selColor);
-  },TEXT.idle.acceptBody);
+  const inp=h('input',{type:'text',maxLength:8,value:TEXT.misc.defLarva,'aria-label':TEXT.idle.nameLabel});
+  pick(TEXT.idle.accept,[{node:h('div',{class:'acc'},h('label',{},TEXT.idle.nameLabel),inp)},{id:'ok',label:TEXT.idle.ok,main:true}],()=>{
+    newGame(META.pname||TEXT.misc.defPlayer,inp.value.trim()||TEXT.misc.defLarva,META.pcol||selColor);
+  },META.special?TEXT.special.accept:TEXT.idle.acceptBody);
 }
 $('bAccept').onclick=acceptOpen;
 // 等待新委託：完成一輪（＋1），回到第 0 日，再看畢業小球有沒有寄信來
@@ -65,10 +65,10 @@ $('again').onclick=()=>{META.rounds++;codexSave();toIdle();letterCheck()};
 // ---------- 設定：暱稱、代表色、外出方式（隨時可改）。在 ☰「設定與存檔」頁的上半部 ----------
 function settingsBuild(){
   const b=$('setBody');b.textContent='';
-  const nm_=h('input',{type:'text',maxLength:8,value:META.pname||'','aria-label':'暱稱'});
+  const nm_=h('input',{type:'text',maxLength:8,value:META.pname||'','aria-label':TEXT.misc.nick});
   const col=colorWidget(()=>META.pcol||selColor,c=>{META.pcol=c;selColor=c;if(S)S.col=c;paintName($('pname'),c);if(S)refresh();codexSave()},()=>nm_.value.trim()||META.pname);
   nm_.oninput=()=>col.repaint();
-  nm_.onchange=()=>{const v=(nm_.value.trim()||'玩家').slice(0,8);META.pname=v;if(S)S.pname=v;$('pname').textContent=v;col.repaint();codexSave()};
+  nm_.onchange=()=>{const v=(nm_.value.trim()||TEXT.misc.defPlayer).slice(0,8);META.pname=v;if(S)S.pname=v;$('pname').textContent=v;col.repaint();codexSave()};
   const mode=m=>h('label',{class:'mrow'},h('input',{type:'radio',name:'outMode',value:m[0],checked:META.outMode===m[0],disabled:!!m[2],onchange:()=>{META.outMode=m[0];codexSave();outChip()}}),' '+m[1]);
   const U=TEXT.ui;
   b.append(h('label',{class:'sl'},U.nick),nm_,h('hr',{class:'div'}),h('label',{class:'sl'},U.color),col,
@@ -94,7 +94,8 @@ function assocReturn(e){
   if(e.own.includes('homereturn'))META.homeUsed++;
   const pts=assocPts(e);META.points+=pts;
   META.returned.push({id:e.id,name:e.name,at:e.at,back:new Date().toISOString().slice(0,10),gift:false,   // gift：寄過信紙了沒（每隻只寄一次，js/letters.js）
-    temp:e.temp,own:e.own,pg:e.pg,pt:e.pt,end:e.end,rnd:META.rounds+(S&&!PV?1:0)});
+    temp:e.temp,own:e.own,pg:e.pg,pt:e.pt,end:e.end,rnd:META.rounds+(S&&!PV?1:0),
+    look:{col:e.col,hue:e.hue,colored:e.colored,tc:e.tc,tb:e.tb,tb2:e.tb2,tbm:e.tbm,tbs:e.tbs,day:e.day}});   // look：外觀（之後大樓背景可能出現寄過信的小球）
   CODEX=CODEX.filter(x=>x!==e);GUEST_IDS=GUEST_IDS.filter(x=>x!==e.id);
   if(typeof WATCH_IDS!=='undefined'){WATCH_IDS=WATCH_IDS.filter(x=>x!==e.id);watchSave()}
   codexSave();

@@ -12,9 +12,19 @@ function finish(code){
   S.over=code;refresh();codexRecord(code);
   const [t,x]=ENDS[code];
   $('et').textContent=`${code}　${t}`;
-  const tagEnd=S.tagsFound.map(id=>TEXT.tags[id].end).filter(Boolean);        // 發現的標籤各多一句結局文字
-  $('ex').textContent=[x,...tagEnd].join('\n').replace(/幼體/g,S.name);
-  const color=S.tc||S.tb?[S.tc?`核心被聊成${colName(S.tc)}色`:'',S.tb?`外殼被聊成${colName(S.tb)}色`:''].filter(Boolean).join('、'):S.colored?'已染上你的代表色':`核心為 hsl ${S.hue}° 色`;
-  $('sum').textContent=`存活至第 ${S.day} 日｜個性：${TEXT.temper[S.temp].name}｜喜歡的零食：${NAME[S.pref.gift]}｜喜歡的玩具：${NAME[S.pref.toy]}｜${color}｜已收錄進圖鑑`;
+  const nmS=s=>String(s).replace(/幼體/g,S.name);
+  $('ex').textContent=nmS(x);
+  // 摘要：表 1＝個性與發現的標籤（標籤用結局的那一句）｜表 2＝時間、喜歡、色彩（顏色寫 #色碼（色名））
+  const X=TEXT.misc,look=larvaLook(S),hex=c=>'#'+c.map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase(),col=c=>`${c.toUpperCase()}（${colName(c)}）`;
+  const tr=(k,v)=>h('tr',{},h('th',{},k||''),h('td',{},v));
+  // 一張表（欄寬一致）：個性、標籤 → 時間、喜歡（零食 / 玩具，同筆記欄）→ 色彩
+  const core=S.tc||(S.colored?S.col:hex(look.core));
+  const coreNote=S.tc?X.sumByChat:S.colored?X.sumDyed:X.sumNatural;
+  const shell=S.tb?col(S.tb)+'｜'+X.sumByChat:X.sumPlain;
+  const two=S.tbm&&S.tb2?col(S.tb2)+'｜'+(S.tbm==='v'?X.sumV:X.sumH):'';
+  const tbl=h('table',{class:'etab'},tr(TEXT.temper[S.temp].name,TEXT.temper[S.temp].desc),...S.tagsFound.map(id=>tr(TEXT.tags[id].name,nmS(TEXT.tags[id].end||TEXT.tags[id].desc))),
+    tr(X.sumTime,fmt(X.sumDays,{day:S.day})),tr(X.sumLike,NAME[S.pref.gift]+' / '+NAME[S.pref.toy]),
+    tr(X.sumColor,X.core+'：'+col(core)+'｜'+coreNote),tr('',X.shell+'：'+shell),...(two?[tr('',X.sumTwo+'：'+two)]:[]));
+  $('sum').textContent='';$('sum').append(tbl,h('p',{class:'dim'},X.sumSaved));
   setTimeout(()=>{if(PV)pvExit();$('ovEnd').classList.add('show')},code==='END-07'?1800:600);   // 等結局框的這段時間如果進了觀察水缸，先離開
 }
