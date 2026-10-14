@@ -16,7 +16,7 @@ function draw(t){
   cx.globalAlpha=1;
   if(nLoaded<IMGN.length){cx.fillStyle='#0f3a4c';cx.fillRect(0,0,W,H);if(IMG.bg_tank.naturalWidth)cx.drawImage(IMG.bg_tank,0,0,W,H);return}
   const bg=(W>500&&IMG.bg_preview&&IMG.bg_preview.naturalWidth)?IMG.bg_preview:IMG.bg_tank;   // 預覽模式專用背景（assets/larva/bg_preview.png，750×500）；沒有就把一般背景拉寬
-  cx.drawImage(bg,0,0,W,H);
+  if(imgOK(bg))cx.drawImage(bg,0,0,W,H);else{cx.fillStyle='#0f3a4c';cx.fillRect(0,0,W,H)}   // 背景圖壞掉（沒上傳）時用底色，不讓整個畫面停住
   const noC=PV||!S;                                   // 預覽模式、第 0 日（沒有小球）：不處理玩家的小球
   if(!noC)step(t);
   stepGuests(t);

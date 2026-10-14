@@ -1,9 +1,13 @@
 // 載入圖片、替核心上色。
 const IMG={};let nLoaded=0;
-IMGN.forEach(n=>{const im=new Image();im.onload=im.onerror=()=>nLoaded++;im.src=ASSETS[n]||BASE+n+'.png';IMG[n]=im});
+// 圖片載不到（例如上傳 GitHub 時漏了檔案）：畫面照常，底部跳提示寫出是哪幾個檔案
+const IMG_MISSING=[];
+IMGN.forEach(n=>{const im=new Image();im.onload=()=>nLoaded++;im.onerror=()=>{nLoaded++;IMG_MISSING.push(BASE+n+'.png');
+  if(window.showErr)window.showErr('圖片載入失敗（請確認檔案有上傳、檔名大小寫一致）：'+IMG_MISSING.join('、'))};im.src=ASSETS[n]||BASE+n+'.png';IMG[n]=im});
+const imgOK=im=>!!(im&&im.complete&&im.naturalWidth);   // 載好了而且不是壞圖
 let TINT={},TINT_N=0;
 const tintRoom=()=>{if(++TINT_N>600){TINT={};TINT_N=0}};   // 快取上限：聊天選自訂顏色時一直換色，不讓快取無限長大
-function tint(n,rgb){const k=n+rgb;if(TINT[k])return TINT[k];tintRoom();const im=IMG[n],c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');
+function tint(n,rgb){const k=n+rgb;if(TINT[k])return TINT[k];const im=IMG[n];if(!imgOK(im)){const e=document.createElement('canvas');e.width=e.height=1;return e}tintRoom();const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');
   g.drawImage(im,0,0);g.globalCompositeOperation='multiply';g.fillStyle=`rgb(${rgb})`;g.fillRect(0,0,c.width,c.height);g.globalCompositeOperation='destination-in';g.drawImage(im,0,0);return TINT[k]=c}
 // 外殼雙色（雜誌染色）：先畫 a 色，再把 b 色疊在下半（v 上下）或右半（h 左右）。soft＝柔和漸層，否則分色（一刀切開）
 // 切線照這個姿勢身體的實際範圍（不透明像素的外框）算中間，每個姿勢各自算一次
