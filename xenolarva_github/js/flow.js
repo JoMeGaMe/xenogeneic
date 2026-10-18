@@ -60,7 +60,7 @@ function acceptOpen(){
 }
 $('bAccept').onclick=acceptOpen;
 // 等待新委託：完成一輪（＋1），回到第 0 日，再看畢業小球有沒有寄信來
-$('again').onclick=()=>{META.rounds++;codexSave();toIdle();letterCheck()};
+$('again').onclick=()=>{META.rounds++;if(S&&S.special&&!PV)META.specialDone=(META.specialDone||0)+1;codexSave();toIdle();letterCheck()};
 
 // ---------- 設定：暱稱、代表色、外出方式（隨時可改）。在 ☰「設定與存檔」頁的上半部 ----------
 function settingsBuild(){

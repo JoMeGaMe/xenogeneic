@@ -1,13 +1,15 @@
 // ===== 異生會大樓（地圖「異生會大樓」，耗 1 行動）＋成就＋心等 =====
 // 進大樓先到 1F 大廳（第一次有開場），右邊（手機在下面）是電梯按鈕：4F｜3F｜2F｜1F｜B1（電腦版：左 2F 1F B1、右 4F 3F）。同一趟可以逛所有樓層。
 //   3F 後勤辦公室（瓊）：查看成就（領取積分、心、裝扮）、升級心等（心夠了要自己按）。第一次去有認識瓊的對話。
-//   2F（賽倫絲，心等 2）：特殊委託（v0.26）｜B1（言曉君，心等 3）：緊急委託（之後）｜4F（言巷）：還不能去。
+//   2F（賽倫絲，心等 2）：特殊委託（v0.26）｜B1（心等 3 只有紙條；心等 4 言曉君回來，可以戳，緊急委託 v0.4）｜4F、5F：還不能去。
 // 成就：存檔時（codexSave）檢查，剛達成的在畫面最上方跳橫幅＋訊息區記一行（META.achSeen）；領取後記在 META.achGot。
 // 資料 js/data/hall.js，文字 TEXT.hall／TEXT.ach。
 let HALL_AT='lobby',HALL_SAY='',HALL_CHR=0,HALL_OFFERS=null,HALL_LAND=null,HALL_GIFT=0;
+let HALL_VISIT=null,HALL_GONE=[];   // 1F 現在的訪客（LOBBY_NPC 的 id）｜這一趟已經跟著回自己樓層的人（不會再出現在 1F）
 
 EVENTS.hallFirst={pages:()=>TEXT.hall.first,apply(){META.hallMet=true;codexSave()}};
 EVENTS.silenceFirst={pages:()=>TEXT.special.first,apply(){META.silenceMet=true;codexSave()}};
+EVENTS.xiaojunFirst={pages:()=>TEXT.hall.xiaojunFirst,apply(){META.xiaojunMet=true;codexSave()}};
 EVENTS.joanFirst={pages:()=>TEXT.hall.joanFirst,apply(){META.joanMet=true;codexSave()}};
 
 // 從地圖出發
@@ -15,7 +17,7 @@ function hallGo(){
   S.ap--;
   if(!META.visited.includes('assoc'))META.visited.push('assoc');
   say(TEXT.hall.arrive,'ev');codexSave();refresh();
-  HALL_AT='lobby';HALL_OFFERS=null;HALL_GIFT=0;                    // 委託名單：這一趟第一次看時才產生
+  HALL_AT='lobby';HALL_OFFERS=null;HALL_GIFT=0;HALL_VISIT=null;HALL_GONE=[];                    // 委託名單：這一趟第一次看時才產生
   if(!META.hallMet)runEvent('hallFirst',{cb:()=>hallOpen('lobby')});
   else hallOpen('lobby');
 }
@@ -24,22 +26,37 @@ function hallOpen(f){
   hallFloor(f||HALL_AT);
   $('ovHall').classList.add('show');
 }
-function hallClose(){$('ovHall').classList.remove('show');hallLandStop();refresh()}
+function hallClose(){$('ovHall').classList.remove('show');hallLandStop();if(S)refresh()}
 const heartsNow=()=>ACH.filter(a=>META.achGot.includes(a.id)).reduce((n,a)=>n+a.heart,0);
 const floorOpen=f=>!HALL_FLOORS[f].lock&&(META.heartLv>=(HALL_FLOORS[f].need||1));
 // 換樓層：決定這層的人說什麼、站誰
 function hallFloor(f){
   const H=TEXT.hall,F=HALL_FLOORS[f];
   if(!floorOpen(f)){HALL_SAY=F.lock?H.topLock:(f==='f2'?H.silenceLock:H.b1Lock)+'\n（'+fmt(H.needLv,{n:F.need})+'）';hallDraw();return}
+  const from=HALL_AT,met=HALL_VISIT,followed=from==='lobby'&&met&&LOBBY_NPC[met].home===f;   // 在 1F 遇到的人，按了他那一層
   HALL_AT=f;HALL_CHR=0;
   if(f==='f2'&&!META.silenceMet){$('ovHall').classList.remove('show');runEvent('silenceFirst',{cb:()=>{hallOpen('f2');specialOpen()}});return}
+  const xjBack=f==='b1'&&META.heartLv>=(F.back||1);                     // 言曉君任務回來了沒
+  if(xjBack&&!META.xiaojunMet){$('ovHall').classList.remove('show');runEvent('xiaojunFirst',{cb:()=>{HALL_SAY=R(H.xiaojun);hallOpen('b1')}});return}
   if(f==='f3'&&!META.joanMet){$('ovHall').classList.remove('show');runEvent('joanFirst',{cb:()=>{HALL_SAY=R(H.joan);hallOpen('f3')}});return}
-  if(f==='lobby'){const g=META.greteMet&&Math.random()<HALL_RULE.greteLobby;HALL_CHR=g?0:-1;HALL_SAY=R(g?H.lobbyGrete:H.lobby)}
+  if(f==='lobby'){HALL_VISIT=lobbyPick();HALL_CHR=HALL_VISIT?0:-1;HALL_SAY=R(!HALL_VISIT?H.lobby:HALL_VISIT==='grete'?H.lobbyGrete:H.visit[HALL_VISIT])}
   else if(f==='f3')HALL_SAY=R(H.joan);
   else if(f==='f2')HALL_SAY=META.special?fmt(TEXT.special.reserved,{temp:TEXT.temper[META.special.temp].name}):R(TEXT.special.idle);
-  else if(f==='b1'){HALL_SAY=H.b1;HALL_CHR=-1}                      // 言曉君還在任務中：不站人
+  else if(f==='b1'){if(xjBack)HALL_SAY=R(H.xiaojun);else{HALL_SAY=H.b1+'\n'+fmt(H.b1Back,{n:F.back});HALL_CHR=-1}}   // 還在任務中：只有紙條、不站人
+  if(followed&&H.follow[met]){HALL_SAY=H.follow[met];HALL_GONE.push(met)}
+  if(f!=='lobby')HALL_VISIT=null;
   hallDraw();hallLandRun();
 }
+// 1F 的訪客：認識的人裡照權重挑一位（這一趟已經跟你回樓層的除外）；沒挑到＝沒人
+function lobbyPick(){
+  if(Math.random()>=HALL_RULE.lobbyNpc)return null;
+  const c=Object.keys(LOBBY_NPC).filter(k=>!HALL_GONE.includes(k)&&LOBBY_NPC[k].met());if(!c.length)return null;
+  let r=Math.random()*c.reduce((n,k)=>n+LOBBY_NPC[k].w,0);for(const k of c){r-=LOBBY_NPC[k].w;if(r<0)return k}return c[c.length-1];
+}
+// 畫面裡站的是誰：1F 看訪客，其他樓層是樓層主人
+const hallCast=()=>{const v=HALL_AT==='lobby'&&HALL_VISIT&&HALL_VISIT!=='grete'?LOBBY_NPC[HALL_VISIT]:null,F=HALL_FLOORS[HALL_AT];
+  return v?{chr:v.chr,pokeAlt:v.pokeAlt,hop:v.hop,poke:TEXT.hall.visitPoke[HALL_VISIT],who:TEXT.hall.visitName[HALL_VISIT],larva:v.home}
+          :{chr:F.chr,pokeAlt:F.pokeAlt,hop:HALL_AT,poke:TEXT.hall.poke[HALL_AT],who:TEXT.hall.who[HALL_AT],larva:HALL_AT}};
 // ---------- 背景裡爬的小球（0～1 隻，js/render/land.js）：有人站著時只在左邊爬，不會撞到人 ----------
 // NPC 跳一下（高度照 NPC_HOP）
 function npcHop(el,who){el.style.setProperty('--hop',-(NPC_HOP[who]||16)+'px');el.classList.remove('hop');void el.offsetWidth;el.classList.add('hop')}
@@ -66,17 +83,17 @@ function hallLarvaTap(x){
   HALL_LAND.poke(x);
   if(HALL_GIFT<HALL_RULE.giftMax&&Math.random()<HALL_RULE.gift){         // 小球送你道具
     HALL_GIFT++;let k=R(HALL_RULE.gifts);if(k==='snack')k=R(GIFTS);S.inv[k]=(S.inv[k]||0)+1;seeItem(k);
-    const got=fmt(H.larvaGot,{item:NAME[k]}),who=HALL_CHR>=0?H.larvaSay[HALL_AT]:'';
+    const C=hallCast(),got=fmt(H.larvaGot,{item:NAME[k]}),who=HALL_CHR>=0?H.larvaSay[C.larva]:'';
     HALL_SAY=got+(who?'\n'+who:'');say(got,'ev');codexSave();
-    if(who)npcHop($('hallChr'),HALL_AT);
+    if(who)npcHop($('hallChr'),C.hop);
   }else HALL_SAY=R(H.larvaPoke);
   $('hallTalk').textContent=HALL_SAY;
 }
 function hallDraw(){
   const H=TEXT.hall,f=HALL_AT,F=HALL_FLOORS[f];
   $('hallBg').src=assetImg(F.bg);
-  const ch=HALL_CHR>=0?F.chr[HALL_CHR]:null;$('hallChr').hidden=!ch;if(ch)$('hallChr').src=assetImg(ch);
-  $('hallWho').textContent=H.who[f];$('hallWho').hidden=!ch;
+  const C=hallCast(),ch=HALL_CHR>=0?C.chr[HALL_CHR]:null;$('hallChr').hidden=!ch;if(ch)$('hallChr').src=assetImg(ch);
+  $('hallWho').textContent=C.who;$('hallWho').hidden=!ch;
   $('hallWhere').textContent=H.floors[f]+'｜'+H.floorName[f];
   $('hallTalk').textContent=HALL_SAY;
   // 電梯
@@ -173,8 +190,8 @@ function bannerNext(){
 }
 
 // 戳一下站在畫面裡的人：隨機一句（TEXT.hall.poke）
-$('hallChr').onclick=e=>{const lx=hallLarvaHit(e);if(lx!==false){hallLarvaTap(lx);return}const L=TEXT.hall.poke[HALL_AT];if(!L)return;const F=HALL_FLOORS[HALL_AT],i=Math.floor(Math.random()*L.length);HALL_SAY=L[i];if(F.chr[1])HALL_CHR=F.pokeAlt?(F.pokeAlt.includes(i)?1:0):HALL_CHR===0?1:0;hallDraw();
-  npcHop($('hallChr'),HALL_AT)};   // 跳一下
+$('hallChr').onclick=e=>{const lx=hallLarvaHit(e);if(lx!==false){hallLarvaTap(lx);return}const C=hallCast(),L=C.poke;if(!L)return;const i=Math.floor(Math.random()*L.length);HALL_SAY=L[i];if(C.chr[1])HALL_CHR=C.pokeAlt?(C.pokeAlt.includes(i)?1:0):HALL_CHR===0?1:0;hallDraw();
+  npcHop($('hallChr'),C.hop)};   // 跳一下
 $('hallClose').onclick=hallClose;$('hallLeave').onclick=hallClose;
 $('achClose').onclick=()=>$('ovAch').classList.remove('show');
 $('achAll').onclick=achClaimAll;
@@ -182,7 +199,7 @@ setTimeout(achCheck,800);   // 讀檔後：舊存檔已經達成的成就（合�
 
 // ---------- 特殊委託（2F 賽倫絲）----------
 function specialRoll(){
-  const lv=Math.min(3,META.heartLv),n=SPECIAL_RULE.count[lv]||2,od=SPECIAL_RULE.odds[lv]||SPECIAL_RULE.odds[2],T=TEXT.special;
+  const lv=Math.min(Math.max(...Object.keys(SPECIAL_RULE.count).map(Number)),META.heartLv),n=SPECIAL_RULE.count[lv]||2,od=SPECIAL_RULE.odds[lv]||SPECIAL_RULE.odds[2],T=TEXT.special;
   return Array.from({length:n},()=>{
     const r=Math.random(),k=r<od.none?0:r<od.none+od.one?1:2,tags=[];
     for(let i=0;i<k;i++){

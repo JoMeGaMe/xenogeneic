@@ -403,10 +403,13 @@ header{position:relative}
 .dchip canvas{width:48px;height:48px;image-rendering:pixelated}
 .dchip span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .box .dress .dchip.on,.box .dress .dcell.on{border-color:var(--acc);background:#1d4a5c;box-shadow:0 0 0 1px var(--acc) inset}
-.dpv{flex:none;min-width:0;display:flex;align-items:center;gap:12px;background:#0b2330;border:2px solid var(--line);padding:8px}
+.dpv{flex:none;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:stretch;background:#0b2330;border:2px solid var(--line);padding:8px}
+.dfig{margin:0;display:flex;flex-direction:column;gap:4px}
 .dpvc{width:120px;height:120px;image-rendering:pixelated;border:2px solid var(--line);flex:none}
-.dinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.box .dpv .ddone{width:auto;flex:none;align-self:flex-end;padding:8px 14px;margin:0}
+.dinfo{min-width:0;display:flex;flex-direction:column;gap:6px}
+.dinfo .dwear{font-size:var(--fs-h2)}
+.dact{margin-top:auto;display:flex;justify-content:flex-end}
+.box .dpv .ddone{width:auto;min-width:96px;padding:8px 18px;margin:0}
 .dpick{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;gap:6px}
 .dcats{flex:none;min-width:0}
 .box .dcats button{padding:6px 2px;font-size:13px;margin:0}
@@ -415,7 +418,7 @@ header{position:relative}
 .dcell canvas{width:56px;height:56px}
 .box .dress .dcell.worn{border-style:dashed}
 .dnone{width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--dim,#8fb3c0)}
-@media (min-width:760px){.dress{display:grid;grid-template-columns:220px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:12px;row-gap:8px}.dpv{grid-column:1;grid-row:1/3;flex-direction:column;justify-content:flex-start;align-self:stretch}.dpvc{width:196px;height:196px}.dinfo{flex:none;align-items:center;text-align:center}.box .dpv .ddone{align-self:stretch;width:100%}.dwho{grid-column:2;grid-row:1}.dpick{grid-column:2;grid-row:2}}
+@media (min-width:760px){.dpvc{width:160px;height:160px}}
 /* 小球們頁的分頁：四等分（小球們｜已交還｜空｜打扮），打扮用淡一點的顏色 */
 #lfilter{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:1 1 100%;min-width:0}
 #lfilter .tgap{display:block}
@@ -432,13 +435,14 @@ header{position:relative}
 /* 名牌：有框，背景再亮也看得到 */
 .hallscene .hwhere{position:absolute;left:6px;top:6px;background:rgba(8,26,36,.82);border:1px solid var(--line);padding:2px 8px;font-size:12px;color:var(--acc)}
 .hlift{grid-area:lift;height:0;min-height:100%;box-sizing:border-box;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,minmax(0,1fr));gap:8px;align-content:stretch;background:#0b2330;border:2px solid var(--line);padding:10px}
-/* 不撐高：和背景圖同高。左 2F 1F B1、右 4F 3F */
+/* 不撐高：和背景圖同高。左 2F 1F B1、右 5F 4F 3F */
 .box .hlift .lbtn{margin:0;padding:0;min-height:0;max-height:52px;align-self:center;height:100%;font-size:14px;font-weight:700;border-radius:999px}
 .hlift .lbtn[data-f=f2]{grid-column:1;grid-row:1}
 .hlift .lbtn[data-f=lobby]{grid-column:1;grid-row:2}
 .hlift .lbtn[data-f=b1]{grid-column:1;grid-row:3}
 .hlift .lbtn[data-f=top]{grid-column:2;grid-row:1}
-.hlift .lbtn[data-f=f3]{grid-column:2;grid-row:2}
+.hlift .lbtn[data-f=f4]{grid-column:2;grid-row:2}
+.hlift .lbtn[data-f=f3]{grid-column:2;grid-row:3}
 .box .hlift .lbtn.on{background:var(--acc);color:#1b1b1b;border-color:var(--acc)}
 .box .hlift .lbtn.locked{opacity:.5}
 .box .hlift .lbtn:disabled{opacity:.3;cursor:not-allowed}
@@ -527,12 +531,22 @@ header{position:relative}
 .shopscene[hidden],.shopwrap[hidden]{display:none}
 /* 和行李箱同比例：切換畫面時框不會變大小（背景左右會裁掉一點） */
 /* 打扮：發光裝扮的顏色列（v0.29.8） */
-.dpv .dcols{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px}
+.dpv .dcols{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
 .box .dpv .dcols .sw1{width:22px;height:22px;min-width:0;margin:0;padding:0;flex:none}
 .box .dpv .dcols .sw1.sel{outline:2px solid #fff;outline-offset:1px}
 .dpv .dcols .rainbow{background:linear-gradient(90deg,#e5484d,#f2b84b,#5fd38d,#58a6ff,#a56bff)}
 .dpv .dcols .t3{margin:0 4px 0 0}
-.dpv{flex-wrap:wrap}
-@media (min-width:760px){.dpv .dcols{flex-basis:auto;width:100%;justify-content:center;margin-top:0}}
 /* 商店底部：閒聊／看商品 與 離開商店 一樣寬（v0.29.11） */
 .box .shopfoot #shopChat,.box .shopfoot #shopLeave{flex:1 1 0;width:auto;min-width:0;margin:0;padding:9px 4px}
+/* ===== 收藏品的道具／裝扮（v0.31）：選中的一格（圖＋名字＋言盡的介紹）＋持有的格子。電腦＝左右，手機＝上下 ===== */
+.cgal{display:flex;flex-direction:column;gap:10px}
+.cginfo{display:grid;grid-template-columns:96px 1fr;gap:6px 12px;align-items:center;background:#0b2330;border:2px solid var(--line);padding:10px}
+.cginfo .cgpic{width:96px;height:96px;margin:0;filter:none;object-fit:contain}
+.cgtxt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cgtxt strong{font-size:var(--fs-h2)}
+.cginfo .cgtalk{grid-column:1/-1;margin:0;font-size:14px;line-height:1.6}
+.cggrid{overflow:visible}
+.cggrid .dcell .sicon{width:56px;height:56px;margin:0;filter:none;object-fit:contain}
+@media (min-width:760px){.cgal{display:grid;grid-template-columns:220px minmax(0,1fr);align-items:start}.cginfo{grid-template-columns:1fr;justify-items:center;text-align:center;position:sticky;top:0}.cginfo .cgpic{width:140px;height:140px}.cgtxt{align-items:center}.cginfo .cgtalk{text-align:left;width:100%}}
+/* 打扮：選中的裝扮下面一行言盡的介紹 */
+.dpv .dtalk{margin:0;font-size:14px;line-height:1.55;white-space:pre-line;color:var(--t-warm,#ffd59a)}

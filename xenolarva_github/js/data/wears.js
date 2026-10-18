@@ -27,6 +27,12 @@ const WEARS={
   devil:{img:'wear_devil',box:[0,0,92,75],cat:'other'},
   foxmask:{img:'wear_foxmask',box:[1,0,86,44],cat:'head'},
   minilarva:{img:'wear_minilarva',box:[0,0,51,48],cat:'head'},
+  // v0.31.3：趴在頭上的小動物
+  bunny:{img:'wear_bunny',box:[4,1,41,39],cat:'head'},
+  shushu:{img:'wear_shushu',box:[6,1,37,37],cat:'head'},   // v0.32.4 鼠薯
+  puppy:{img:'wear_puppy',box:[3,2,43,41],cat:'head'},
+  snake:{img:'wear_snake',box:[7,4,44,55],cat:'head'},
+  blackcat:{img:'wear_blackcat',box:[8,4,47,49],cat:'head'},
   eyepatch:{img:'wear_eyepatch',box:[6,12,92,71],cat:'face'},
   dododo:{img:'wear_dododo',box:[12,4,44,78],cat:'icon'},
   gogogo:{img:'wear_gogogo',box:[47,1,90,63],cat:'icon'},

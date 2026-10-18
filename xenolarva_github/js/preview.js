@@ -100,7 +100,7 @@ function pvPoke(x,y){
   if(!best||!pokeGuest(best,t,x,y))return;
   if(S.trans){
     const vl=voiceLine({temp:best.e.temp,tags:best.e.own,found:best.e.own,sat:60,dirt:20,life:90,trust:60,self:best});
-    say((nm(best.name)+'\n'+vl).replace(/幼體/g,nm(best.name)),vl===TEXT.grete.nothing?'ev':'voice');
+    say(withLarva(nm(best.name)+'\n'+vl,nm(best.name)),vl===TEXT.grete.nothing?'ev':'voice');
   }
 }
 $('pvSel').onclick=watchOpen;

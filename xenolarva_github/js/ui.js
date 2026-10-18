@@ -4,14 +4,14 @@
 function say(t,cls=''){
   bounce=1;
   const p=document.createElement('p');
-  p.textContent=(S?t.replace(/幼體/g,nm(S.name)):t);
+  p.textContent=withLarva(t);
   if(cls)p.className=cls;
   $('log').appendChild(p);$('log').scrollTop=1e9;
 }
 
 // ---------- 成就提示框：水缸上方黑底半透明的框，依序顯示 ----------
 const toastQ=[];let toastBusy=false;
-function toast(text){toastQ.push(text);if(!toastBusy)nextToast()}
+function toast(text){toastQ.push(withLarva(text));if(!toastBusy)nextToast()}
 function nextToast(){
   const t=toastQ.shift();
   if(!t){toastBusy=false;return}
@@ -74,7 +74,7 @@ document.querySelectorAll('[data-t]').forEach(e=>{const v=textAt(e.dataset.t);if
 
 // 彈出選單：title 標題、opts 選項 [{id,label,off}]、cb(id) 選了之後做的事
 function pick(title,opts,cb,body){
-  $('pt').textContent=title;$('pp').textContent=body||'';$('pp').hidden=!body;
+  $('pt').textContent=title;$('pp').textContent=withLarva(body||'');$('pp').hidden=!body;
   $('pNote').hidden=true;$('pScene').hidden=true;
   $('pFig').hidden=true;$('pTag').hidden=true;   // 頭像與名牌只有事件會用（showEvent 再打開）
   $('po').innerHTML='';

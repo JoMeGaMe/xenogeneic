@@ -50,6 +50,7 @@ function tagReact(kind,v,ids,chance){
     let t=TEXT.tags[id][kind];
     if(kind==='day'&&TEXT.tags[id].dayNone&&!visibleDecor().length)t=TEXT.tags[id].dayNone;
     if(kind==='day'&&TEXT.tags[id].daySleepy&&TEMPERS[S.temp].sleepy)t=TEXT.tags[id].daySleepy;   // 高高在上的睏睏：浮在水面睡
+    if(kind==='day'&&id==='smalleat'&&S.sat<=35)return;   // 不愛吃：餓的時候換日提示已經寫了（hint.hungrySmall），不再重複
     if(!t||(chance!=null&&Math.random()>chance))return;
     if(t.includes('{deco}')){
       const ds=visibleDecor();if(!ds.length)return;

@@ -202,6 +202,7 @@ def classify(k):
         if last in ('giftToast',): return ('Log', '禮物')
         return ('介面', '零散的介面文字')
     if top == 'pv': return ('介面', '觀察水缸') if last not in ('join', 'leave', 'hi', 'transOn', 'transOff') else ('Log', '觀察水缸')
+    if top == 'skin': return ('介面', '設定：外觀（版型、配色、字體）')
     if top in ('ui', 'layout', 'CNAME'): return ('介面', {'ui': '按鈕與標題', 'layout': '☰ 選單與開關', 'CNAME': '顏色名稱（色票）'}[top])
     if top == 'assoc': return ('Log', '協會') if last == 'done' else ('介面', '協會')
     if top == 'feed': return ('介面', '餵食選單') if last in ('pick', 'headMain', 'headSnack') else ('Log', '餵食')
@@ -211,6 +212,8 @@ def classify(k):
     if top == 'hall':
         if any(x in k for x in ('.floors.', '.floorName.', '.who.')): return ('介面', '異生會大樓')
         if k.startswith('hall.poke'): return ('事件', '異生會大樓：戳一下')
+        if k.startswith(('hall.visitName',)): return ('介面', '異生會大樓')
+        if k.startswith(('hall.visit', 'hall.follow', 'hall.lobbyGrete')): return ('事件', '異生會大樓：1F 的訪客')
         if last in ('arrive', 'upLog', 'upShop'): return ('Log', '異生會大樓')
         if last in ('title', 'leave', 'floors', 'floorName', 'who', 'needLv', 'btnAch', 'btnUp', 'status', 'next', 'maxLv', 'btnSpecial', 'btnUrgent'): return ('介面', '異生會大樓')
         return ('事件', '異生會大樓')
@@ -385,7 +388,9 @@ def old_context(path):
 # ---------------------------------------------------------------- 參考資料（數值）：用 node 跑遊戲資料檔取得
 def game_data(root):
     snip = os.path.join(root, '.textsheet_tmp.js')
-    open(snip, 'w').write("console.log('@@'+JSON.stringify({TEMPERS,TAGS,TAG_ODDS,TAG_CLASH,SOUV_SRC,SOUV_RULE,ASSOC,HALL_FLOORS}));process.exit(0);")
+    open(snip, 'w').write("console.log('@@'+JSON.stringify({TEMPERS,TAGS,TAG_ODDS,TAG_CLASH,SOUV_SRC,SOUV_RULE,ASSOC,HALL_FLOORS,LOBBY_NPC,"
+        "DAY_RULE,WATER_RULE,ACT_RULE,END_RULE,OUT_ITEMS,NAME,PLACES,GRETE_RULE,GRETE_MEET,CHAT_RULE,LETTER_RULE,HALL_RULE,NPC_HOP,HEART_RULE,SPECIAL_RULE,SHOP_ITEMS,SHOP_SCENE,SHOP_SHOW,GAME_RULE,GAME_LIKE,ACH_PT,"
+        "ACH:ACH.map(a=>({id:a.id,cat:a.cat,heart:a.heart,pt:achPts(a),wear:a.wear||''})),VERSION}));process.exit(0);")
     try:
         out = subprocess.run(['node', os.path.join(root, 'tools/test_harness.js'), root, snip], capture_output=True, text=True).stdout
     finally:
@@ -414,9 +419,16 @@ def pic_of(k, D):
         if not ch: return None
         if F_.get('pokeAlt') is not None: return f"人物：{ch[1] if i in F_['pokeAlt'] and len(ch) > 1 else ch[0]}"
         return f"人物：{'／'.join(ch)}（輪流）"
+    SC = (D or {}).get('SHOP_SCENE') or {}
     m = re.match(r'^shop\.poke\[(\d+)\]$', k)
-    if m: return '人物：' + ('yanjin_2' if int(m.group(1)) == 2 else 'yanjin_1') + '（閒聊畫面）'
-    if re.match(r'^shop\.(chat\[|sceneLarva\[|larvaGive$)', k): return '人物：yanjin_1\n背景：ruins_1（閒聊畫面）'
+    if m: return '人物：' + ('yanjin_2' if int(m.group(1)) in (SC.get('pokeAlt') or [2]) else 'yanjin_1') + '（閒聊畫面）'
+    m = re.match(r'^shop\.chat\[(\d+)\]$', k)
+    if m: return '人物：' + ('yanjin_2' if int(m.group(1)) in (SC.get('chatAlt') or []) else 'yanjin_1') + '\n背景：ruins_1（閒聊畫面）'
+    if re.match(r'^shop\.(sceneLarva\[|larvaGive$)', k): return '人物：yanjin_1\n背景：ruins_1（閒聊畫面）'
+    m = re.match(r'^hall\.(visit|visitPoke)\.(\w+)\[(\d+)\]$', k)        # 1F 的訪客
+    if m and D and 'LOBBY_NPC' in D:
+        N_ = D['LOBBY_NPC'].get(m.group(2)) or {}; ch = N_.get('chr') or []
+        if ch: return '人物：' + (ch[1] if m.group(1) == 'visitPoke' and int(m.group(3)) in (N_.get('pokeAlt') or []) else ch[0]) + '\n背景：hall_lobby'
     if k.startswith('special.') and k.split('.')[1] in ('idle', 'reserved'): return '人物：silence_1（預約後 silence_2）' if k.split('.')[1] == 'reserved' else '人物：silence_1'
     if re.match(r'^hall\.(joan\[|up\.|upNo$|upMax$)', k): return '人物：joan_1'
     m = re.match(r'^hall\.larvaSay\.(\w+)$', k)
@@ -439,8 +451,12 @@ def text_table(ws, rows, start, T, ctx, D=None):
         o = ctx.get(row['key'])
         if o and (o[0] in SHEETS or o[1] == group): o = None          # 舊總表裡誤填成分頁名／分組名的說明不要沿用
         if o and o[1] and '言盡的名牌' in str(o[1]) and not row['key'].startswith('shop.'): o = None   # 舊總表誤標（special.who 等）不要沿用
-        if o and o[0] and o[0] not in ('全部', '-') and not row['key'].startswith('souv.'): who = o[0]   # 禮物的對象＝禮物現在的名字（改名後要跟著變）
+        live = who and any(k.endswith('.name') and k.split('.')[0] in ('temper', 'tags') and v == who for k, v in T.items())   # 個性、標籤的名字以遊戲現在的為準（改過名的不要被舊總表蓋掉）
+        if o and o[0] and o[0] not in ('全部', '-') and not live and not row['key'].startswith('souv.'): who = o[0]   # 禮物的對象＝禮物現在的名字（改名後要跟著變）
         if o and o[1] and not re.search(r'・[A-Za-z]+$', str(o[1])) and not re.fullmatch(r'[A-Za-z][A-Za-z0-9]*(（第 \d+ 則）)?', str(o[1])): what = o[1]
+        m = re.match(r'^hall\.up\.(\d+)$', row['key'])
+        if m: who, what = '瓊', f'升到心等 Lv{m.group(1)} 時說的話'
+        if row['key'] == 'hall.arrive': what = '到達異生會大樓'
         vals = [group, who, what, row['v'], '、'.join(dict.fromkeys(re.findall(r'\{\w+\}', row['v']))), row['key'], None]
         for i, v in enumerate(vals, 1):
             c = ws.cell(r, i, v); c.alignment = WRAP; c.border = THIN
@@ -465,6 +481,98 @@ def ref_table(ws, r, head, cols, data, widths=None):
             c = ws.cell(r, i, v); c.alignment = WRAP; c.font = Font(name=F, size=10); c.fill = C_REF; c.border = THIN
         r += 1
     return r + 1
+
+def ref_sheet(ws, D, T):
+    """8 數值參考：從遊戲常數自動產生（DAY_RULE、ACT_RULE…）。「你的調整」欄給使用者寫想改成多少（不會自動套回）"""
+    def nm(group, k): return T.get(f'{group}.{k}.name', k)
+    def pct(x): return f'{round(x * 100)}%'
+    title(ws, f'異種幼體養成模擬器・設定總表｜數值參考（遊戲 {D.get("VERSION", "")}，自動產生）',
+          '每次產生總表都會從程式重新讀數字。想調整：在黃色「你的調整」欄寫想要的數字，傳回來時跟 Claude 說，程式不會自動套用這一欄。')
+    for i, w in enumerate([26, 70, 26, 30], 1): ws.column_dimensions[get_column_letter(i)].width = w
+    r = 4
+    def sec(head, rows):
+        nonlocal r
+        ws.cell(r, 1, head).font = Font(name=F, bold=True, size=12); r += 1
+        for i, h in enumerate(['項目', '目前數值', '程式位置', '你的調整'], 1):
+            c = ws.cell(r, i, h); c.font = Font(name=F, bold=True, color='FFFFFF'); c.fill = C_HEAD
+        r += 1
+        for row in rows:
+            for i, v in enumerate(row, 1):
+                c = ws.cell(r, i, v); c.alignment = WRAP; c.font = Font(name=F, size=10); c.border = THIN
+            ws.cell(r, 4).fill = C_NEW; r += 1
+        r += 1
+    DR, WR, AR, ER = D['DAY_RULE'], D['WATER_RULE'], D['ACT_RULE'], D['END_RULE']
+    tg = lambda k: nm('tags', k)
+    sec('每日結算（每天換日時，照順序）', [
+        ('① 飽食減少', f"每天 −{DR['sat']['normal']}（{tg('glutton')} −{DR['sat']['glutton']}、{tg('smalleat')} −{DR['sat']['smalleat']}）", 'DAY_RULE.sat'),
+        ('① 污染增加', f"每天 +{DR['dirt']['normal']}（{tg('clean')} +{DR['dirt']['clean']}）", 'DAY_RULE.dirt'),
+        ('① 酸鹼度飄移', f"每天隨機 ±{DR['ph']['drift'] / 2:g}，再往遠離 7 的方向偏 {DR['ph']['bias']:g}；{tg('clean')}飄移 ×{DR['ph']['cleanMul']:g}；範圍 {DR['ph']['min']}～{DR['ph']['max']}", 'DAY_RULE.ph'),
+        ('② 生命（飽食）', f"飽食<{DR['lifeSat']['starve']}：{DR['lifeSat']['starveD']}｜<{DR['lifeSat']['hungry']}：{DR['lifeSat']['hungryD']}｜否則 +{DR['lifeSat']['okD']}", 'DAY_RULE.lifeSat'),
+        ('② 生命（水質）', f"嚴重 {DR['lifeWater']['severeD']}｜差 {DR['lifeWater']['badD']}｜否則 +{DR['lifeWater']['okD']}；{tg('frail')}時負的變化 ×{DR['frailMul']:g}", 'DAY_RULE.lifeWater、frailMul'),
+        ('水質「差」', f"污染>{WR['bad']['dirt']} 或 |pH−7|>{WR['bad']['ph']:g}（{tg('frail')}：>{WR['frailBad']['dirt']}／>{WR['frailBad']['ph']:g}）", 'WATER_RULE'),
+        ('水質「嚴重」', f"污染>{WR['severe']['dirt']} 或 |pH−7|>{WR['severe']['ph']:g}（{tg('frail')}：>{WR['frailSevere']['dirt']}／>{WR['frailSevere']['ph']:g}）", 'WATER_RULE'),
+        ('③ 信賴', f"飽食≥{DR['trust']['sat']} 且生命>{DR['trust']['life']}：+{DR['trust']['up']}；否則 {DR['trust']['down']}", 'DAY_RULE.trust'),
+        ('③ 標籤的代價', f"{tg('playful')} {DR['tagCost']['playfulDays']} 天沒玩 −{DR['tagCost']['playful']}｜{tg('lovey')}當天沒玩 −{DR['tagCost']['lovey']}｜{tg('clean')}污染>{DR['tagCost']['cleanDirt']} −{DR['tagCost']['clean']}｜{tg('vain')}戴裝扮 +{DR['tagCost']['vain']}、沒戴 −{DR['tagCost']['vain']}", 'DAY_RULE.tagCost'),
+        ('④ 核心染上代表色', f"第 {DR['color']['day']} 日起，信賴≥{DR['color']['trust']}、互動≥{DR['color']['bond']}、生命≥{DR['color']['life']}", 'DAY_RULE.color'),
+        ('⑤ 提前消逝', '生命≤0 → END-07', 'js/settle.js'),
+    ])
+    AW, AF, AP, AO = AR['water'], AR['feed'], AR['play'], AR['out']
+    LOOT = {'food': '海草湯', 'snack': '零食', 'agent': '換水劑', 'toy': '玩具'}
+    loot = '｜'.join(f"{T.get(f'place.{k}.name', k)}：" + '、'.join(f"{LOOT.get(a, a)} {b}" for a, b in v['loot'].items()) for k, v in D['PLACES'].items() if v.get('loot'))
+    sec('行動', [
+        ('換水', f"污染 −{AW['dirt']}（最低 {AW['min']}）、pH 往 7 靠 {pct(AW['ph'])}；同一天第二次換水生命 −{AW['overLife']}", 'ACT_RULE.water'),
+        ('餵食', f"海草湯飽食 +{AF['food']}、零食 +{AF['snack']}（{tg('smalleat')} ×{AF['smalleatMul']:g}）｜喜歡的零食信賴 +{AF['favTrust']}、普通 +{AF['okTrust']}（再乘個性倍率）", 'ACT_RULE.feed'),
+        ('吃撐', f"飽食>{AF['full']}（{tg('glutton')}>{AF['fullGlutton']}）還硬塞：生命 −{AF['overFood']}（海草湯）／−{AF['overSnack']}（零食）", 'ACT_RULE.feed'),
+        ('不喜歡的零食', f"飽食≤{AF['dislikeSat']} 才勉強吃（飽食 +{AF['dislikeAmt']}），否則推開（還是會消耗）", 'ACT_RULE.feed'),
+        ('玩耍', f"最愛的玩具信賴 +{AP['fav']}、{tg('playful')} +{AP['playful']}、普通 +{AP['meh']}（再乘個性倍率）；{tg('scholar')} ×{AP['scholarMul']:g}", 'ACT_RULE.play'),
+        ('出門', f"帶回 {D['OUT_ITEMS']} 件；水質檢測儀 {pct(AO['kitChance'])}（第 {AO['kitSure']} 次出門起必得）；背景裝飾 {pct(AO['decor'])}", 'ACT_RULE.out、OUT_ITEMS'),
+        ('出門的戰利品權重', loot, 'PLACES.loot'),
+    ])
+    sec('個性', [(nm('temper', k), f"速度 {v['speed']:g}｜信賴倍率 {v['trustGain']:g}｜喜歡加成 {v['favGain']:g}｜探索型 {'是' if v.get('explorer') else '否'}", 'TEMPERS') for k, v in D['TEMPERS'].items()])
+    sec('結局條件（由上到下第一個符合的）', [
+        ('END-05', '核心被聊天染成代表色以外的顏色', 'js/endings.js'),
+        ('END-06', f"生命<{ER['sadLife']} 或 信賴<{ER['sadTrust']}", 'END_RULE'),
+        ('END-02', f"信賴≥{ER['bondTrust']} 且 互動≥{ER['bondN']}", 'END_RULE'),
+        ('END-03', f"探索≥{ER['explore']} 且是探索型個性", 'END_RULE'),
+        ('END-04', f"生命≥{ER['lonerLife']} 且 互動≤{ER['lonerBond']}", 'END_RULE'),
+        ('END-01', '其他', ''),
+    ])
+    TO = D['TAG_ODDS']
+    sec('標籤', [('每隻的標籤數', f"{pct(TO['none'])} 無、{pct(TO['one'])} 一個、{pct(1 - TO['none'] - TO['one'])} 兩個", 'TAG_ODDS')] +
+        [(tg(k), f"權重 {v['weight']}" + ('（停用）' if v.get('off') else '') + ('（需要有消逝過的小球）' if v.get('needsLost') else ''), 'TAGS') for k, v in D['TAGS'].items()] +
+        [('互斥組合', '、'.join(f'{tg(a)}×{tg(b)}' for a, b in D['TAG_CLASH']), 'TAG_CLASH')])
+    GR, GM, CR, SR, LR = D['GRETE_RULE'], D['GRETE_MEET'], D['CHAT_RULE'], D['SOUV_RULE'], D['LETTER_RULE']
+    sec('格蕾特、聊天、禮物、信', [
+        ('遇見格蕾特', f"出門每次 {pct(GM['chance'])}；第 {GM['sure']} 次出門起一定遇見；拒絕之後每次 {pct(GM['again'])}", 'GRETE_MEET'),
+        ('小助手換水', f"換日後 污染>{GR['waterDirt']} 或 |pH−7|>{GR['waterPh']:g} 就換", 'GRETE_RULE'),
+        ('小助手餵食', f"飽食<{GR['feedBelow']} 才餵，最多 {GR['maxFeeds']} 次；飽食<{GR['hungryBelow']} 才會餵普通零食", 'GRETE_RULE'),
+        ('聊天染色', f"同一種顏色聊 {CR['need']} 次、接近度≥{CR['near']}；出門遇到聊顏色／雙色事件 {pct(CR['event'])}", 'CHAT_RULE'),
+        ('小禮物', f"信賴≥{SR['trust']} 才送；個性禮物 {pct(SR['temper'])}、每個標籤 {pct(SR['tag'])}；每天最多 {SR['maxPerDay']}｜{tg('sneak')}每天溜出去 {pct(SR['sneak'])}、帶禮物 {pct(SR['sneakGift'])}", 'SOUV_RULE'),
+        ('畢業小球的信', f"交還滿 {LR['minWeeks']} 輪才會寄；未滿 {LR['stableWeeks']} 輪：期許 {pct(LR['young'])}、道別 {pct(LR['farewell'])}；之後：問候 {pct(LR['normal'])}；每輪最多一封", 'LETTER_RULE'),
+    ])
+    FL = {'top': '4F', 'f3': '3F', 'f2': '2F', 'lobby': '1F', 'b1': 'B1'}
+    HR, HL, SP = D['HEART_RULE'], D['HALL_RULE'], D['SPECIAL_RULE']
+    sec('異生會大樓', [
+        ('心等升級', '、'.join(f'Lv{k}：♥{v}' for k, v in HR['need'].items()) + f"（最高 Lv{HR['max']}；心是累積的）", 'HEART_RULE.need'),
+        ('商店每次擺幾種', '、'.join(f'Lv{k}：{v} 種' for k, v in HR['shop'].items()), 'HEART_RULE.shop'),
+        ('特殊委託名單', '、'.join(f'Lv{k}：{v} 隻' for k, v in SP['count'].items()), 'SPECIAL_RULE.count'),
+        ('特殊委託的標籤數', '｜'.join(f"Lv{k}：{pct(v['none'])} 無、{pct(v['one'])} 一個" for k, v in SP['odds'].items()), 'SPECIAL_RULE.odds'),
+        ('樓層開放', '、'.join(f"{FL.get(k, k)}：Lv{v.get('need', 1)}" + ('（鎖住）' if v.get('lock') else '') for k, v in D['HALL_FLOORS'].items()), 'HALL_FLOORS'),
+        ('背景小球', f"每層 {pct(HL['larva'])} 出現；戳了 {pct(HL['gift'])} 送道具（每趟最多 {HL['giftMax']}）；交還過的那隻 {pct(HL['known'])}", 'HALL_RULE'),
+        ('大廳有認識的人（訪客，見 LOBBY_NPC）', pct(HL['lobbyNpc']), 'HALL_RULE.lobbyNpc'),
+    ])
+    cat = lambda c: T.get(f'ach.cats.{c}', c)
+    sec(f"成就（{len(D['ACH'])} 個，♥ 合計 {sum(a['heart'] for a in D['ACH'])}）",
+        [(T.get(f"ach.list.{a['id']}.name", a['id']), f"{cat(a['cat'])}｜{T.get('ach.list.' + a['id'] + '.cond', '')}｜♥{a['heart']}、{a['pt']} 積分" + (f"＋裝扮 {a['wear']}" if a['wear'] else ''), 'ACH') for a in D['ACH']])
+    sec('言盡的商店（積分）',
+        [(T.get(f"shop.items.{k}.name", None) or T.get(f'wears.{v.get("wear")}.name', None) or k,
+          (f"{v['price']}" if v['price'] else '非賣品') + ('｜固定商品（這一輪用）' if v.get('fixed') else '') + ('｜不在商店擺' if v.get('hidden') else '') + ('｜永久道具' if v.get('tool') else ''), 'SHOP_ITEMS') for k, v in D['SHOP_ITEMS'].items()] +
+        [('閒聊畫面的小球', f"出現 {pct(D['SHOP_SCENE']['larva'])}；每次最多送 {D['SHOP_SCENE']['giftMax']} 個", 'SHOP_SCENE')])
+    G = D['GAME_RULE']
+    GL = {'grace': '開始後幾毫秒才算碰到', 'wandTime': '指揮棒一場', 'bucketTime': '小水桶一場', 'bucketPlaceMax': '放水桶最久等多久', 'bubbleTime': '氣泡棒一場',
+          'bellHideMax': '鈴鐺藏起來最久', 'bellSeekMax': '找鈴鐺最久', 'linger': '結束後道具淡出'}
+    sec('互動玩耍（毫秒）', [(GL.get(k, k), f'{v}', f'GAME_RULE.{k}') for k, v in G.items()] + [('喜歡的玩具（個性）', '｜'.join(f"{D['NAME'].get(k, k)}：" + '、'.join(nm('temper', t) for t in v) for k, v in D['GAME_LIKE'].items()), 'GAME_LIKE')])
+    ws.freeze_panes = 'A4'
 
 def old_ref(path):
     """舊分頁 1 的手寫說明（平常行為、被戳時、效果、揭曉時機…），以 ID 對應"""
@@ -496,7 +604,7 @@ def build(root, oldpath, outpath):
         wb = openpyxl.load_workbook(oldpath)
         keep = []
         for ws in list(wb):
-            if ws.title.endswith('互動') or ws.title.endswith('數值參考'): keep.append(ws)
+            if ws.title.endswith('互動'): keep.append(ws)
             else: wb.remove(ws)
     else:
         wb = openpyxl.Workbook(); wb.remove(wb.active); keep = []
@@ -505,18 +613,19 @@ def build(root, oldpath, outpath):
     names = ['0 使用說明'] + [f'{i + 1} {s}' for i, s in enumerate(SHEETS)]
     for n in names: sheets[n] = wb.create_sheet(n)
     for i, ws in enumerate(keep):
-        base = '互動' if ws.title.endswith('互動') else '數值參考'
-        ws.title = f'{len(names) + i} {base}'
+        ws.title = f'{len(names) + i} 互動'
         ws.sheet_properties.tabColor = 'BBBBBB'
-    wb._sheets = [sheets[n] for n in names] + keep
+    refws = wb.create_sheet(f'{len(names) + len(keep)} 數值參考')
+    wb._sheets = [sheets[n] for n in names] + keep + [refws]
+    ref_sheet(refws, D, T)
 
     # ---- 0 使用說明
     ws = sheets['0 使用說明']
     title(ws, '異種幼體養成模擬器・設定總表', '這份總表由程式自動產生（tools/textsheet.py），每一條遊戲文字剛好出現一次。')
     guide = [
         ('怎麼改文字', '在黃色的「你的新文字」欄寫新文字，其他欄不用動。改好把整份傳給 Claude，會自動套回遊戲，套完「目前文字」會更新、黃色欄清空。'),
-        ('分頁', '1 個性、2 標籤、3 物品與禮物：名字與說明（下方灰底是參考資料：數值、行為、效果）。4 Log：訊息區的文字（含個性、標籤的反應）。5 事件：彈出框的劇情與按鈕（開場、接取委託、格蕾特、結局）。6 介面：按鈕、標題、選單的字。7 互動、8 數值參考：手動整理的參考表。'),
-        ('代入字', '{name}、{item} 這類大括號會在遊戲裡換成名字或物品，新文字裡請保留（「代入字」欄列出這句用到的）。文字裡的「幼體」在訊息區會自動換成小球的名字。'),
+        ('分頁', '1 個性、2 標籤、3 物品與禮物：名字與說明（下方灰底是參考資料：數值、行為、效果）。4 Log：訊息區的文字（含個性、標籤的反應）。5 事件：彈出框的劇情與按鈕（開場、接取委託、格蕾特、結局）。6 介面：按鈕、標題、選單的字。7 互動：手動整理的參考表。8 數值參考：從程式自動產生（v0.30 起），每次都是最新數字；想調整就寫在黃色欄。'),
+        ('代入字', '{name}、{item} 這類大括號會在遊戲裡換成名字或物品，新文字裡請保留（「代入字」欄列出這句用到的）。{larva}＝這句話的主角小球，遊戲裡會換成名字（平常是這一輪的小球；同伴被戳、玩耍、觀察水缸時是那一隻；沒有小球的地方顯示「幼體」）。「幼體」兩個字只是一般名詞，不會被換掉。'),
         ('換行', '儲存格裡直接換行（Excel：Alt＋Enter；Mac：Option＋Enter）就是遊戲裡的換行。'),
         ('新增一則', '淺綠色的「（新增一則）」列：寫在右邊就會加進那個清單（遊戲會隨機挑一則）。要一次加好幾則，用「空一行」隔開。'),
         ('刪除一則', '在清單裡某一則的新文字欄寫「（刪除）」。'),
@@ -635,7 +744,13 @@ def apply(root, xlsx):
                 if not any(v is not None and str(v).strip() for v in r): break
                 k = r[ck] if ck < len(r) else None; pic = r[cp] if cp < len(r) else None
                 if not k or pic is None or not str(pic).strip(): continue
-                pic = str(pic).strip().removesuffix('.png')
+                pic = str(pic).strip()
+                m_ = re.search(r'人物[：:]\s*([\w-]+)', pic)                    # 也接受照「使用的圖片」格式填的（人物：joan_1／背景：…）
+                if m_: pic = m_.group(1)
+                elif '背景' in pic: continue                                   # 只寫背景＝沒有要換人物
+                pic = pic.removesuffix('.png')
+                cur = r[vals.index('使用的圖片')] if '使用的圖片' in vals and vals.index('使用的圖片') < len(r) else ''
+                if cur and re.search(r'人物[：:]\s*' + re.escape(pic) + r'(?![\w-])', str(cur)): continue   # 和現在一樣＝不用換
                 info = index.get(str(k) + '#pic')
                 if not info: problems.append(f'{ws.title}｜{k}：這一列沒有人物圖可以換'); continue
                 if not (os.path.exists(os.path.join(root, 'assets', pic + '.png')) or os.path.exists(os.path.join(root, 'assets', pic + '.jpg'))):

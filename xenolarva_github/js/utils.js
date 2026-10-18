@@ -21,7 +21,10 @@ const has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 // 轉成安全的 HTML 文字
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 // 把文字裡的 {key} 換成 vars[key]：fmt('把{item}推開',{item:'甜果'}) → '把甜果推開'
-const fmt=(s,v)=>String(s).replace(/\{(\w+)\}/g,(_,k)=>(v&&k in v)?v[k]:'');
+const fmt=(s,v)=>String(s).replace(/\{(\w+)\}/g,(m,k)=>(v&&k in v)?v[k]:k==='larva'?m:'');   // {larva} 沒給就先留著，顯示時（withLarva）再填
+// {larva}＝這句話的主角小球。顯示時填名字：有指定就用指定的（同伴、玩的那隻…），沒有就用這一輪的小球；都沒有（第 0 日、圖鑑說明）用「幼體」
+const LARVA_FALLBACK='幼體';
+const withLarva=(s,name)=>String(s).replace(/\{larva\}/g,name!=null?name:(typeof S!=='undefined'&&S&&S.name?nm(S.name):LARVA_FALLBACK));
 // 建立 DOM 元素：h('div',{class:'x',onclick:fn},'文字',子元素…)。文字一律當純文字處理，不會被當成 HTML。
 function h(tag,attrs,...kids){
   const e=document.createElement(tag);

@@ -158,7 +158,7 @@ function pokeGuest(g,t,x,y){
   g.next=0;
   if(kind==='spin')g.rv=(Math.random()<.5?-1:1)*.5;
   if(kind==='hide'){g.vx+=(g.x<x?-1:1)*1.6}
-  say(TEXT.poke[kind].replace(/幼體/g,nm(g.name)));
+  say(withLarva(TEXT.poke[kind],nm(g.name)));
   emoteOn(g,{come:'heart',hide:'q',wave:'ex',turn:'x',spin:'star',stretch:'q',touch:'heart'}[kind]||'ex');   // 被戳時也冒氣泡（和玩家養的那隻一樣）
   return true;
 }

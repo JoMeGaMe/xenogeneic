@@ -11,8 +11,8 @@ let GUEST_IDS=[];      // 勾選「放入水缸」的小球 id（最多 3 隻）
 //   save(v)：存檔時要先整理的（沒寫就原樣存）
 // 欄位說明：intro 看過開場故事｜points 積分｜returned 已交還的小球 [{id,name,at,back,gift,temp,own,pg,pt,end,rnd,lkind,look}]（rnd＝交還時的輪數；look＝外觀，大樓背景用）
 //   got 交還後仍算已收集的結局／個性／標籤｜homeUsed 交還掉的回歸者名額｜outMode 外出方式（random／map）｜rounds 完成過幾輪｜farewells 收到幾封「道別」信
-//   letterMode 收到信紙的方式（popup／log）｜letters 收藏的信紙｜letterGot 各種信收過幾封｜crowns 玩耍拿過幾次王冠｜special 預約的特殊委託
-//   visited 去過的地點｜buys 買過幾次｜achGot 領過的成就｜achSeen 達成過（跳過橫幅）的成就｜heartLv 心等｜hallMet／joanMet／silenceMet 看過大樓／瓊／賽倫絲的開場
+//   letterMode 收到信紙的方式（popup／log）｜letters 收藏的信紙｜letterGot 各種信收過幾封｜crowns 玩耍拿過幾次王冠｜special 預約的特殊委託｜specialDone 完成過幾次特殊委託
+//   visited 去過的地點｜buys 買過幾次｜achGot 領過的成就｜achSeen 達成過（跳過橫幅）的成就｜heartLv 心等｜hallMet／joanMet／silenceMet／xiaojunMet 看過大樓／瓊／賽倫絲／言曉君的開場
 //   shopMet 見過言盡｜wears 有的裝扮｜tools 永久道具（指揮棒、水桶、雜誌）｜playMode 玩耍方式（quick／play）｜kit 水質檢測儀｜grete 遇見格蕾特｜greteMet 認識格蕾特
 //   chatColor／chatDual 學會聊天染色／雙色｜chatWins 染色成功幾次｜souv 禮物收藏｜decor 撿到的裝飾｜hidden 在水缸隱藏的裝飾｜seen 見過的物品｜pname／pcol 玩家名字與代表色
 const _list=a=>Array.isArray(a)?a:[];
@@ -46,12 +46,13 @@ const SAVE_FIELDS={
   crowns:{def:()=>0,read:d=>_num(d.crowns,99999),merge:'max'},
   visited:{def:()=>[],read:d=>_gl(d.visited,x=>has(PLACES,x)),merge:'union'},
   buys:{def:()=>0,read:d=>_num(d.buys,99999),merge:'max'},
+  specialDone:{def:()=>0,read:d=>_num(d.specialDone,99999),merge:'max'},   // 完成過幾次特殊委託（v0.30，成就用）
   special:{def:()=>null,merge:'fill',
     read:d=>d.special&&has(TEMPERS,d.special.temp)?{temp:d.special.temp,tags:_list(d.special.tags).map(String).filter(x=>has(TAGS,x)).slice(0,2),hue:_hue(d.special.hue),why:String(d.special.why||'').slice(0,200),rnd:_num(d.special.rnd,99999)}:null},
   achGot:{def:()=>[],read:d=>_gl(d.achGot,x=>ACH.some(a=>a.id===x)),merge:'union'},
   achSeen:{def:()=>[],read:d=>_gl(d.achSeen,x=>ACH.some(a=>a.id===x)),merge:'union'},
   heartLv:{def:()=>1,read:d=>Math.max(1,Math.min(HEART_RULE.max,_num(d.heartLv,9)||1)),merge:'max'},
-  hallMet:_bool('hallMet'),joanMet:_bool('joanMet'),silenceMet:_bool('silenceMet'),
+  hallMet:_bool('hallMet'),joanMet:_bool('joanMet'),silenceMet:_bool('silenceMet'),xiaojunMet:_bool('xiaojunMet'),
   farewells:{def:()=>0,read:d=>_num(d.farewells,9999),merge:'max'},
   shopMet:_bool('shopMet'),
   wears:{def:()=>[],read:d=>_gl(d.wears,x=>has(WEARS,x)),merge:'union'},
@@ -157,8 +158,11 @@ const rowInfo=e=>[h('div',{class:'dim'},fmt(TEXT.misc.rowInfo,{day:e.day,at:e.at
 const tipSpan=(id)=>h('span',{class:'tipc','data-tip':TEXT.temper[id].desc,tabindex:0},TEXT.temper[id].name);
 
 // ---------- 收藏（每個種類一頁，文字列表；沒發現的顯示 ？？？）----------
-const COLL_TABS=['end','temper','item','decor','tag','souv','letter'];   // 名字在 TEXT.misc.collTabs
-let CT='end';
+// 圖鑑（book）＝發現過的紀錄；收藏品（coll）＝持有的東西。兩頁共用 #pg_coll 這個畫面，分類不同（v0.31）
+const COLL_SETS={book:['end','temper','tag','souv','letter'],coll:['item','tool','decor','wear']};   // 名字在 TEXT.misc.collTabs
+let CSET='book';
+const CT_OF={book:'end',coll:'item'};     // 每一頁目前選的分類
+const CSEL={tool:null,wear:null};          // 道具／裝扮：選中的那一格
 const UNK='？？？';
 let REVEAL=false;      // 開發者模式：把所有收藏都顯示成已發現（不會存檔）
 // 回傳這個種類的表頭與每一列。found＝已發現
@@ -166,7 +170,7 @@ function collData(k){
   const X_=TEXT.misc;
   if(k==='end'){
     const got=new Set([...CODEX.map(e=>e.end),...META.got.end]);
-    return {head:[X_.colName,X_.colDesc],rows:Object.keys(ENDS).map(id=>got.has(id)||REVEAL?{found:1,cells:[ENDS[id][0],ENDS[id][1]]}:{cells:[UNK,UNK]})};
+    return {head:[X_.colName,X_.colDesc],rows:Object.keys(ENDS).map(id=>got.has(id)||REVEAL?{found:1,cells:[ENDS[id][0],withLarva(ENDS[id][1],LARVA_FALLBACK)]}:{cells:[UNK,UNK]})};
   }
   if(k==='temper'){
     const got=new Set([...CODEX.map(e=>e.temp),...META.got.temper]);
@@ -189,21 +193,47 @@ function collData(k){
       return n>0||REVEAL?{found:1,cells:[t.name,src,String(n),t.desc]}
         :{cells:[UNK,UNK,'0',UNK]}})};
   }
-  if(k==='letter')return {count:META.letters.length,rows:[],custom:letterList};   // 收藏的信紙（js/letters.js 的 letterList；數量＝收藏幾封）
+  if(k==='letter')return {count:META.letters.length,rows:[],custom:letterList};
+  if(k==='tool'){const own=COLL_TOOLS.filter(id=>META.tools.includes(id));return {count:own.length,rows:[],custom:box=>collGallery(box,'tool',own)}}
+  if(k==='wear'){const own=Object.keys(WEARS).filter(id=>META.wears.includes(id));return {count:own.length,rows:[],custom:box=>collGallery(box,'wear',own)}}   // 收藏的信紙（js/letters.js 的 letterList；數量＝收藏幾封）
   const got=new Set(CODEX.reduce((a,e)=>a.concat(e.tags),[...META.got.tag]));   // 標籤：有小球在結局前被發現過就算
   return {head:[X_.colName,X_.colDesc],rows:Object.keys(TAGS).map(id=>got.has(id)||REVEAL?{found:1,cells:[TEXT.tags[id].name,TEXT.tags[id].desc]}:{cells:[UNK,UNK]})};
 }
 function renderColl(){
   const fb=$('cfilter');fb.textContent='';
-  COLL_TABS.forEach(k=>{const t=TEXT.misc.collTabs[k];
+  let CT=CT_OF[CSET];
+  COLL_SETS[CSET].forEach(k=>{const t=TEXT.misc.collTabs[k];
     const d=collData(k);
-    fb.append(h('button',{class:CT===k?'on':'',onclick:()=>{CT=k;renderColl()}},t,h('small',{},d.count!=null?String(d.count):`${d.rows.filter(r=>r.found).length}/${d.rows.length}`)));
+    fb.append(h('button',{class:CT===k?'on':'',onclick:()=>{CT_OF[CSET]=k;renderColl()}},t,h('small',{},d.count!=null?String(d.count):`${d.rows.filter(r=>r.found).length}/${d.rows.length}`)));
   });
   const d=collData(CT),box=$('collBody');box.textContent='';
   if(d.custom){d.custom(box);return}
   box.append(h('table',{class:'ctab'},
     h('thead',{},h('tr',{},...d.head.map(t=>h('th',{},t)))),
     h('tbody',{},...d.rows.map(r=>h('tr',{class:r.found?'':'unk'},...r.cells.map(c=>h('td',{},c)))))));
+}
+
+// 收藏品的道具／裝扮：上（電腦在左）＝選中的那一格（圖、名字、言盡的介紹、怎麼來的），下（電腦在右）＝持有的格子。只顯示已持有的。
+const COLL_TOOLS=['wand','bucket','magV','magH'];
+const shopKeyOf=(kind,id)=>Object.keys(SHOP_ITEMS).find(k=>SHOP_ITEMS[k][kind]===id);
+const shopTalk=(kind,id)=>{const k=shopKeyOf(kind,id);return k&&TEXT.shop.items[k]?TEXT.shop.items[k].talk||'':''};
+function collPic(kind,id){
+  if(kind==='wear')return wearIcon(id);
+  const k=shopKeyOf('tool',id),im=h('img',{class:'sicon',alt:'',src:assetImg(SHOP_ITEMS[k].img)});return im;
+}
+function collGallery(box,kind,own){
+  const X_=TEXT.misc;
+  if(!own.length){box.append(h('p',{class:'dim'},kind==='wear'?X_.collNoWear:X_.collNoTool));return}
+  if(!own.includes(CSEL[kind]))CSEL[kind]=own[0];
+  const id=CSEL[kind],k=shopKeyOf(kind,id),it=SHOP_ITEMS[k]||{};
+  const name=kind==='wear'?wearName(id):NAME[id];
+  const from=it.hidden||!it.price?X_.collAch:fmt(X_.collShop,{n:it.price});
+  const pic=collPic(kind,id);pic.classList.add('cgpic');
+  const info=h('div',{class:'cginfo'},pic,h('div',{class:'cgtxt'},h('strong',{},name),h('span',{class:'dim'},from)),
+    h('p',{class:'pp cgtalk'},shopTalk(kind,id)));
+  const grid=h('div',{class:'dgrid cggrid'},...own.map(x=>h('button',{class:'dcell'+(x===id?' on':''),onclick:()=>{CSEL[kind]=x;renderColl()}},
+    collPic(kind,x),h('span',{},kind==='wear'?wearName(x):NAME[x]))));
+  box.append(h('div',{class:'cgal'},info,grid));
 }
 
 // ---------- 小球們 ----------
@@ -268,8 +298,8 @@ function renderLarvae(){
 }
 
 // ---------- 打扮（小球們的第二個分頁）----------
-// 上：選小球（這一輪的小球＋圖鑑裡還在的，橫向捲動）｜中：預覽＋「打扮好了」｜下：分類＋裝扮格子（框內捲動）。電腦版：左預覽、右兩個選單。
-// 選好裝扮要按「打扮好了」才會換上；換別隻或離開＝放棄。DRESS.who＝'_cur'（這一輪）或圖鑑 id；pick＝選的裝扮（'' 不戴）
+// 上：選小球（這一輪的小球＋圖鑑裡還在的，橫向捲動）｜中：預覽卡（左預覽＋名牌，右裝扮名稱＋言盡的介紹，右下「確定」）｜下：分類＋裝扮格子（框內捲動）。電腦和手機同一個排法。
+// 選好裝扮要按「確定」才會換上；換別隻或離開＝放棄。DRESS.who＝'_cur'（這一輪）或圖鑑 id；pick＝選的裝扮（'' 不戴）
 const DRESS={who:null,pick:null,cat:'all',col:'rainbow'};   // col：發光裝扮（螢光棒）選的顏色
 function dressList(){
   const L=[];
@@ -310,7 +340,12 @@ function dressRender(box){
   const colRow=glow?h('div',{class:'dcols'},h('span',{class:'t3'},L.dressColor),
     ...COLORS.map((c,i)=>h('button',{class:'sw1'+(DRESS.col===c?' sel':''),style:'background:'+c,title:CNAME[i],'aria-label':CNAME[i],onclick:()=>{DRESS.col=c;renderLarvae()}})),
     h('button',{class:'sw1 rainbow'+(DRESS.col==='rainbow'?' sel':''),title:L.dressRainbow,'aria-label':L.dressRainbow,onclick:()=>{DRESS.col='rainbow';renderLarvae()}})):null;
-  const pvBox=h('div',{class:'dpv'},pv,h('div',{class:'dinfo'},h('strong',{},who.name),h('span',{class:'dim'},DRESS.pick?wearName(DRESS.pick):L.dressNone)),done,colRow);
+  // 左：預覽＋小球名牌｜右：裝扮名稱＋言盡的介紹（＋發光裝扮的顏色），右下「確定」（v0.31.4 使用者要求）
+  const talk=DRESS.pick?shopTalk('wear',DRESS.pick):'';
+  const pvBox=h('div',{class:'dpv'},
+    h('figure',{class:'dfig'},pv,h('div',{class:'pname'},who.name)),
+    h('div',{class:'dinfo'},h('strong',{class:'dwear'},DRESS.pick?wearName(DRESS.pick):L.dressNone),
+      talk?h('p',{class:'pp dtalk'},talk):null,colRow,h('div',{class:'dact'},done)));
   // 裝扮
   const cats=Object.keys(L.dressCats);
   const tabs=h('div',{class:'filter dcats'},...cats.map(k=>h('button',{class:DRESS.cat===k?'on':'',onclick:()=>{DRESS.cat=k;renderLarvae()}},L.dressCats[k])));
@@ -331,19 +366,21 @@ function dressApply(who){
 }
 
 // ---------- 選單頁面（從右上角 ☰ 各自打開，沒有切換頁籤）----------
-// 頁面：larvae 小球們｜coll 收藏品｜save 設定與存檔（上方兩顆按鈕跳到該段）｜about 說明與公告。標題文字在 TEXT.layout.pages
+// 頁面：larvae 小球們｜book 圖鑑｜coll 收藏品｜save 設定與存檔（上方兩顆按鈕跳到該段）｜about 說明與公告。標題文字在 TEXT.layout.pages
 let TAB='larvae';
-const MENU_PAGES=['larvae','coll','save','about'];
+const MENU_PAGES=['larvae','book','coll','save','about'];
 const PAGE_ALIAS={info:'save',set:'save',news:'about'};
+const PAGE_DOM={book:'coll'};             // 圖鑑和收藏品用同一個畫面
 function showTab(n,sec){
   n=PAGE_ALIAS[n]||n;
   TAB=n;
-  MENU_PAGES.forEach(k=>{$('pg_'+k).hidden=(k!==n)});
+  const dom=k=>PAGE_DOM[k]||k;
+  MENU_PAGES.forEach(k=>{if(!PAGE_DOM[k])$('pg_'+k).hidden=(k!==dom(n))});
   $('menuTitle').textContent=TEXT.layout.pages[n];
-  if(n==='coll')renderColl();
+  if(n==='coll'||n==='book'){CSET=n;renderColl()}
   if(n==='larvae')renderLarvae();
   if(n==='save'){settingsBuild();$('saveText').value=JSON.stringify(saveObj())}
-  $('pg_'+n).scrollTop=0;
+  $('pg_'+dom(n)).scrollTop=0;
   if(n==='save')jumpFit(sec);
   if(n==='about')['aboutBody','newsBody'].forEach(id=>{$(id).scrollTop=0});
 }

@@ -13,9 +13,10 @@ const itemLabel=k=>`${NAME[k]} ×${S.inv[k]}`;
 // ---------- 換水 ----------
 function actWater(){
   S.inv.agent--;S.waterToday++;
-  S.dirt=Math.max(5,S.dirt-60);S.ph+=(7-S.ph)*0.7;
+  const AW=ACT_RULE.water;
+  S.dirt=Math.max(AW.min,S.dirt-AW.dirt);S.ph+=(7-S.ph)*AW.ph;
   if(S.waterToday>1){                           // 一天換超過一次：嚇到幼體
-    S.life=clamp(S.life-6);emote('x');say(TEXT.water.over,'bad');
+    S.life=clamp(S.life-AW.overLife);emote('x');say(TEXT.water.over,'bad');
   }else{emote('drop');say(TEXT.water.ok)}
   refresh();
 }
@@ -33,22 +34,22 @@ function actFeed(){
 function feedItem(k){
   S.inv[k]--;S.history.push('feed');
   const glut=hasTag('glutton'),snack=GIFTS.includes(k),before=S.tagsFound.filter(id=>snack||id!=='glutton');
-  const amt=Math.round((k==='food'?35:15)*(hasTag('smalleat')?.6:1)),full=   // 不愛吃：每次吃得少
-    S.sat>(glut?70:85),v={item:NAME[k]};   // 貪吃鬼更容易吃撐、什麼零食都不推開
-  if(k===S.pref.dislike&&!glut&&S.sat<=40){          // 不喜歡的零食：餓得受不了才勉強吃
-    S.sat=clamp(S.sat+10);emote('q');say(fmt(TEXT.feed.dislikeEat,v));
+  const AF=ACT_RULE.feed,amt=Math.round((k==='food'?AF.food:AF.snack)*(hasTag('smalleat')?AF.smalleatMul:1)),full=   // 不愛吃：每次吃得少
+    S.sat>(glut?AF.fullGlutton:AF.full),v={item:NAME[k]};   // 貪吃鬼更容易吃撐、什麼零食都不推開
+  if(k===S.pref.dislike&&!glut&&S.sat<=AF.dislikeSat){          // 不喜歡的零食：餓得受不了才勉強吃
+    S.sat=clamp(S.sat+AF.dislikeAmt);emote('q');say(fmt(TEXT.feed.dislikeEat,v));
   }else if(k===S.pref.dislike&&!glut){               // 不喜歡的零食：推開（還是會消耗）
     emote('x');say(fmt(TEXT.feed.dislike,v));
   }else if(full){                              // 已經吃飽還硬塞：傷身體
-    S.life=clamp(S.life-(k==='food'?5:3));S.sat=clamp(S.sat+amt);
+    S.life=clamp(S.life-(k==='food'?AF.overFood:AF.overSnack));S.sat=clamp(S.sat+amt);
     emote('x');say(TEXT.feed.full,'bad');
   }else if(k==='food'){
     S.sat=clamp(S.sat+amt);emote('star');say(TEXT.feed.soup);
   }else if(k===S.pref.gift){                   // 喜歡的零食：信賴大增，並記進「喜好」欄
-    S.sat=clamp(S.sat+amt);S.trust=clamp(S.trust+gain(11,true));S.bond++;S.found.gift=true;
+    S.sat=clamp(S.sat+amt);S.trust=clamp(S.trust+gain(AF.favTrust,true));S.bond++;S.found.gift=true;
     emote('heart');say(fmt(TEXT.temper[S.temp].feedFav||TEXT.feed.fav,v),'ev');
   }else{                                       // 普通零食
-    S.sat=clamp(S.sat+amt);S.trust=clamp(S.trust+gain(4));
+    S.sat=clamp(S.sat+amt);S.trust=clamp(S.trust+gain(AF.okTrust));
     emote('star');say(fmt(TEXT.feed.ok,v));
   }
   if(glut&&snack)discoverTag('glutton');
@@ -64,14 +65,14 @@ function actPlay(){
   pick(TEXT.play.pick,opts,t=>{
     S.ap--;S.playedToday=true;
     const v={item:NAME[t]},before=[...S.tagsFound],pl=hasTag('playful');
-    const pgain=(n,f)=>hasTag('scholar')?Math.round(gain(n,f)/2):gain(n,f);   // 學者：玩耍加的信賴只有一半
+    const AP=ACT_RULE.play,pgain=(n,f)=>hasTag('scholar')?Math.round(gain(n,f)*AP.scholarMul):gain(n,f);   // 學者：玩耍加的信賴只有一半
     if(t===S.pref.toy){
-      S.trust=clamp(S.trust+pgain(9,true));S.bond++;S.found.toy=true;
+      S.trust=clamp(S.trust+pgain(AP.fav,true));S.bond++;S.found.toy=true;
       emote('heart');say(fmt(TEXT.temper[S.temp].playFav||TEXT.play.fav,v),'ev');
     }else if(pl){                                   // 貪玩：每種玩具都喜歡（信賴增加比最愛的少一點）
-      S.trust=clamp(S.trust+pgain(6));emote('heart');
+      S.trust=clamp(S.trust+pgain(AP.playful));emote('heart');
     }else{
-      S.trust=clamp(S.trust+pgain(2));emote('q');say(fmt(TEXT.play.meh,v));
+      S.trust=clamp(S.trust+pgain(AP.meh));emote('q');say(fmt(TEXT.play.meh,v));
     }
     if(pl)discoverTag('playful');
     tagReact('play',v,before);
@@ -97,7 +98,7 @@ function actOut(place){
   if(!META.visited.includes(place))META.visited.push(place);   // 去過的地點（成就）
   const got={};
   for(let i=0;i<OUT_ITEMS;i++){const k=lootPick(PLACES[place].loot);got[k]=(got[k]||0)+1}
-  if(S.inv.kit<1&&(S.outs>=3||Math.random()<0.25))got.kit=1;      // 水質檢測儀：第 3 次出門起必拿到，之前有 25% 機率
+  if(S.inv.kit<1&&(S.outs>=ACT_RULE.out.kitSure||Math.random()<ACT_RULE.out.kitChance))got.kit=1;      // 水質檢測儀：第 3 次出門起必拿到，之前有 25% 機率
 
   const list=[];
   for(const k in got){
@@ -110,7 +111,7 @@ function actOut(place){
   }
   const free=Object.keys(DECOR).filter(k=>!META.decor.includes(k));
   let deco=null;
-  if(free.length&&Math.random()<.35){deco=R(free);META.decor.push(deco)}   // 背景裝飾：35% 機率撿到沒有的一種
+  if(free.length&&Math.random()<ACT_RULE.out.decor){deco=R(free);META.decor.push(deco)}   // 背景裝飾：35% 機率撿到沒有的一種
   codexSave();
 
   emote(list.length||deco?'ex':'q');

@@ -36,8 +36,9 @@ function newGame(pname,name,col){
 
 // ---------- 把數值轉成玩家看得懂的文字 ----------
 // 虛弱的小球對水質更挑剔（門檻比較低）
-const waterBad=()=>hasTag('frail')?(S.dirt>50||Math.abs(S.ph-7)>1):(S.dirt>60||Math.abs(S.ph-7)>1.2);
-const waterSevere=()=>hasTag('frail')?(S.dirt>75||Math.abs(S.ph-7)>1.6):(S.dirt>85||Math.abs(S.ph-7)>2);
+const waterOver=w=>S.dirt>w.dirt||Math.abs(S.ph-7)>w.ph;   // 門檻在 js/data/rules.js 的 WATER_RULE
+const waterBad=()=>waterOver(hasTag('frail')?WATER_RULE.frailBad:WATER_RULE.bad);
+const waterSevere=()=>waterOver(hasTag('frail')?WATER_RULE.frailSevere:WATER_RULE.severe);
 // 水質：有檢測儀才顯示精確數值，沒有就顯示「未知」，要從行為線索判斷
 function waterW(){
   if(S.inv.kit>0)return fmt(TEXT.misc.waterNum,{d:Math.round(S.dirt),p:S.ph.toFixed(1)});
@@ -50,7 +51,7 @@ function hints(){
   else if(S.dirt>35)h.push(TEXT.hint.hazy);
   if(S.ph-7>1.2)h.push(TEXT.hint.base);
   if(7-S.ph>1.2)h.push(TEXT.hint.acid);
-  if(S.sat<=35)h.push(TEXT.hint.hungry);
+  if(S.sat<=35)h.push(hasTag('smalleat')?TEXT.hint.hungrySmall:TEXT.hint.hungry);   // 不愛吃：餓了也不太積極（不管有沒有被發現，都是一個線索）
   if(S.life<=50)h.push(TEXT.hint.weak);
   return h;
 }

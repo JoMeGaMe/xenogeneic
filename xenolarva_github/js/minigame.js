@@ -13,7 +13,7 @@ const GAME_RULE={grace:1500,wandTime:9000,bucketTime:9000,bucketPlaceMax:15000,b
 const gameName=o=>nm(o===C?S.name:o.name);
 const gameBodies=()=>[...(S&&!S.over&&!SN&&!PV?[C]:[]),...GUESTS.filter(g=>g.phase==='live')];
 const gameSpeed=o=>.9+TEMPERS[o===C?S.temp:o.e.temp].speed*.6;
-const gameSay=(s,cls)=>say(s.replace(/幼體/g,GAME&&GAME.who?gameName(GAME.who):nm(S.name)),cls||'ev');   // 文字裡的「幼體」＝玩的那隻
+const gameSay=(s,cls)=>say(withLarva(s,GAME&&GAME.who?gameName(GAME.who):nm(S.name)),cls||'ev');   // 文字裡的 {larva}＝玩的那隻
 // 這隻喜不喜歡這個玩具：最喜歡的玩具（養的那隻 S.pref.toy；同伴 e.pt）或有「貪玩」標籤＝喜歡。
 // 指揮棒、小水桶（商店買的永久道具）不會是「最喜歡的玩具」，改看個性：
 //   指揮棒＝黏人、好奇、活潑、守序喜歡追；小水桶＝害羞、頑固、睏睏、易染喜歡躲（剛好相反）

@@ -76,7 +76,7 @@ function shopView(v){
   if(v==='goods'){shopSceneStop();shopDraw();return}
   SHOP_PV=null;SHOP_SEL=null;SHOP_CHR=0;
   const S_=SHOP_SCENE;$('shopSBg').src=assetImg(S_.bg);$('shopSCase').src=assetImg(S_.suitcase);
-  SHOP_SAY=R(T.chat);shopSceneDraw();
+  const ci=Math.floor(Math.random()*T.chat.length);SHOP_SAY=T.chat[ci];SHOP_CHR=(S_.chatAlt||[]).includes(ci)?1:0;shopSceneDraw();
   shopSceneStop();
   if(Math.random()<S_.larva){const c=$('shopLand'),sc=S_.larvaSc;
     SHOP_LAND=landStart(c,{n:1,floor:c.height-36*sc-14,xmin:150,xmax:420,sc,look:larvaLook({day:HALL_RULE.strangerDay,hue:Math.floor(Math.random()*360),col:'#ffffff'})})}

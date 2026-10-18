@@ -8,7 +8,7 @@
 | 修改結局文字 | `js/data/endings.js` |
 | 修改結局判定條件／順序 | `js/endings.js`（`endCode`） |
 | 新增玩家指令 | `js/actions.js` ＋ `index.html` 加按鈕 ＋ `js/main.js` 綁定 |
-| 調整每日數值（飽食、水質、生命、信賴） | `js/settle.js` |
+| 調整每日數值（飽食、水質、生命、信賴）、行動數值、結局門檻 | `js/data/rules.js`（DAY_RULE、WATER_RULE、ACT_RULE、END_RULE；邏輯在 `js/settle.js`、`js/actions.js`、`js/endings.js`） |
 | 圖鑑／存檔／匯入匯出 | `js/codex.js` |
 | 水缸同伴（追逐、互撞） | `js/render/guests.js` |
 | 說明頁文字、世界觀、製作者 | `js/data/about.js` |
@@ -27,15 +27,8 @@
 | 新增姿勢圖 | `assets/larva/` 放圖 ＋ `js/data/sprites.js` 登記 |
 | 調整游動速度、被戳的反應 | `js/render/creature.js` |
 | 調整版面、顏色、按鈕 | `css/style.css`、`index.html` |
-
-## 分工原則
-- `data/`：只放資料，不放規則。
-- `state.js`：遊戲狀態（唯一的一份）。
-- `ui.js`、`render/`：只負責顯示，不改規則。
-- `actions.js`、`settle.js`、`endings.js`：遊戲規則。
-
-## 預覽用單檔
-`python tools/build_single_file.py` 會產生 `game_inline.html`（含所有圖片，一個檔案就能開）。
+| 介面配色、版型、按鈕質感 | `css/theme.css`（接在 style.css 後面；顏色都用這裡的變數） |
+| 設定裡的外觀選項（版型／配色／字體） | `js/skin.js`（文字：`texts.js` 的 `skin`；字體檔 `assets/font/`） |
 | 開場故事、第 0 日（沒小球）、接取委託、設定、交還協會積分 | `js/flow.js`（資料：`js/data/assoc.js`；文字：`texts.js` 的 `intro`／`idle`／`assoc`） |
 | 觀察水缸模式（750×500、最多 5 隻、可戳） | `js/preview.js`（背景 `assets/larva/bg_preview.png`） |
 | 聊天與聊天染色（單色／雙色） | `js/chat.js`、`js/data/chat.js`；事件在 `js/events.js`（`colorTalk`／`colorTalk2`） |
@@ -57,3 +50,19 @@
 | 事件頁的場景（背景＋角色＋道具） | 事件頁面加 `bg`／`chr`／`item`（assets 檔名）＝`js/events.js` 的 showEvent；圖片 `assetImg(檔名)` |
 | 裝扮道具（像素圖、戴的位置） | `js/data/wears.js`（商品在 `js/data/shop.js` 加一筆 `wear:'id'`；畫在 `js/render/larva.js` 的 drawLarva） |
 | 互動玩耍（指揮棒、氣泡棒、小鈴鐺、軟球） | `js/minigame.js`（文字 `TEXT.game`；開始＝`gameStart`，由 actPlay 在「遊玩」方式時呼叫）；表情氣泡圖案 `js/data/emotes.js` |
+| 異生會大樓（樓層、電梯、瓊的成就與心等、背景小球、交還的小球回來） | `js/hall.js`（資料 `js/data/hall.js`：`HALL_FLOORS`、`HALL_RULE`、`NPC_HOP`、`ACH`；文字 `TEXT.hall`） |
+| 特殊委託（2F 賽倫絲：名單、預約→下一輪） | `js/hall.js` 的 `specialOpen`（文字 `TEXT.special`） |
+| 商店閒聊畫面（言盡、行李箱、送東西的小球） | `js/shop.js` 的 `shopView`（`SHOP_SCENE` 在 `js/data/shop.js`） |
+| 雜誌染色（外殼上下／左右漸層） | `js/chat.js`（`MAG_SPLIT`）＋ `js/render/sprites.js` 的 `tint2` |
+| 打扮分頁、發光裝扮顏色 | `js/codex.js`（`DRESS`）＋ `js/data/wears.js` |
+| 存檔欄位（新增跨輪資料） | `js/codex.js` 的 `SAVE_FIELDS` |
+| 圖片載入與失敗提示 | `js/render/sprites.js`（`IMG_MISSING`、`imgOK`） |
+
+## 分工原則
+- `data/`：只放資料，不放規則。
+- `state.js`：遊戲狀態（唯一的一份）。
+- `ui.js`、`render/`：只負責顯示，不改規則。
+- `actions.js`、`settle.js`、`endings.js`：遊戲規則。
+
+## 預覽用單檔
+`python tools/build_single_file.py` 會產生 `game_inline.html`（含所有圖片，一個檔案就能開）。

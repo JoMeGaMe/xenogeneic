@@ -31,6 +31,11 @@ const SHOP_ITEMS={
   wings:         {price:10,wear:'wings'},
   devil:         {price:12,wear:'devil'},
   minilarva:     {price:10,wear:'minilarva'},
+  bunny:         {price:8,wear:'bunny'},
+  shushu:        {price:8,wear:'shushu'},
+  puppy:         {price:8,wear:'puppy'},
+  snake:         {price:8,wear:'snake'},
+  blackcat:      {price:8,wear:'blackcat'},
   eyepatch:      {price:7,wear:'eyepatch'},
   dododo:        {price:6,wear:'dododo'},
   gogogo:        {price:6,wear:'gogogo'},
@@ -49,5 +54,6 @@ const SHOP_SLOTS=[{x:26,y:38},{x:74,y:38},{x:50,y:74}];   // 商品在行李箱�
 const SHOP_SLOTS4=[{x:24,y:36},{x:62,y:34},{x:36,y:74},{x:76,y:72}];   // 心等 3：擺 4 種時的位置
 const SHOP_CASE='shop_case';                           // 行李箱（由上往下看）：assets/shop_case.png，3:2（750×500；目前是使用者的圖切掉上蓋）
 // 閒聊畫面（商店的「閒聊」）：廢墟背景＋行李箱＋言盡（戳她發呆時換 yanjin_2）＋偶爾一隻小球
-const SHOP_SCENE={bg:'ruins_1',suitcase:'suitcase',chr:['yanjin_1','yanjin_2'],pokeAlt:[2],larva:.35,larvaSc:.85,giftMax:3};   // 閒聊畫面的小球也會送東西（機率、種類同大樓 HALL_RULE），每次去商店最多 giftMax 個
+// chatAlt：閒聊畫面打開時那句（TEXT.shop.chat 的第幾句，從 0 起算）用第二張圖 yanjin_2（v0.32.3 使用者在總表指定第 5 則）
+const SHOP_SCENE={bg:'ruins_1',suitcase:'suitcase',chr:['yanjin_1','yanjin_2'],pokeAlt:[2],chatAlt:[4],larva:.35,larvaSc:.85,giftMax:3};   // 閒聊畫面的小球也會送東西（機率、種類同大樓 HALL_RULE），每次去商店最多 giftMax 個
 // （v0.29.2 起商品畫面不放言盡的頭像；assets/yanjin_face.png 先留著）

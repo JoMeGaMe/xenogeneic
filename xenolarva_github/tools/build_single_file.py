@@ -2,10 +2,22 @@
 # 用法：在專案根目錄執行  python tools/build_single_file.py
 import re, base64, glob, os, json
 html = open('index.html', encoding='utf-8').read()
-css = open('css/style.css', encoding='utf-8').read()
-html = re.sub(r'<link rel="stylesheet" href="css/style.css[^"]*">', lambda m: '<style>\n' + css + '</style>', html)
+# css/ 底下每個 <link> 都內嵌（style.css、theme.css…）；CSS 裡的 url(../assets/…)（字體、框圖）轉成 base64
+CSS_MIME = {'.woff2': 'font/woff2', '.woff': 'font/woff', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml'}
+def css_url(m):
+    rel = m.group(2)
+    f = os.path.normpath(os.path.join('css', rel))
+    mime = CSS_MIME.get(os.path.splitext(f)[1].lower())
+    if not mime or not os.path.exists(f):
+        return m.group(0)
+    return 'url(data:' + mime + ';base64,' + base64.b64encode(open(f, 'rb').read()).decode() + ')'
+def inline_css(m):
+    css = open(m.group(1), encoding='utf-8').read()
+    css = re.sub(r"""url\((['"]?)(\.\./assets/[^'")]+)\1\)""", css_url, css)
+    return '<style>\n' + css + '</style>'
+html = re.sub(r'<link rel="stylesheet" href="(css/[^"?]+)[^"]*">', inline_css, html)
 # 手繪的大背景（不透明、不是像素風）：單一 HTML 裡改存成 JPEG，檔案小很多（原始 png 不動，GitHub 版照樣用 png）
-JPEG_IN_SINGLE = ('hall_', 'place_', 'letter_')
+JPEG_IN_SINGLE = ('hall_', 'place_', 'letter_', 'home_')
 def enc(f):
     n = os.path.basename(f)[:-4]
     if f.endswith('.png') and n.startswith(JPEG_IN_SINGLE):

@@ -1,0 +1,218 @@
+/* ===== 介面主題（UI 美化，v0.32 起）=====
+   這個檔放在 style.css 後面載入，只「蓋過」顏色與質感，不改版面（位置、大小、欄數都還是 style.css 管）。
+   ・配色：html 的 data-skin（玩家在設定選，js/skin.js）。每套只是一組變數；新增一套＝複製一段改顏色＋skin.js 的 SKINS 加一列。
+     選擇器寫成 [data-skin="x"]:not(#_)：一來要蓋過 style.css 第 7 行比較強的 --bg，二來設定頁的色票按鈕也能套自己那套顏色。
+   ・字體：html 的 data-font＝mix（標題、按鈕用像素字）｜pixel（全部）｜plain（都不用）。像素字是俐方體11號（Cubic 11，OFL 授權，assets/font/）。
+   ・按鈕三種質感：一般（面板色＋底部硬陰影）｜主要 .main／#end（強調色）｜選中的頁籤（同主要）。按下去往下沉 2px。
+   ・新寫的東西：底色用 --well（內框）／--deep（輸入框、訊息區），分隔線用 --rowline，文字壓在強調色上用 --onacc，彈出框標題用 --head。 */
+@font-face{font-family:"Cubic 11";src:url(../assets/font/Cubic_11.woff2) format("woff2");font-display:swap}
+
+/* 經典：原本的深海藍＋黃（預設） */
+:root,[data-skin="classic"]:not(#_){
+  --bg:#0b2330;        /* 頁面底色（上） */
+  --bg2:#081a24;       /* 頁面底色（下，漸層） */
+  --panel:#12394a;     /* 按鈕、彈出框 */
+  --panel-hi:#184657;  /* 按鈕滑過 */
+  --well:#0b2330;      /* 內框（.pp、清單卡片） */
+  --deep:#081a24;      /* 訊息區、輸入框 */
+  --line:#2b6b80;      /* 框線 */
+  --line-dk:#1f5264;   /* 內框的框線 */
+  --rowline:#1d4a5c;   /* 表格分隔線 */
+  --ink:#e6f6f2;       /* 本文 */
+  --dim:#8fb9bd;       /* 備註 */
+  --head:#f2c14e;      /* 彈出框標題 */
+  --acc:#f2c14e;       /* 強調、主要按鈕 */
+  --acc-dk:#b8891f;    /* 主要按鈕的框 */
+  --acc-sh:#6b4c0c;    /* 主要按鈕的陰影 */
+  --onacc:#1b1b1b;     /* 強調色上的字 */
+  --hi:rgba(220,250,255,.08);   /* 按鈕上緣的亮邊 */
+  --shadow:#04121a;             /* 按鈕底下的硬陰影 */
+  --glass:rgba(18,57,74,.92);   /* 疊在圖上的名牌 */
+  --scrim:rgba(5,15,22,.85);    /* 彈出框後面的暗幕 */
+  --glow:rgba(120,200,230,.12); /* 頁面上方的光 */
+  --wood:#1f5264;               /* 水缸外框 */
+  --dots:rgba(255,255,255,.035);  /* 頁面點點底紋 */
+  --page-ink:var(--ink);--page-dim:var(--dim);   /* 直接寫在頁面底色上的字（頂列）；亮底的配色要改深色 */
+  --acc-txt:var(--acc);         /* 用強調色寫的「字」（小標題、事件訊息）；亮色配色要比按鈕深 */
+  /* 原本寫死的彩色字：深色配色照舊，亮色配色換成深一點的同色 */
+  --name-txt:#ffb066;--t-good:#9be3a5;--t-warm:#ffd59a;--t-cool:#9fd0ff;--t-violet:#c9b8ff;--t-orange:#ffbf8a;--t-danger:#ff9a9a;--chip-ring:#fff;
+}
+/* 夜櫻：夜空藏青＋櫻粉，按鈕用柔和的奶茶色 */
+[data-skin="night"]:not(#_){
+  --bg:#141f3a;--bg2:#2c2140;--panel:#293355;--panel-hi:#323d64;--well:#111a32;--deep:#0b1428;
+  --line:#6c6f9c;--line-dk:#3c4670;--rowline:#323c62;--ink:#f4ece8;--dim:#b4a9bf;
+  --head:#e7a7bd;--acc:#d2b09a;--acc-dk:#9c7a63;--acc-sh:#4c3428;--onacc:#2a1820;
+  --hi:rgba(255,220,235,.09);--shadow:#070e1f;--glass:rgba(41,51,85,.92);--scrim:rgba(9,23,44,.84);
+  --glow:rgba(175,102,129,.20);--wood:#3c4670;
+}
+/* 深海：寶藍底＋淡金按鈕 */
+[data-skin="deep"]:not(#_){
+  --bg:#0a1a3d;--bg2:#050f26;--panel:#0f2f5a;--panel-hi:#14396b;--well:#071530;--deep:#050f24;
+  --line:#5a7fae;--line-dk:#1d4478;--rowline:#123462;--ink:#eef1f6;--dim:#a3b3cc;
+  --head:#e3cf9f;--acc:#e9e0cf;--acc-dk:#b3a481;--acc-sh:#3b3526;--onacc:#0a1a3d;
+  --hi:rgba(233,224,207,.08);--shadow:#020818;--glass:rgba(15,47,90,.92);--scrim:rgba(3,10,28,.85);
+  --glow:rgba(233,224,207,.10);--wood:#1d4478;
+}
+/* 暮紫：灰紫底＋柔橘按鈕 */
+[data-skin="dusk"]:not(#_){
+  --bg:#262131;--bg2:#1b1724;--panel:#3b3350;--panel-hi:#463d5e;--well:#1f1a29;--deep:#17131f;
+  --line:#8f78a9;--line-dk:#574a6e;--rowline:#433a57;--ink:#f2eff7;--dim:#bdb3cc;
+  --head:#f0b98a;--acc:#e8a46c;--acc-dk:#a9693a;--acc-sh:#4a2a16;--onacc:#2e1608;
+  --hi:rgba(240,225,255,.09);--shadow:#0f0c15;--glass:rgba(59,51,80,.92);--scrim:rgba(18,14,24,.84);
+  --glow:rgba(232,164,108,.14);--wood:#574a6e;
+}
+/* 奶茶（亮色）：奶油底＋白框＋深咖啡字，按鈕赤陶色 */
+[data-skin="latte"]:not(#_){
+  --bg:#e9e0cf;--bg2:#ddd0ba;--panel:#f7f2e9;--panel-hi:#fffaf2;--well:#efe7da;--deep:#fbf8f2;
+  --line:#b08d74;--line-dk:#d2bba6;--rowline:#e0d2c0;--ink:#4a372c;--dim:#8a7362;
+  --head:#9a5f40;--acc:#b97a5a;--acc-dk:#8d553a;--acc-sh:#6b4030;--onacc:#fffaf2;--acc-txt:#9a5f40;
+  --hi:rgba(255,255,255,.7);--shadow:#c9b49c;--glass:rgba(247,242,233,.92);--scrim:rgba(74,55,44,.45);
+  --glow:rgba(255,255,255,.55);--wood:#cba990;--dots:rgba(120,90,60,.06);
+  --page-ink:#4a372c;--page-dim:#8a7362;--bad:#c4472b;
+  --name-txt:#b0582a;--t-good:#2f7a4b;--t-warm:#8a5a1c;--t-cool:#2f6aa0;--t-violet:#6a4fa0;--t-orange:#a8521f;--t-danger:#c0392b;--chip-ring:#4a372c;
+  color-scheme:light;
+}
+/* 黑夜：深灰底＋淺灰按鈕（亮度和深海的淡金一樣） */
+[data-skin="noir"]:not(#_){
+  --bg:#1d1d20;--bg2:#141416;--panel:#2c2c31;--panel-hi:#36363c;--well:#18181b;--deep:#121214;
+  --line:#74747c;--line-dk:#45454b;--rowline:#38383d;--ink:#ededef;--dim:#a6a6ad;
+  --head:#d4d4d8;--acc:#e3e3e6;--acc-dk:#a9a9ae;--acc-sh:#3a3a3e;--onacc:#1b1b1d;
+  --hi:rgba(255,255,255,.07);--shadow:#0b0b0c;--glass:rgba(44,44,49,.92);--scrim:rgba(10,10,12,.85);
+  --glow:rgba(255,255,255,.07);--wood:#45454b;
+}
+
+/* 字體：像素字只在需要的地方 */
+:root{--font-px:"Cubic 11","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;--font-n:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;--font-ui:var(--font-px);--font-body:var(--font-n)}
+:root[data-font="pixel"]{--font-body:var(--font-px)}
+:root[data-font="plain"]{--font-ui:var(--font-n)}
+body{font-family:var(--font-body)}
+input,textarea,select{font-family:var(--font-body)}
+button,.fbtn,header,.box h2,.box h3,.t2,.t3,.phead,.bagh,#setBody .sl,#pg_about .sl,.etab th,.sname,.pname,.pin{font-family:var(--font-ui)}
+
+/* ---- 頁面：上方一道光＋往下漸深＋很淡的點點底紋 ---- */
+body{background-color:var(--bg);
+  background-image:radial-gradient(ellipse 80% 45% at 50% 0%,var(--glow),transparent 70%),radial-gradient(var(--dots) 1px,transparent 1.6px),linear-gradient(var(--bg),var(--bg2));
+  background-size:100% 100%,14px 14px,100% 100%;background-attachment:fixed;-webkit-font-smoothing:antialiased}
+
+/* ===== 下面分兩種：A 顏色（兩種版型都套）｜B 立體版型（html[data-frame="round"] 才套；包在 :where() 裡，權重和不加前綴時一樣：圓角、厚框、陰影、水缸外框）=====
+   平面版型＝style.css 原本的框寬與直角，只換顏色。 */
+
+/* ---------- A 顏色 ---------- */
+header{color:var(--page-ink)}
+header .ver{color:var(--page-dim)}
+#day{color:var(--ink)}
+.pips span{border-color:var(--acc-dk)}
+.pips span.on{background:var(--acc)}
+#tank{border-color:var(--line-dk)}
+#log{background:var(--deep);border-color:var(--line-dk)}
+#log p.rule{border-top-color:var(--line-dk)}
+button,.fbtn{background-color:var(--panel);border-color:var(--line)}
+button:hover:not(:disabled),.fbtn:hover{background-color:var(--panel-hi);border-color:var(--acc)}
+button small{color:var(--dim)}
+/* 主要按鈕（.main、結束今日、選中的頁籤）：強調色＋深色字＋深一階的框 */
+.box button.main,button.main,#end,body.idle #bAccept,.tabs button.on,.filter button.on,.pbtn.on,.ybtn.on,.box .hlift .lbtn.on,.box .shopwrap .stabs button.on,.box .achrow .achget,.box .sprow .achget{background-color:var(--acc);color:var(--onacc);border-color:var(--acc-dk)}
+.box button.main:hover:not(:disabled),button.main:hover:not(:disabled),#end:hover,body.idle #bAccept:hover{filter:brightness(1.08);border-color:var(--acc-dk)}
+.box button.main:disabled,button.main:disabled,.box .sprow .achget:disabled{background-color:transparent;color:var(--dim);border-color:var(--line-dk)}
+.filter button.on small{color:var(--onacc)}
+#end.arm{background:#fff;color:#1b1b1b}
+.ib.on{background-color:var(--well)}
+.ochip{background:var(--deep);border-color:var(--line-dk)}
+.ov{background:var(--scrim)}
+.box{border-color:var(--line)}
+.box h2{color:var(--head)}
+.jtabs{background:var(--panel)}
+.pp,.lrow,.cginfo,.hlift,.rrow,.dpv,.cpv,.scust,.pname,.shopface img,.shopface canvas{background:var(--well);border-color:var(--line-dk)}
+.lrow.on{border-color:var(--acc);background:var(--panel-hi)}
+.ctab td,.bagrow{border-bottom-color:var(--rowline)}
+.ctab th{border-bottom-color:var(--line-dk)}
+.etab td{border-bottom-color:var(--rowline)}
+.box .dress .dchip.on,.box .dress .dcell.on{background:var(--panel-hi)}
+#lfilter button.tdress{background:var(--panel-hi);border-color:var(--acc);color:var(--ink)}
+/* 選中的「打扮」：強調色調淡（混白），和其他選中頁籤區分；底一定是亮的，所以字固定深色（v0.32.1） */
+#lfilter button.tdress.on{background:color-mix(in srgb,var(--acc) 58%,#fff);border-color:var(--acc);color:#1b1b1b}
+input[type=text],textarea,#devp select,#devp input[type=text]{background:var(--deep);border-color:var(--line-dk)}
+input[type=text]:focus{border-color:var(--acc);outline:none}
+#tip{background:var(--deep)}
+#notes{background:var(--well);border-color:var(--line-dk)}
+.box::-webkit-scrollbar-thumb,.box *::-webkit-scrollbar-thumb,#log::-webkit-scrollbar-thumb{background:var(--line-dk)}
+.scene,.hallscene,.mapwrap{border-color:var(--line-dk)}
+.scene .sname,.hallscene .sname{background:var(--glass);border-color:var(--line-dk)}
+.hallscene .hwhere{background:var(--glass)}
+.pin,.shopwrap .stag,.box .shopwrap .stag,.box .shopwrap .stabs button{background-color:var(--glass);border-color:var(--line)}
+.box .shopwrap .sslot.sel .stag.spv{background-color:var(--glass)}
+.shopwrap .shoppv canvas{background:var(--well)}
+#achBanner{background:var(--panel);color:var(--ink)}
+#devp{background:var(--deep)}
+/* 用強調色寫的字、原本寫死的彩色字：改用變數（亮色配色才看得到） */
+.box h3{color:var(--acc-txt)}
+#log p.ev,#log p.voice,.tagc,.phead,.bagh,.t3,#setBody .sl,#pg_about .sl,.etab th,.achrw,.achrow.ready strong,.mapinfo .mname,.shoppts,.ib.on,.ochip,#introStory p.q,.hallscene .hwhere,#devp h4,.box .shopwrap .sslot.sel .stag.spv{color:var(--acc-txt)}
+#log p.voice{border-left-color:var(--acc-txt)}
+.tipc{border-bottom-color:var(--acc-txt)}
+.pname,.scene .sname,.hallscene .sname{color:var(--name-txt)}
+.pnote,.mapinfo .mfind{color:var(--t-good)}
+.letter .lbody,.srcL,.lkind,.dpv .dtalk{color:var(--t-warm)}
+.srcG,.lk-young{color:var(--t-cool)}
+.lk-farewell{color:var(--t-violet)}
+.srcT{color:var(--t-orange)}
+.box .savefoot .danger,.box .lact .lret{color:var(--t-danger)}
+.box .dpv .dcols .sw1.sel{outline-color:var(--chip-ring)}
+
+/* ---------- B 立體版型 ---------- */
+:where(:root[data-frame="round"]) header>span:first-child{display:inline-flex;align-items:center;gap:2px}
+:where(:root[data-frame="round"]) #day{background:var(--well);border:2px solid var(--line-dk);border-radius:999px;padding:1px 12px}
+:where(:root[data-frame="round"]) .pips span{border-radius:3px}
+/* 水缸：外框＋底部陰影（用 box-shadow，不改水缸大小，戳的位置不受影響） */
+:where(:root[data-frame="round"]) #tank{border-radius:6px;box-shadow:0 0 0 3px var(--wood),0 0 0 4px var(--line-dk),0 6px 0 1px var(--shadow)}
+/* 外框加陰影往下凸出約 7px：訊息區多空一點，不要被蓋到 */
+@media (min-width:760px){:where(:root[data-frame="round"]) .logwrap{margin-top:14px}}
+:where(:root[data-frame="round"]) #log{border-radius:8px;box-shadow:inset 0 2px 0 rgba(0,0,0,.35)}
+/* 按鈕：底部硬陰影，按下去往下沉 2px（用 translate，不會和原本的 transform 打架） */
+:where(:root[data-frame="round"]) button,:where(:root[data-frame="round"]) .fbtn{border-radius:7px;box-shadow:inset 0 2px 0 var(--hi),0 3px 0 var(--shadow);transition:translate .06s,box-shadow .06s,background-color .12s}
+:where(:root[data-frame="round"]) button:active:not(:disabled),:where(:root[data-frame="round"]) .fbtn:active{translate:0 2px;box-shadow:inset 0 2px 0 var(--hi),0 1px 0 var(--shadow)}
+:where(:root[data-frame="round"]) button:disabled{box-shadow:none}
+:where(:root[data-frame="round"]) .box .xbtn{top:12px;right:12px;border-radius:50%;box-shadow:0 2px 0 var(--shadow)}
+:where(:root[data-frame="round"]) .box button.main,:where(:root[data-frame="round"]) button.main,:where(:root[data-frame="round"]) #end,:where(:root[data-frame="round"]) body.idle #bAccept,:where(:root[data-frame="round"]) .tabs button.on,:where(:root[data-frame="round"]) .filter button.on,:where(:root[data-frame="round"]) .pbtn.on,:where(:root[data-frame="round"]) .ybtn.on,:where(:root[data-frame="round"]) .box .hlift .lbtn.on,:where(:root[data-frame="round"]) .box .shopwrap .stabs button.on,:where(:root[data-frame="round"]) .box .achrow .achget,:where(:root[data-frame="round"]) .box .sprow .achget{box-shadow:inset 0 2px 0 rgba(255,255,255,.4),0 3px 0 var(--acc-sh)}
+:where(:root[data-frame="round"]) .box button.main:disabled,:where(:root[data-frame="round"]) button.main:disabled,:where(:root[data-frame="round"]) .box .sprow .achget:disabled{box-shadow:none}
+:where(:root[data-frame="round"]) .tog.on{border-color:#f5b8c0;box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 3px 0 #6e2a36}
+:where(:root[data-frame="round"]) .ib,:where(:root[data-frame="round"]) .mbtn{box-shadow:inset 0 1px 0 var(--hi),0 2px 0 var(--shadow)}
+/* 行動按鈕：圖示放進一個小圓底 */
+:where(:root[data-frame="round"]) #abtns .abtn .ico{box-sizing:content-box;padding:5px;border-radius:50%;background-color:var(--acc);box-shadow:0 0 0 2px var(--line-dk);-webkit-mask:none;mask:none;position:relative}
+:where(:root[data-frame="round"]) #abtns .abtn .ico::after{content:'';position:absolute;inset:5px;background:var(--onacc);-webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat}
+:where(:root[data-frame="round"]) .ochip{border-radius:4px}
+/* 彈出框：圓角＋內圈細框＋陰影 */
+:where(:root[data-frame="round"]) .ov{-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+:where(:root[data-frame="round"]) .box{border-radius:12px;box-shadow:inset 0 0 0 2px var(--well),inset 0 0 0 3px var(--line-dk),0 6px 0 var(--shadow),0 18px 40px rgba(0,0,0,.45)}
+:where(:root[data-frame="round"]) .box h2{letter-spacing:.04em}
+:where(:root[data-frame="round"]) .tabs{border-bottom:2px dashed var(--line-dk)}
+:where(:root[data-frame="round"]) .pp,:where(:root[data-frame="round"]) .lrow,:where(:root[data-frame="round"]) .cginfo,:where(:root[data-frame="round"]) .dpv{border-radius:8px}
+:where(:root[data-frame="round"]) input[type=text],:where(:root[data-frame="round"]) textarea,:where(:root[data-frame="round"]) #devp select,:where(:root[data-frame="round"]) #devp input[type=text]{border-radius:6px}
+:where(:root[data-frame="round"]) #tip{border-radius:8px}
+:where(:root[data-frame="round"]) #hamMenu:not([hidden]){border-radius:10px;box-shadow:0 4px 0 var(--shadow)}
+:where(:root[data-frame="round"]) #notes{border-radius:8px}
+:where(:root[data-frame="round"]) .scene,:where(:root[data-frame="round"]) .hallscene,:where(:root[data-frame="round"]) .mapwrap{border-radius:8px}
+:where(:root[data-frame="round"]) .scene .sname,:where(:root[data-frame="round"]) .hallscene .sname,:where(:root[data-frame="round"]) .hallscene .hwhere{border-radius:6px}
+:where(:root[data-frame="round"]) #achBanner{border-radius:10px}
+:where(:root[data-frame="round"]) #devp{border-radius:8px}
+:where(:root[data-frame="round"]) #toast{border-radius:999px}
+@media (prefers-reduced-motion:reduce){button,.fbtn{transition:none!important}}
+
+/* ---- 設定頁的外觀選擇：配色按鈕是自己那套顏色 ---- */
+.skinrow{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+.box .skinrow .skinchip{display:inline-flex;align-items:center;gap:6px;width:auto;margin:0;padding:6px 12px;font-size:14px;background-color:var(--panel);border-color:var(--line);color:var(--ink)}
+/* 選中的：框變成白色（亮色配色是深色）＋前面打勾。畫在按鈕自己的框上，不往外凸，最左邊那顆就不會被彈出框切掉 */
+.box .skinrow .skinchip.on{border-color:var(--chip-ring);font-weight:700}
+.box .skinrow .skinchip.on::before{content:'✓';font-weight:700}
+.skinsw{display:inline-block;width:16px;height:16px;border-radius:50%;background:linear-gradient(90deg,var(--acc) 50%,var(--head) 50%);box-shadow:0 0 0 2px var(--line-dk)}
+
+/* ---- 手機版下方行動按鈕：圖示一律靠上對齊（玩耍、出門多一個切換鈕也不會比較高），立體版圖示縮小，讓出一點高度給水缸上方 ---- */
+@media (max-width:759px){
+  #acts .abtn{position:relative;justify-content:flex-start;padding:5px 2px 3px;min-height:0}
+  /* 玩耍、出門的切換鈕（精簡／隨機…）留在按鈕裡、放在最下面，做成整排寬的小鈕比較好按 */
+  #acts .ochip,#acts #bPlayMode{position:static;align-self:stretch;margin:1px 2px 0;font-size:11px;line-height:16px;text-align:center}
+  :where(:root[data-frame="round"]) #acts .abtn{gap:2px}
+  :where(:root[data-frame="round"]) #acts .abtn .ico{width:15px;height:15px;padding:4px}
+  :where(:root[data-frame="round"]) #abtns .abtn .ico::after{inset:4px}
+  :where(:root[data-frame="round"]) #acts .ochip{border-radius:4px;box-shadow:0 1px 0 var(--shadow)}
+  /* 水缸外框往外凸 4px，上面多空一點，和「第 N 日」不要太近；寬度公式多扣同樣的高度，畫面還是不用捲動 */
+  :where(:root[data-frame="round"]) .tankwrap{margin-top:8px;width:min(100%,calc(100vh - var(--actsH,200px) - 172px));width:min(100%,calc(100dvh - var(--actsH,200px) - 172px))}
+}
