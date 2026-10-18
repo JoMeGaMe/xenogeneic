@@ -21,6 +21,7 @@ $('bMenu').onclick=()=>openMenu('larvae');
 $('again').textContent=TEXT.idle.wait;
 $('eLarvae').onclick=()=>openMenu('larvae');
 $('menuClose').onclick=()=>$('ovMenu').classList.remove('show');
+$('dressClose').onclick=dressClose;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')['ovMenu','ovPick','ovBag','ovWatch'].forEach(i=>$(i).classList.remove('show'))});
 $('cDown').onclick=()=>codexDownload();
 $('cUp').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(codexMerge);e.target.value=''};

@@ -126,7 +126,7 @@ button small{color:var(--dim)}
 .ctab td,.bagrow{border-bottom-color:var(--rowline)}
 .ctab th{border-bottom-color:var(--line-dk)}
 .etab td{border-bottom-color:var(--rowline)}
-.box .dress .dchip.on,.box .dress .dcell.on{background:var(--panel-hi)}
+.box .dress .dcell.on{background:var(--panel-hi)}
 #lfilter button.tdress{background:var(--panel-hi);border-color:var(--acc);color:var(--ink)}
 /* 選中的「打扮」：強調色調淡（混白），和其他選中頁籤區分；底一定是亮的，所以字固定深色（v0.32.1） */
 #lfilter button.tdress.on{background:color-mix(in srgb,var(--acc) 58%,#fff);border-color:var(--acc);color:#1b1b1b}

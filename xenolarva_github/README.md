@@ -54,7 +54,7 @@
 | 特殊委託（2F 賽倫絲：名單、預約→下一輪） | `js/hall.js` 的 `specialOpen`（文字 `TEXT.special`） |
 | 商店閒聊畫面（言盡、行李箱、送東西的小球） | `js/shop.js` 的 `shopView`（`SHOP_SCENE` 在 `js/data/shop.js`） |
 | 雜誌染色（外殼上下／左右漸層） | `js/chat.js`（`MAG_SPLIT`）＋ `js/render/sprites.js` 的 `tint2` |
-| 打扮分頁、發光裝扮顏色 | `js/codex.js`（`DRESS`）＋ `js/data/wears.js` |
+| 打扮（獨立視窗 `#ovDress`）、發光裝扮顏色 | `js/codex.js`（`DRESS`、`dressOpen`／`dressRender`）＋ `js/data/wears.js` |
 | 存檔欄位（新增跨輪資料） | `js/codex.js` 的 `SAVE_FIELDS` |
 | 圖片載入與失敗提示 | `js/render/sprites.js`（`IMG_MISSING`、`imgOK`） |
 

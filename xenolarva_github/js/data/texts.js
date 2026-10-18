@@ -570,7 +570,7 @@ const TEXT={
     star:'標上星號（排在最前面）',unstar:'取消星號',wear:'裝扮',wearing:'戴著',noWear:'沒有戴',previewing:'預覽中',
     wearHint:'點名字可以預覽，按「戴上」才會換上。',noWears:'還沒有裝扮。可以在廢棄大樓的商店買。',
     tabDress:'打扮',dressCats:{all:'全部',head:'頭飾',face:'臉飾',icon:'圖示',other:'其他'},dressNone:'不戴',dressDone:'確定',
-    dressCur:'這一輪',dressNoLarva:'還沒有可以打扮的小球。',dressOn:'【{name}】換上了{item}。',dressOff:'【{name}】把裝扮拿下來了。',dressHint:'選好之後按「確定」才會換上。',dressColor:'顏色',dressRainbow:'彩虹'},
+    dressCur:'這一輪',dressNoLarva:'還沒有可以打扮的小球。',dressOn:'【{name}】換上了{item}。',dressOff:'【{name}】把裝扮拿下來了。',dressColor:'顏色',dressRainbow:'彩虹',dressTitle:'打扮',dressWho:'換一隻小球',dressWhoTab:'小球'},
   // ---- 介面上零散的字（v0.29 從程式裡搬過來，方便從總表改）----
   // 設定頁最下面的外觀選項（js/skin.js）；names／fonts／frames 的 key 是 skin.js 裡 SKINS／FONTS／FRAMES 的 id
   skin:{head:'外觀',skin:'配色',font:'字體',frame:'版型',

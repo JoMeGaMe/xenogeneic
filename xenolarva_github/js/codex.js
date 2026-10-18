@@ -278,13 +278,11 @@ function larvaRow(e){
 }
 function renderLarvae(){
   const L=TEXT.larvae,fb=$('lfilter');fb.textContent='';
-  if(!['ret','dress'].includes(LF))LF='all';
+  if(LF!=='ret')LF='all';
   // 分頁：小球們｜已交還｜（空一格）｜打扮（打扮用比較淡的顏色，和另外兩個區分）
   [['all',L.tabNow],['ret',L.tabRet],[null],['dress',L.tabDress]].forEach(([k,t])=>
-    fb.append(k?h('button',{class:(LF===k?'on':'')+(k==='dress'?' tdress':''),onclick:()=>{LF=k;if(k==='dress')DRESS.who=null;renderLarvae()}},t):h('span',{class:'tgap'})));
+    fb.append(k?h('button',{class:(LF===k?'on':'')+(k==='dress'?' tdress':''),onclick:()=>{if(k==='dress'){dressOpen();return}LF=k;renderLarvae()}},t):h('span',{class:'tgap'})));
   const box=$('llist');box.textContent='';
-  $('pg_larvae').classList.toggle('dressing',LF==='dress');
-  if(LF==='dress'){dressRender(box);return}
   if(LF==='ret'){        // 已交還：直接列出紀錄（名字｜交還日期｜信寄了沒）
     $('lstat').textContent=fmt(L.retStat,{n:META.returned.length})+`｜${TEXT.assoc.pts} ${META.points}`;
     if(!META.returned.length){box.append(h('p',{class:'dim'},L.retEmpty));return}
@@ -298,9 +296,11 @@ function renderLarvae(){
 }
 
 // ---------- 打扮（小球們的第二個分頁）----------
-// 上：選小球（這一輪的小球＋圖鑑裡還在的，橫向捲動）｜中：預覽卡（左預覽＋名牌，右裝扮名稱＋言盡的介紹，右下「確定」）｜下：分類＋裝扮格子（框內捲動）。電腦和手機同一個排法。
+// v0.33.2 起是獨立彈出框 #ovDress（「小球們」的「打扮」打開）。
+// 上＝預覽卡（左預覽＋名牌，右裝扮名稱＋言盡的介紹，右下「確定」）｜下＝分類列＋格子（框內捲動，至少 140px；太矮時整頁捲動）。電腦：左欄預覽卡、右欄分類＋格子。
+// 分類列最前面是「小球」（v0.33.4 起是字，原本是目前那隻的小頭像），一條直槓，再接全部／頭飾／臉飾／圖示／其他。點小頭像＝格子換成小球清單（DRESS.cat='who'），選好一隻自動跳回原本的分類。
 // 選好裝扮要按「確定」才會換上；換別隻或離開＝放棄。DRESS.who＝'_cur'（這一輪）或圖鑑 id；pick＝選的裝扮（'' 不戴）
-const DRESS={who:null,pick:null,cat:'all',col:'rainbow'};   // col：發光裝扮（螢光棒）選的顏色
+const DRESS={who:null,pick:null,cat:'all',col:'rainbow',back:'all',msg:''};   // col：發光裝扮（螢光棒）選的顏色
 function dressList(){
   const L=[];
   if(S&&!S.over&&!PV)L.push({id:'_cur',name:S.name,look:()=>larvaLook(S),wear:()=>S.wear||'',col:()=>S.wearCol||'rainbow',cur:true});
@@ -308,53 +308,69 @@ function dressList(){
     .forEach(e=>L.push({id:e.id,name:e.name,look:()=>larvaLook(e),wear:()=>e.wear||'',col:()=>e.wearCol||'rainbow',e}));
   return L;
 }
-function dressDraw(c,look,wear,col,tt){
+// clear＝透明底（分類列的小頭像、小球清單：直接用按鈕的底色，跟著配色變；v0.33.3）
+function dressDraw(c,look,wear,col,tt,clear){
   const g=c.getContext('2d');g.imageSmoothingEnabled=false;
-  const gr=g.createLinearGradient(0,0,0,96);gr.addColorStop(0,'#2b7f93');gr.addColorStop(1,'#12485c');g.fillStyle=gr;g.fillRect(0,0,96,96);
-  if(nLoaded<IMGN.length){setTimeout(()=>dressDraw(c,look,wear,col),300);return}
+  if(clear)g.clearRect(0,0,96,96);else{const gr=g.createLinearGradient(0,0,0,96);gr.addColorStop(0,'#2b7f93');gr.addColorStop(1,'#12485c');g.fillStyle=gr;g.fillRect(0,0,96,96)}
+  if(nLoaded<IMGN.length){setTimeout(()=>dressDraw(c,look,wear,col,tt,clear),300);return}
   drawLarva(g,48,44,0,0,'idle_a',{...look,wear,wcol:col||look.wcol},tt||0,1,1);
 }
 // 會發光的裝扮：畫布持續重畫（彩虹會慢慢換色），離開畫面就停
-function dressGlowLoop(c,look,wear,col){
+function dressGlowLoop(c,look,wear,col,clear){
   if(!wear||!WEARS[wear]||!WEARS[wear].glow)return;
-  const tm=setInterval(()=>{if(!c.isConnected){clearInterval(tm);return}dressDraw(c,look,wear,col,performance.now()/1000)},100);
+  const tm=setInterval(()=>{if(!c.isConnected){clearInterval(tm);return}dressDraw(c,look,wear,col,performance.now()/1000,clear)},100);
+}
+// DRESS.back：從小球清單選完要回到的分類｜DRESS.msg：剛換好時卡片上的一行字
+function dressOpen(){DRESS.who=null;DRESS.pick=null;DRESS.msg='';if(DRESS.cat==='who')DRESS.cat=DRESS.back;$('dressTitle').textContent=TEXT.larvae.dressTitle;$('ovDress').classList.add('show');dressRefresh(true)}
+function dressClose(){$('ovDress').classList.remove('show');if($('ovMenu').classList.contains('show'))renderLarvae()}
+// 每點一下都整個重畫：記住整頁、格子、顏色列的捲動位置，畫完放回去（first＝剛打開，從頭開始）
+function dressRefresh(first){
+  const pg=$('pg_dress'),q=s=>pg.querySelector(s);
+  const keep=first?null:{pg:pg.scrollTop,g:(q('.dgrid')||{}).scrollTop||0,c:(q('.dcols')||{}).scrollLeft||0,cat:DRESS.cat};
+  pg.textContent='';dressRender(pg);
+  if(keep){pg.scrollTop=keep.pg;const g=q('.dgrid'),c=q('.dcols');if(g&&keep.cat===DRESS.cat)g.scrollTop=keep.g;if(c)c.scrollLeft=keep.c}else pg.scrollTop=0;
 }
 function dressRender(box){
   const L=TEXT.larvae,list=dressList();
-  if(!list.length){box.append(h('p',{class:'dim'},L.dressNoLarva));$('lstat').textContent='';return}
+  if(!list.length){box.append(h('p',{class:'dim'},L.dressNoLarva));return}
   let who=list.find(x=>x.id===DRESS.who);
   if(!who){who=list[0];DRESS.who=who.id;DRESS.pick=null}
   if(DRESS.pick===null){DRESS.pick=who.wear();DRESS.col=who.col()}
-  $('lstat').textContent=L.dressHint;
-  // 小球
-  const strip=h('div',{class:'dwho'},...list.map(x=>{
-    const c=h('canvas',{width:96,height:96});dressDraw(c,x.look(),x.wear(),x.col());dressGlowLoop(c,x.look(),x.wear(),x.col());
-    return h('button',{class:'dchip'+(x.id===who.id?' on':''),onclick:()=>{DRESS.who=x.id;DRESS.pick=null;renderLarvae()}},c,h('span',{},x.cur?L.dressCur+'｜'+x.name:x.name));
-  }));
+  const larvaCv=x=>{const c=h('canvas',{width:96,height:96});dressDraw(c,x.look(),x.wear(),x.col(),0,true);dressGlowLoop(c,x.look(),x.wear(),x.col(),true);return c};
   // 預覽
   const glow=!!(DRESS.pick&&WEARS[DRESS.pick]&&WEARS[DRESS.pick].glow);
   const pv=h('canvas',{width:96,height:96,class:'dpvc'});dressDraw(pv,who.look(),DRESS.pick,DRESS.col);dressGlowLoop(pv,who.look(),DRESS.pick,DRESS.col);
   const changed=DRESS.pick!==who.wear()||(glow&&DRESS.col!==who.col());
   const done=h('button',{class:'ddone main',disabled:!changed,onclick:()=>dressApply(who)},L.dressDone);
   // 發光裝扮：選顏色（色票＋彩虹）
+  const setCol=c=>{DRESS.col=c;DRESS.msg='';dressRefresh()};
   const colRow=glow?h('div',{class:'dcols'},h('span',{class:'t3'},L.dressColor),
-    ...COLORS.map((c,i)=>h('button',{class:'sw1'+(DRESS.col===c?' sel':''),style:'background:'+c,title:CNAME[i],'aria-label':CNAME[i],onclick:()=>{DRESS.col=c;renderLarvae()}})),
-    h('button',{class:'sw1 rainbow'+(DRESS.col==='rainbow'?' sel':''),title:L.dressRainbow,'aria-label':L.dressRainbow,onclick:()=>{DRESS.col='rainbow';renderLarvae()}})):null;
+    ...COLORS.map((c,i)=>h('button',{class:'sw1'+(DRESS.col===c?' sel':''),style:'background:'+c,title:CNAME[i],'aria-label':CNAME[i],onclick:()=>setCol(c)})),
+    h('button',{class:'sw1 rainbow'+(DRESS.col==='rainbow'?' sel':''),title:L.dressRainbow,'aria-label':L.dressRainbow,onclick:()=>setCol('rainbow')})):null;
+  if(colRow)colRow.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&colRow.scrollWidth>colRow.clientWidth){colRow.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});   // 顏色列放不下時橫向捲動；電腦用滑鼠滾輪也能捲
   // 左：預覽＋小球名牌｜右：裝扮名稱＋言盡的介紹（＋發光裝扮的顏色），右下「確定」（v0.31.4 使用者要求）
   const talk=DRESS.pick?shopTalk('wear',DRESS.pick):'';
   const pvBox=h('div',{class:'dpv'},
     h('figure',{class:'dfig'},pv,h('div',{class:'pname'},who.name)),
     h('div',{class:'dinfo'},h('strong',{class:'dwear'},DRESS.pick?wearName(DRESS.pick):L.dressNone),
-      talk?h('p',{class:'pp dtalk'},talk):null,colRow,h('div',{class:'dact'},done)));
-  // 裝扮
+      talk?h('p',{class:'pp dtalk'},talk):null,colRow,DRESS.msg?h('p',{class:'dim dmsg',role:'status'},DRESS.msg):null,h('div',{class:'dact'},done)));
+  // 分類列：小頭像｜全部 頭飾 臉飾 圖示 其他
   const cats=Object.keys(L.dressCats);
-  const tabs=h('div',{class:'filter dcats'},...cats.map(k=>h('button',{class:DRESS.cat===k?'on':'',onclick:()=>{DRESS.cat=k;renderLarvae()}},L.dressCats[k])));
-  const own=META.wears.filter(id=>WEARS[id]&&(DRESS.cat==='all'||WEARS[id].cat===DRESS.cat));
-  const cell=(id,label,pic)=>h('button',{class:'dcell'+(DRESS.pick===id?' on':'')+(who.wear()===id?' worn':''),onclick:()=>{DRESS.pick=id;renderLarvae()}},pic,h('span',{},label));
-  const grid=h('div',{class:'dgrid'},cell('',L.dressNone,h('span',{class:'dnone'},'∅')),...own.map(id=>cell(id,wearName(id),wearIcon(id))));
-  const pick=h('div',{class:'dpick'},tabs,META.wears.length?grid:h('p',{class:'dim'},L.noWears));
-  box.append(h('div',{class:'dress'},strip,pvBox,pick));
-  const on=strip.querySelector('.on');if(on)requestAnimationFrame(()=>{const r=on.offsetLeft-strip.offsetLeft;if(r<strip.scrollLeft||r+on.offsetWidth>strip.scrollLeft+strip.clientWidth)strip.scrollLeft=r-8});   // 選中的那隻捲進畫面（不用 scrollIntoView，免得整頁橫移）
+  const tabs=h('div',{class:'filter dcats'},
+    h('button',{class:'dwhob'+(DRESS.cat==='who'?' on':''),title:L.dressWho,'aria-label':L.dressWho,onclick:()=>{if(DRESS.cat==='who')DRESS.cat=DRESS.back;else{DRESS.back=DRESS.cat;DRESS.cat='who'}dressRefresh()}},L.dressWhoTab),   // v0.33.4：寫字（使用者：小頭像跟著選中的小球變會讓人疑惑）
+    h('span',{class:'dbar','aria-hidden':'true'}),
+    ...cats.map(k=>h('button',{class:DRESS.cat===k?'on':'',onclick:()=>{DRESS.cat=k;dressRefresh()}},L.dressCats[k])));
+  let grid;
+  if(DRESS.cat==='who'){   // 小球清單（這一輪的＋圖鑑裡還在的）；選好自動跳回原本的分類
+    grid=h('div',{class:'dgrid'},...list.map(x=>h('button',{class:'dcell'+(x.id===who.id?' on':''),onclick:()=>{if(x.id!==who.id){DRESS.who=x.id;DRESS.pick=null;DRESS.msg=''}DRESS.cat=DRESS.back;dressRefresh()}},
+      larvaCv(x),h('span',{},x.cur?L.dressCur+'｜'+x.name:x.name))));
+  }else if(!META.wears.length)grid=h('p',{class:'dim'},L.noWears);
+  else{
+    const own=META.wears.filter(id=>WEARS[id]&&(DRESS.cat==='all'||WEARS[id].cat===DRESS.cat));
+    const cell=(id,label,pic)=>h('button',{class:'dcell'+(DRESS.pick===id?' on':'')+(who.wear()===id?' worn':''),onclick:()=>{DRESS.pick=id;DRESS.msg='';dressRefresh()}},pic,h('span',{},label));
+    grid=h('div',{class:'dgrid'},cell('',L.dressNone,h('span',{class:'dnone'},'∅')),...own.map(id=>cell(id,wearName(id),wearIcon(id))));
+  }
+  box.append(h('div',{class:'dress'},pvBox,h('div',{class:'dpick'},tabs,grid)));
 }
 function dressApply(who){
   const L=TEXT.larvae,id=DRESS.pick,wc=id&&WEARS[id]&&WEARS[id].glow?DRESS.col:'';
@@ -362,7 +378,7 @@ function dressApply(who){
   else{who.e.wear=id;who.e.wearCol=wc;GUESTS.forEach(g=>{if(g.e===who.e)g.look=larvaLook(who.e)})}   // 水缸裡的同伴馬上換上
   codexSave();
   const msg=id?fmt(L.dressOn,{name:who.name,item:wearName(id)}):fmt(L.dressOff,{name:who.name});
-  say(msg,'sys');DRESS.pick=null;renderLarvae();$('lmsg').textContent=msg;
+  say(msg,'sys');DRESS.pick=null;DRESS.msg=msg;dressRefresh();
 }
 
 // ---------- 選單頁面（從右上角 ☰ 各自打開，沒有切換頁籤）----------
