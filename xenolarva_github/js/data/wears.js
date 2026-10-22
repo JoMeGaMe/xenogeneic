@@ -1,7 +1,8 @@
 // 【資料】小球的裝扮道具（在言盡的商店買，永久持有；在「物品」裡幫這一輪的小球戴上／拿下）。名字在 TEXT.shop.items。
 //   art：像素圖（每個字一格；. 透明，其他字對應 pal 的顏色）｜scale：每格放大幾倍（小球圖是 96×96）
 //   （舊格式）art＋pal＋scale＋dx、dy：程式畫的像素圖，相對於核心的中心
-// 用圖片：img:'wear_xxx'（assets/wear_xxx.png，96×96 透明底，照 tools/wear_template 的小球位置直接畫上去）。
+// 用圖片：img:'wear_xxx'（assets/wear/wear_xxx.png，96×96 透明底，照 tools/wear_template 的小球位置直接畫上去）。
+//   v0.35.4 起也可以給 2 倍圖（192×192，位置一樣、放大兩倍畫）：程式自動縮成 96 畫；box 一律寫 96 的座標（2 倍圖的範圍除以 2）。
 //   換姿勢時程式會讓圖跟著核心移動。商店的商品圖也直接用這張（box＝有畫東西的範圍 [左,上,右,下]，商店只放大這一塊；換圖後要重算）。
 // cat：打扮頁的分類（head 頭飾｜face 臉飾｜icon 圖示（符號類）｜other 其他）
 const WEARS={
@@ -30,6 +31,7 @@ const WEARS={
   // v0.31.3：趴在頭上的小動物
   bunny:{img:'wear_bunny',box:[4,1,41,39],cat:'head'},
   shushu:{img:'wear_shushu',box:[6,1,37,37],cat:'head'},   // v0.32.4 鼠薯
+  phone:{img:'wear_phone',box:[3,25,93,87],cat:'other'},   // v0.35.4 手機（第一件 2 倍圖 192×192）
   puppy:{img:'wear_puppy',box:[3,2,43,41],cat:'head'},
   snake:{img:'wear_snake',box:[7,4,44,55],cat:'head'},
   blackcat:{img:'wear_blackcat',box:[8,4,47,49],cat:'head'},

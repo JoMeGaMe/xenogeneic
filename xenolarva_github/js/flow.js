@@ -63,22 +63,44 @@ $('bAccept').onclick=acceptOpen;
 $('again').onclick=()=>{META.rounds++;if(S&&S.special&&!PV)META.specialDone=(META.specialDone||0)+1;codexSave();toIdle();letterCheck()};
 
 // ---------- 設定：暱稱、代表色、外出方式（隨時可改）。在 ☰「設定與存檔」頁的上半部 ----------
+// v0.35：暱稱、代表色搬到「玩家設定」頁（playerBuild）
 function settingsBuild(){
   const b=$('setBody');b.textContent='';
-  const nm_=h('input',{type:'text',maxLength:8,value:META.pname||'','aria-label':TEXT.misc.nick});
-  const col=colorWidget(()=>META.pcol||selColor,c=>{META.pcol=c;selColor=c;if(S)S.col=c;paintName($('pname'),c);if(S)refresh();codexSave()},()=>nm_.value.trim()||META.pname);
-  nm_.oninput=()=>col.repaint();
-  nm_.onchange=()=>{const v=(nm_.value.trim()||TEXT.misc.defPlayer).slice(0,8);META.pname=v;if(S)S.pname=v;$('pname').textContent=v;col.repaint();codexSave()};
   const mode=m=>h('label',{class:'mrow'},h('input',{type:'radio',name:'outMode',value:m[0],checked:META.outMode===m[0],disabled:!!m[2],onchange:()=>{META.outMode=m[0];codexSave();outChip()}}),' '+m[1]);
   const U=TEXT.ui;
-  b.append(h('label',{class:'sl'},U.nick),nm_,h('hr',{class:'div'}),h('label',{class:'sl'},U.color),col,
-    h('hr',{class:'div'}),h('label',{class:'sl'},U.outMode),mode(['random',U.outRandom]),mode(['map',U.outMap]),
+  b.append(h('label',{class:'sl'},U.outMode),mode(['random',U.outRandom]),mode(['map',U.outMap]),
     h('hr',{class:'div'}),h('label',{class:'sl'},TEXT.game.modeHead),
     ...[['quick',TEXT.game.modeQuick],['play',TEXT.game.modePlay]].map(m=>h('label',{class:'mrow'},h('input',{type:'radio',name:'playMode',value:m[0],checked:META.playMode===m[0],onchange:()=>{META.playMode=m[0];codexSave();playChip()}}),' '+m[1])),
     h('hr',{class:'div'}),h('label',{class:'sl'},U.letterMode),
     ...[['popup',U.letterPopup],['log',U.letterLog]].map(m=>h('label',{class:'mrow'},h('input',{type:'radio',name:'letterMode',value:m[0],checked:META.letterMode===m[0],onchange:()=>{META.letterMode=m[0];codexSave()}}),' '+m[1])));
 }
 const settingsOpen=()=>openMenu('save','secSet');
+
+// ---------- 玩家設定（☰「玩家設定」，v0.35）：上面是紙娃娃＋名牌；頁籤切換「長相」｜「名字」（v0.4 會加專屬小球）----------
+let PL_TAB='look';
+function playerBuild(){
+  const P=TEXT.player,U=TEXT.ui,tabs=$('plTabs'),b=$('plBody');
+  tabs.textContent='';b.textContent='';
+  Object.keys(P.tabs).forEach(k=>tabs.append(h('button',{class:PL_TAB===k?'on':'',onclick:()=>{PL_TAB=k;playerBuild()}},P.tabs[k])));
+  // 紙娃娃（還沒登記＝空框）＋名牌
+  const cv=h('canvas',{class:'plcv',width:DOLL_W*DOLL_K,height:DOLL_H*DOLL_K,'aria-label':TEXT.doll.preview});
+  const tag=h('span',{class:'dname'},META.pname||TEXT.misc.defPlayer);paintName(tag,META.pcol||'');
+  const fig=h('div',{class:'plfig'+(META.doll?'':' none')},cv,tag);
+  if(META.doll)dollLoad().then(()=>{if(cv.isConnected)dollPaint(cv,META.doll,'')});
+  const side=h('div',{class:'plside'});
+  b.append(h('div',{class:'plcard'},fig,side));
+  if(PL_TAB==='look'){
+    if(META.doll)side.append(h('p',{class:'dim'},P.lookHint),h('button',{class:'main',onclick:()=>dollOpen({done:ok=>{if(ok)playerBuild()}})},P.edit));
+    else side.append(h('p',{class:'dim pre'},P.noDoll));
+    return;
+  }
+  const nm_=h('input',{type:'text',maxLength:8,value:META.pname||'','aria-label':TEXT.misc.nick});
+  const col=colorWidget(()=>META.pcol||selColor,c=>{META.pcol=c;selColor=c;if(S)S.col=c;paintName($('pname'),c);paintName(tag,c);if(S)refresh();codexSave()},()=>nm_.value.trim()||META.pname);
+  nm_.oninput=()=>{col.repaint();tag.textContent=nm_.value.trim()||TEXT.misc.defPlayer};
+  nm_.onchange=()=>{const v=(nm_.value.trim()||TEXT.misc.defPlayer).slice(0,8);META.pname=v;if(S)S.pname=v;$('pname').textContent=v;tag.textContent=v;col.repaint();codexSave()};
+  side.append(h('label',{class:'sl'},U.nick),nm_,h('p',{class:'dim'},P.nameHint));
+  b.append(h('hr',{class:'div'}),h('label',{class:'sl'},U.color),col);
+}
 $('bSet').onclick=settingsOpen;
 function prefillPlayer(){if(introCol&&$('ovStart').classList.contains('show')){$('pn').value=META.pname||'';selColor=META.pcol||selColor;introCol.repaint()}}
 

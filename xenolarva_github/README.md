@@ -44,10 +44,10 @@
 | 截圖檢查版面（環境內建 Chromium） | `python3 tools/screenshot.py <game_inline.html 絕對路徑> <輸出資料夾>` |
 | 設定總表（產生／套回文字） | `python3 tools/textsheet.py build <專案根目錄> <舊總表.xlsx> <新總表.xlsx>`；`python3 tools/textsheet.py apply <專案根目錄> <總表.xlsx>` |
 | index.html 寫死的介面字 | 元素加 `data-t="ui.xxx"`，文字放 `TEXT.ui`（開遊戲時 ui.js 會換上） |
-| 畢業小球的信紙（寄信判定、內容、收藏重看） | `js/letters.js`（規則 `js/data/letters.js`；文字 `TEXT.letter`；信紙圖 `assets/letter.png`） |
-| 外出地圖（地點、名牌位置、掉落權重、地圖底圖） | `js/places.js`（資料 `js/data/places.js`；文字 `TEXT.place`／`TEXT.map`；底圖 `assets/map.png` 750×500）；隨機外出也從 `RANDOM_PLACES` 挑地點 |
+| 畢業小球的信紙（寄信判定、內容、收藏重看） | `js/letters.js`（規則 `js/data/letters.js`；文字 `TEXT.letter`；信紙圖 `assets/letter/`） |
+| 外出地圖（地點、名牌位置、掉落權重、地圖底圖） | `js/places.js`（資料 `js/data/places.js`；文字 `TEXT.place`／`TEXT.map`；底圖 `assets/bg/map.jpg` 1200×800；大圖 `assets/bg_hd/map.jpg`）；隨機外出也從 `RANDOM_PLACES` 挑地點 |
 | 廢棄大樓的商店（言盡）：商品、價格、擺放位置 | `js/shop.js`（資料 `js/data/shop.js`；文字 `TEXT.shop`；開場事件 `EVENTS.shopIntro`） |
-| 事件頁的場景（背景＋角色＋道具） | 事件頁面加 `bg`／`chr`／`item`（assets 檔名）＝`js/events.js` 的 showEvent；圖片 `assetImg(檔名)` |
+| 事件頁的場景（背景＋角色＋道具） | 事件頁面加 `bg`／`chr`／`item`（只寫檔名，不含資料夾和副檔名）＝`js/events.js` 的 showEvent；圖片 `assetImg(檔名)` |
 | 裝扮道具（像素圖、戴的位置） | `js/data/wears.js`（商品在 `js/data/shop.js` 加一筆 `wear:'id'`；畫在 `js/render/larva.js` 的 drawLarva） |
 | 互動玩耍（指揮棒、氣泡棒、小鈴鐺、軟球） | `js/minigame.js`（文字 `TEXT.game`；開始＝`gameStart`，由 actPlay 在「遊玩」方式時呼叫）；表情氣泡圖案 `js/data/emotes.js` |
 | 異生會大樓（樓層、電梯、瓊的成就與心等、背景小球、交還的小球回來） | `js/hall.js`（資料 `js/data/hall.js`：`HALL_FLOORS`、`HALL_RULE`、`NPC_HOP`、`ACH`；文字 `TEXT.hall`） |
@@ -66,3 +66,19 @@
 
 ## 預覽用單檔
 `python tools/build_single_file.py` 會產生 `game_inline.html`（含所有圖片，一個檔案就能開）。
+
+## 圖片資料夾（v0.33.5 起）
+程式與設定總表都只寫**檔名**（例 `hall_3f`、`joan_1`），放哪個資料夾由 `js/utils.js` 的 `ASSET_DIRS` 依檔名開頭決定（`assetPath(檔名)`）。新增圖片照開頭放進對的資料夾即可。
+
+| 資料夾 | 內容 | 尺寸 |
+|---|---|---|
+| `assets/bg/` | 背景 `hall_*`、`home_*`、`place_*`（含 `place_ruins_in` 廢棄大樓裡面＝言盡的商店、`place_ruins_out` 外側）、外出地圖 `map.jpg` | 720×360（家 720×432、地圖 1200×800） |
+| `assets/bg_hd/` | 上面背景的大圖，同檔名、`.jpg`（v0.4 用，還沒接進遊戲，也不放進單一 HTML） | 2160×1080（家 2160×1296、地圖 2400×1600） |
+| `assets/npc/` | 人物立繪 `grete_` `joan_` `silence_` `yanjin_` `xiaojun_` `yanjie_` `yanxiang_` | 200×200 或 186×200 |
+| `assets/letter/` | 信紙 `letter_*` | 720×360 |
+| `assets/item/` | 商品、道具 `item_*` | 200×200 |
+| `assets/wear/` | 裝扮 `wear_*` | 96×96 |
+| `assets/ui/` | `heart_badge`、`shop_case`、`suitcase` | — |
+| `assets/larva/` | 小球（`body_*` 192×192＝2 倍、`body_*_L` 光點層、`core_*` 2 倍）、水缸背景與裝飾（`js/data/sprites.js` 自己讀；光點／光暈強度 `LARVA_FX`） | 小球 192×192（畫成 96） |
+| `assets/doll/` | 紙娃娃部件（v0.35 起遊戲在用：長相登記、玩家設定；清單與範圍在 `js/data/doll.js`） | 372×400（程式當 186×200） |
+| `assets/font/` | 像素字體 | — |

@@ -8,7 +8,7 @@
 #
 # 文字來源：js/data/texts.js（TEXT）、items.js（NAME、CNAME）、endings.js（ENDS）、decor.js（DECOR 的 name）。
 # 每一條文字在總表剛好出現一次，key＝程式裡的位置。程式改了文字，重新 build 就會同步。
-import sys, re, json, subprocess, os
+import sys, re, json, subprocess, os, glob
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -203,6 +203,7 @@ def classify(k):
         return ('介面', '零散的介面文字')
     if top == 'pv': return ('介面', '觀察水缸') if last not in ('join', 'leave', 'hi', 'transOn', 'transOff') else ('Log', '觀察水缸')
     if top == 'skin': return ('介面', '設定：外觀（版型、配色、字體）')
+    if top in ('doll', 'player'): return ('介面', '長相登記與玩家設定')   # v0.35 紙娃娃
     if top in ('ui', 'layout', 'CNAME'): return ('介面', {'ui': '按鈕與標題', 'layout': '☰ 選單與開關', 'CNAME': '顏色名稱（色票）'}[top])
     if top == 'assoc': return ('Log', '協會') if last == 'done' else ('介面', '協會')
     if top == 'feed': return ('介面', '餵食選單') if last in ('pick', 'headMain', 'headSnack') else ('Log', '餵食')
@@ -215,7 +216,9 @@ def classify(k):
         if k.startswith(('hall.visitName',)): return ('介面', '異生會大樓')
         if k.startswith(('hall.visit', 'hall.follow', 'hall.lobbyGrete')): return ('事件', '異生會大樓：1F 的訪客')
         if last in ('arrive', 'upLog', 'upShop'): return ('Log', '異生會大樓')
-        if last in ('title', 'leave', 'floors', 'floorName', 'who', 'needLv', 'btnAch', 'btnUp', 'status', 'next', 'maxLv', 'btnSpecial', 'btnUrgent'): return ('介面', '異生會大樓')
+        if last in ('urgentLog',): return ('Log', '異生會大樓')
+        if last in ('title', 'leave', 'floors', 'floorName', 'who', 'needLv', 'btnAch', 'btnUp', 'status', 'next', 'maxLv', 'btnSpecial', 'btnUrgent', 'btnUrgentAsk', 'btnReg'): return ('介面', '異生會大樓')
+        if last.startswith(('urgent', 'regDone')): return ('事件', '異生會大樓：緊急委託的登記（B1 言曉君）')
         return ('事件', '異生會大樓')
     if top == 'special':
         if last in ('log', 'start'): return ('Log', '特殊委託')
@@ -225,12 +228,20 @@ def classify(k):
     return ('Log', {'start': '開局', 'water': '換水', 'out': '出門', 'settle': '換日', 'hint': '觀察線索（沒有檢測儀時）',
                     'poke': '被戳', 'voice': '心聲（翻譯）', 'social': '小球之間', 'guest': '圖鑑同伴'}.get(top, top))
 
+DOLL_FIELD = {'doll.title': '長相登記：標題', 'doll.done': '確定按鈕', 'doll.none': '格子：無', 'doll.normal': '預覽左上：平常', 'doll.emoTag': '預覽左上：表情（{e}）',
+    'doll.labParts': '小標：調整部件', 'doll.labEmoParts': '小標：表情部件', 'doll.labEmo': '小標：調整表情', 'doll.emoAgain': '提示：再按一次表情', 'doll.bubbleNote': '泡泡模式時（部件列）',
+    'doll.size': '大小', 'doll.posX': '位置（左右）', 'doll.posY': '位置（上下）', 'doll.left': '方向：左', 'doll.right': '方向：右', 'doll.up': '方向：上', 'doll.down': '方向：下',
+    'doll.less': '按鈕說明：減少', 'doll.more': '按鈕說明：增加', 'doll.reset': '重設按鈕', 'doll.same': '表情：恢復按鈕', 'doll.own': '表情：單獨調過的標示', 'doll.noneNote': '選了無時',
+    'doll.hair': '髮色標題', 'doll.eyeColHead': '有預設色的眼睛（13、16、17）：標題', 'doll.eyeDef': '有預設色的眼睛：預設色按鈕', 'doll.eyeOwn': '有預設色的眼睛：瞳色按鈕', 'doll.eye': '瞳色標題', 'doll.skin': '膚色標題', 'doll.pickOwn': '自訂顏色', 'doll.skinNote': '膚色的說明', 'doll.clothNote': '衣服的說明',
+    'doll.emoHead': '表情的標題（{e}）', 'doll.emoFace': '換臉按鈕', 'doll.emoBubble': '泡泡按鈕', 'doll.emoFaceNote': '換臉的說明', 'doll.emoBubbleNote': '泡泡的說明', 'doll.bubbleEmpty': '泡泡模式時（格子）',
+    'doll.loading': '讀取圖片時', 'doll.preview': '預覽圖的說明（讀屏用）',
+    'player.edit': '更改長相按鈕', 'player.noDoll': '還沒登記時', 'player.lookHint': '長相頁的說明', 'player.nameHint': '名字頁的說明'}
 SHEETS = ['個性', '標籤', '物品與禮物', 'Log', '事件', '介面']
 GROUP_ORDER = {
     'Log': ['開局', '第 0 日', '換水', '餵食', '玩耍', '聊天', '出門', '被戳', '換日', '觀察線索（沒有檢測儀時）', '個性：每天的狀態與喜好',
             '標籤：發現與反應', '禮物：送出時', '格蕾特', '心聲（翻譯）', '小球之間', '圖鑑同伴', '協會', '商店', '互動玩耍', '畢業小球的信紙', '異生會大樓', '成就', '特殊委託'],
-    '事件': ['開場故事', '接取新委託', '遇見格蕾特', '再次遇到格蕾特', '聊顏色（格蕾特）', '雙色（格蕾特）', '言盡的商店：第一次去', '言盡的商店：對話', '結局', '結局：標籤的結語', '畢業小球的信紙', '異生會大樓', '異生會大樓：戳一下', '特殊委託（賽倫絲）'],
-    '介面': ['按鈕與標題', '☰ 選單與開關', '小球們頁', '外出地圖', '商店', '餵食選單', '玩耍選單', '物品', '協會', '收藏品：信紙', '顏色名稱（色票）', '異生會大樓', '成就', '特殊委託'],
+    '事件': ['開場故事', '接取新委託', '遇見格蕾特', '再次遇到格蕾特', '聊顏色（格蕾特）', '雙色（格蕾特）', '言盡的商店：第一次去', '言盡的商店：對話', '結局', '結局：標籤的結語', '畢業小球的信紙', '異生會大樓', '異生會大樓：戳一下', '異生會大樓：緊急委託的登記（B1 言曉君）', '特殊委託（賽倫絲）'],
+    '介面': ['按鈕與標題', '☰ 選單與開關', '小球們頁', '外出地圖', '商店', '餵食選單', '玩耍選單', '物品', '協會', '收藏品：信紙', '顏色名稱（色票）', '異生會大樓', '成就', '特殊委託', '長相登記與玩家設定'],
 }
 
 FIELD = {'name': '名字', 'desc': '說明', 'mood': '每天開始時的狀態', 'feedFav': '餵到喜歡的零食', 'playFav': '玩到喜歡的玩具',
@@ -310,6 +321,12 @@ def who_and_what(k, T):
     if top == 'place': what = {'name': '名牌（地點名稱）', 'desc': '說明', 'find': '比較容易撿到什麼'}.get(words[-1], what)
     if top == 'map': what = {'title': '地圖標題', 'go': '選取後的名牌：前往', 'back': '選取住所後的名牌：回家', 'locked': '還沒開放的標示'}.get(words[-1], what)
     if top == 'NAME': what = '名字'
+    if top in ('doll', 'player'):   # v0.35 紙娃娃：欄位名稱自己一套（不用共用的 FIELD，免得 back、up 被當成別的意思）
+        sub = seg[1] if len(seg) > 1 else ''
+        if sub == 'parts': what = '部件名稱：' + words[-1]
+        elif sub == 'emos': what = '表情名稱：' + words[-1]
+        elif sub == 'tabs': what = '玩家設定的頁籤'
+        else: what = DOLL_FIELD.get(top + '.' + words[-1], words[-1])
     if top == 'special': what = {'who': '說明文裡的「誰」（代入 {who}）', 'why': '說明文（通用，{who}＝誰）', 'whyTag': '說明文（依標籤）', 'whyTemp': '說明文（依個性）'}.get(seg[1], what)
     if top == 'special' and seg[1] == 'whyTag' and len(seg) > 2: who = T.get(f'tags.{seg[2]}.name', seg[2])
     if top == 'special' and seg[1] == 'whyTemp' and len(seg) > 2: who = T.get(f'temper.{seg[2]}.name', seg[2])
@@ -423,8 +440,8 @@ def pic_of(k, D):
     m = re.match(r'^shop\.poke\[(\d+)\]$', k)
     if m: return '人物：' + ('yanjin_2' if int(m.group(1)) in (SC.get('pokeAlt') or [2]) else 'yanjin_1') + '（閒聊畫面）'
     m = re.match(r'^shop\.chat\[(\d+)\]$', k)
-    if m: return '人物：' + ('yanjin_2' if int(m.group(1)) in (SC.get('chatAlt') or []) else 'yanjin_1') + '\n背景：ruins_1（閒聊畫面）'
-    if re.match(r'^shop\.(sceneLarva\[|larvaGive$)', k): return '人物：yanjin_1\n背景：ruins_1（閒聊畫面）'
+    if m: return '人物：' + ('yanjin_2' if int(m.group(1)) in (SC.get('chatAlt') or []) else 'yanjin_1') + '\n背景：place_ruins_in（閒聊畫面）'
+    if re.match(r'^shop\.(sceneLarva\[|larvaGive$)', k): return '人物：yanjin_1\n背景：place_ruins_in（閒聊畫面）'
     m = re.match(r'^hall\.(visit|visitPoke)\.(\w+)\[(\d+)\]$', k)        # 1F 的訪客
     if m and D and 'LOBBY_NPC' in D:
         N_ = D['LOBBY_NPC'].get(m.group(2)) or {}; ch = N_.get('chr') or []
@@ -753,7 +770,7 @@ def apply(root, xlsx):
                 if cur and re.search(r'人物[：:]\s*' + re.escape(pic) + r'(?![\w-])', str(cur)): continue   # 和現在一樣＝不用換
                 info = index.get(str(k) + '#pic')
                 if not info: problems.append(f'{ws.title}｜{k}：這一列沒有人物圖可以換'); continue
-                if not (os.path.exists(os.path.join(root, 'assets', pic + '.png')) or os.path.exists(os.path.join(root, 'assets', pic + '.jpg'))):
+                if not glob.glob(os.path.join(root, 'assets', '**', pic + '.png'), recursive=True) + glob.glob(os.path.join(root, 'assets', '**', pic + '.jpg'), recursive=True):
                     problems.append(f'{ws.title}｜{k}：assets 裡找不到 {pic}.png'); continue
                 if info['kind'] == 'picnum':
                     if pic not in ('grete_1', 'grete_2'): problems.append(f'{ws.title}｜{k}：格蕾特的事件只能用 grete_1 或 grete_2'); continue

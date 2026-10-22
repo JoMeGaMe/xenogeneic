@@ -40,12 +40,15 @@ function drawLarva(g,x,y,rot,sq,pose,look,tt,alpha,sc){
   g.save();
   g.translate(Math.round(x),Math.round(y));g.rotate(rot);g.scale(sc*(1+sq),sc*(1-sq));g.translate(-48,-44);
   const [kx,ky]=coreAt(pose),pul=1+Math.sin(tt*2.2)*.06;
-  g.globalAlpha=alpha*look.ca*.8;g.drawImage(tint('core_glow',look.core),kx-20*pul,ky-20*pul,40*pul,40*pul);
+  const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';   // 小球圖是 2 倍（192×192）畫成 96：縮小時要平滑
+  g.globalAlpha=alpha*look.ca*.8*LARVA_FX.glow;g.drawImage(tint('core_glow',look.core),kx-20*pul,ky-20*pul,40*pul,40*pul);
   g.globalAlpha=alpha*look.ca;  g.drawImage(tint('core_mask',look.core),kx-12*pul,ky-12*pul,24*pul,24*pul);
-  g.globalAlpha=alpha;          g.drawImage(look.body2?tint2('body_'+pose,look.body,look.body2,look.bm,look.soft):tint('body_'+pose,look.body),0,0);
+  g.globalAlpha=alpha;          g.drawImage(look.body2?tint2('body_'+pose,look.body,look.body2,look.bm,look.soft):tint('body_'+pose,look.body),0,0,96,96);
+  const hl=IMG['body_'+pose+'_L'];if(imgOK(hl)){g.globalAlpha=alpha*LARVA_FX.hl;g.drawImage(hl,0,0,96,96);g.globalAlpha=alpha}   // 光點：白色，不跟著換色
+  g.imageSmoothingEnabled=sm;
   if(look.wear&&WEARS[look.wear]){                   // 裝扮（js/data/wears.js）
     const w=wearImg(look.wear),W_=WEARS[look.wear];
-    if(W_.img){if(w.naturalWidth){const [bx,by]=coreAt('idle_a'),wx=Math.round(kx-bx),wy=Math.round(ky-by);g.drawImage(w,wx,wy,96,96);if(W_.glow)drawGlow(g,look.wear,look.wcol,tt,wx,wy,96,96)}}   // 圖片版：照 idle_a 畫好，換姿勢時跟著核心移動
+    if(W_.img){if(w.naturalWidth){const [bx,by]=coreAt('idle_a'),wx=Math.round(kx-bx),wy=Math.round(ky-by);if(w.naturalWidth>96){g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high'}g.drawImage(w,wx,wy,96,96);g.imageSmoothingEnabled=sm;if(W_.glow)drawGlow(g,look.wear,look.wcol,tt,wx,wy,96,96)}}   // 圖片版：照 idle_a 畫好，換姿勢時跟著核心移動
     else g.drawImage(w,Math.round(kx-w.width/2+W_.dx),Math.round(ky-w.height/2+W_.dy));
   }
   g.restore();

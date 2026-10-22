@@ -1,7 +1,7 @@
 // ===== 異生會大樓（地圖「異生會大樓」，耗 1 行動）＋成就＋心等 =====
 // 進大樓先到 1F 大廳（第一次有開場），右邊（手機在下面）是電梯按鈕：4F｜3F｜2F｜1F｜B1（電腦版：左 2F 1F B1、右 4F 3F）。同一趟可以逛所有樓層。
 //   3F 後勤辦公室（瓊）：查看成就（領取積分、心、裝扮）、升級心等（心夠了要自己按）。第一次去有認識瓊的對話。
-//   2F（賽倫絲，心等 2）：特殊委託（v0.26）｜B1（心等 3 只有紙條；心等 4 言曉君回來，可以戳，緊急委託 v0.4）｜4F、5F：還不能去。
+//   2F（賽倫絲，心等 2）：特殊委託（v0.26）｜B1（心等 3 只有紙條；心等 4 言曉君回來，可以戳；第一次見面後問要不要接緊急委託→長相登記 v0.35；委託本身 v0.4）｜4F、5F：還不能去。
 // 成就：存檔時（codexSave）檢查，剛達成的在畫面最上方跳橫幅＋訊息區記一行（META.achSeen）；領取後記在 META.achGot。
 // 資料 js/data/hall.js，文字 TEXT.hall／TEXT.ach。
 let HALL_AT='lobby',HALL_SAY='',HALL_CHR=0,HALL_OFFERS=null,HALL_LAND=null,HALL_GIFT=0;
@@ -37,7 +37,8 @@ function hallFloor(f){
   HALL_AT=f;HALL_CHR=0;
   if(f==='f2'&&!META.silenceMet){$('ovHall').classList.remove('show');runEvent('silenceFirst',{cb:()=>{hallOpen('f2');specialOpen()}});return}
   const xjBack=f==='b1'&&META.heartLv>=(F.back||1);                     // 言曉君任務回來了沒
-  if(xjBack&&!META.xiaojunMet){$('ovHall').classList.remove('show');runEvent('xiaojunFirst',{cb:()=>{HALL_SAY=R(H.xiaojun);hallOpen('b1')}});return}
+  if(xjBack&&!META.xiaojunMet){$('ovHall').classList.remove('show');runEvent('xiaojunFirst',{cb:()=>{HALL_AT='b1';urgentAsk()}});return}   // 見面完接著問緊急委託
+  if(xjBack&&!META.urgentAsked){HALL_AT='b1';urgentAsk();return}                                                                     // 舊存檔：已經見過，第一次再來時問
   if(f==='f3'&&!META.joanMet){$('ovHall').classList.remove('show');runEvent('joanFirst',{cb:()=>{HALL_SAY=R(H.joan);hallOpen('f3')}});return}
   if(f==='lobby'){HALL_VISIT=lobbyPick();HALL_CHR=HALL_VISIT?0:-1;HALL_SAY=R(!HALL_VISIT?H.lobby:HALL_VISIT==='grete'?H.lobbyGrete:H.visit[HALL_VISIT])}
   else if(f==='f3')HALL_SAY=R(H.joan);
@@ -109,10 +110,30 @@ function hallDraw(){
     A.append(h('button',{onclick:achOpen},H.btnAch+(n?`（${n}）`:'')),h('button',{onclick:heartUp},H.btnUp));
   }
   if(f==='f2')A.append(h('button',{onclick:specialOpen},TEXT.special.btnList));
-  if(f==='b1')A.append(h('button',{disabled:true},H.btnUrgent));
+  if(f==='b1'&&HALL_CHR>=0&&META.heartLv>=(F.back||1)){   // 言曉君在：登記過＝緊急委託（準備中）＋下面「更改登記」｜還沒＝「緊急委託」再問一次
+    if(META.urgent&&META.doll)A.append(h('button',{disabled:true},H.btnUrgent),h('button',{onclick:urgentEdit},H.btnReg));
+    else A.append(h('button',{onclick:urgentAsk},H.btnUrgentAsk));
+  }
   while(A.children.length<2)A.append(h('button',{class:'hph',tabindex:-1,'aria-hidden':'true'},'—'));   // 按鈕位置固定兩格（框的大小不變）
   heartFoot($('hallHeart'));
 }
+// ---------- 緊急委託的登記（B1 言曉君，v0.35）----------
+// 問要不要接：有 →「好，我幫你登記」→ 長相登記（紙娃娃，js/doll.js）；按確定才算登記好｜還在考慮 →「好，你考慮。」（之後按「緊急委託」可以再回答）
+function urgentAsk(){
+  const H=TEXT.hall,sc=chr=>({bg:'hall_b1',chr,name:H.who.b1});
+  $('ovHall').classList.remove('show');
+  const back=say_=>{hallOpen('b1');HALL_SAY=say_;HALL_CHR=0;hallDraw()};   // 回到 B1，言曉君說最後那句
+  showEvent(H.urgentAsk,{scene:sc('xiaojun_1'),opts:[{id:0,label:H.urgentYes},{id:1,label:H.urgentLater}],cb:k=>{
+    META.urgentAsked=true;codexSave();
+    if(k===1){showEvent(H.urgentLaterSay,{scene:sc('xiaojun_2'),cb:()=>back(H.urgentLaterSay)});return}
+    showEvent(H.urgentYesSay,{scene:sc('xiaojun_1'),btn:H.urgentStart,cb:()=>dollOpen({done:ok=>{
+      if(ok){META.urgent=true;codexSave();say(H.urgentLog,'ev');back(H.urgentDone)}
+      else back(H.urgentCancel);
+    }})});
+  }});
+}
+// 更改登記：直接打開長相登記
+function urgentEdit(){dollOpen({done:ok=>{if(ok){HALL_SAY=TEXT.hall.regDone;HALL_CHR=0;hallDraw()}}})}
 // 心等徽章（點亮到目前等級）＋心數
 function heartFoot(box){
   const H=TEXT.hall,lv=META.heartLv;box.textContent='';

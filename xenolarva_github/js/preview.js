@@ -14,7 +14,7 @@ function setWorld(w){
   const k=w/WORLD.w;
   BUB.forEach(b=>{b.x*=k});
   WORLD.w=w;WORLD.dx=(w-500)/2;WALL.r=w-40;
-  cv.width=w;cv.style.aspectRatio=w+'/500';cx.imageSmoothingEnabled=false;
+  cv.width=w*CVK;cv.height=500*CVK;cx.setTransform(CVK,0,0,CVK,0,0);cv.style.aspectRatio=w+'/500';cx.imageSmoothingEnabled=false;
 }
 // 空白的假狀態：只要讓畫面與移動規則讀得到欄位
 const pvState=trans=>({day:1,ap:0,life:90,sat:60,dirt:0,ph:7,trust:60,pname:'',name:'',col:'#ffffff',hue:0,colored:false,over:null,temp:'curious',inv:{},

@@ -11,5 +11,5 @@ const PLACES={
 };
 const RANDOM_PLACES=['park','mall'];   // 外出方式「隨機」時，從這幾個地點平均挑一個
 const OUT_ITEMS=3;                     // 每次出門帶回幾件
-// 地圖底圖：assets/map.jpg（3:2，目前 1200×800；不要畫地名，名牌由程式放）。換圖後名牌位置（x、y）要重新對一下。
-const MAP_IMG=(typeof ASSETS!=='undefined'&&ASSETS.map)||'assets/map.jpg';
+// 地圖底圖：assets/bg/map.jpg（3:2，目前 1200×800；大圖 bg_hd/map.jpg 2400×1600；不要畫地名，名牌由程式放）。換圖後名牌位置（x、y）要重新對一下。
+const MAP_IMG=(typeof ASSETS!=='undefined'&&ASSETS.map)||assetPath('map');

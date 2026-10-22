@@ -15,6 +15,7 @@ let GUEST_IDS=[];      // 勾選「放入水缸」的小球 id（最多 3 隻）
 //   visited 去過的地點｜buys 買過幾次｜achGot 領過的成就｜achSeen 達成過（跳過橫幅）的成就｜heartLv 心等｜hallMet／joanMet／silenceMet／xiaojunMet 看過大樓／瓊／賽倫絲／言曉君的開場
 //   shopMet 見過言盡｜wears 有的裝扮｜tools 永久道具（指揮棒、水桶、雜誌）｜playMode 玩耍方式（quick／play）｜kit 水質檢測儀｜grete 遇見格蕾特｜greteMet 認識格蕾特
 //   chatColor／chatDual 學會聊天染色／雙色｜chatWins 染色成功幾次｜souv 禮物收藏｜decor 撿到的裝飾｜hidden 在水缸隱藏的裝飾｜seen 見過的物品｜pname／pcol 玩家名字與代表色
+//   doll 玩家的長相（紙娃娃）｜urgentAsked／urgent 言曉君問過緊急委託／已登記
 const _list=a=>Array.isArray(a)?a:[];
 const _gl=(a,ok)=>[...new Set(_list(a).map(String).filter(ok))];
 const _num=(v,m)=>Math.max(0,Math.min(m,Math.floor(Number(v))||0));
@@ -66,7 +67,9 @@ const SAVE_FIELDS={
   hidden:{def:()=>[],read:d=>_list(d.hidden).filter(k=>has(DECOR,k)),merge:'union'},
   seen:{def:()=>[],read:d=>_list(d.seen).filter(k=>has(NAME,k)),merge:'union'},
   pname:{def:()=>'',read:d=>String(d.pname||'').slice(0,8),merge:'fill'},
-  pcol:{def:()=>'',read:d=>parseColor(String(d.pcol||''))||'',merge:'fill'}
+  pcol:{def:()=>'',read:d=>parseColor(String(d.pcol||''))||'',merge:'fill'},
+  doll:{def:()=>null,read:d=>dollNorm(d.doll),merge:'fill'},   // v0.35：玩家的長相（紙娃娃，js/data/doll.js）；null＝還沒登記
+  urgentAsked:_bool('urgentAsked'),urgent:_bool('urgent')         // v0.35：言曉君問過要不要接緊急委託｜登記了（選「有」並完成長相登記）
 };
 const metaDefaults=()=>Object.keys(SAVE_FIELDS).reduce((o,k)=>(o[k]=SAVE_FIELDS[k].def(),o),{});
 const META=metaDefaults();
@@ -382,9 +385,9 @@ function dressApply(who){
 }
 
 // ---------- 選單頁面（從右上角 ☰ 各自打開，沒有切換頁籤）----------
-// 頁面：larvae 小球們｜book 圖鑑｜coll 收藏品｜save 設定與存檔（上方兩顆按鈕跳到該段）｜about 說明與公告。標題文字在 TEXT.layout.pages
+// 頁面：larvae 小球們｜book 圖鑑｜coll 收藏品｜player 玩家設定（v0.35，js/flow.js playerBuild）｜save 設定與存檔（上方兩顆按鈕跳到該段）｜about 說明與公告。標題文字在 TEXT.layout.pages
 let TAB='larvae';
-const MENU_PAGES=['larvae','book','coll','save','about'];
+const MENU_PAGES=['larvae','book','coll','player','save','about'];
 const PAGE_ALIAS={info:'save',set:'save',news:'about'};
 const PAGE_DOM={book:'coll'};             // 圖鑑和收藏品用同一個畫面
 function showTab(n,sec){
@@ -395,6 +398,7 @@ function showTab(n,sec){
   $('menuTitle').textContent=TEXT.layout.pages[n];
   if(n==='coll'||n==='book'){CSET=n;renderColl()}
   if(n==='larvae')renderLarvae();
+  if(n==='player')playerBuild();
   if(n==='save'){settingsBuild();$('saveText').value=JSON.stringify(saveObj())}
   $('pg_'+dom(n)).scrollTop=0;
   if(n==='save')jumpFit(sec);

@@ -38,3 +38,14 @@ function h(tag,attrs,...kids){
   kids.forEach(c=>{if(c!=null&&c!==false)e.append(c.nodeType?c:document.createTextNode(String(c)))});
   return e;
 }
+
+// ---- 圖片放哪個資料夾（v0.33.5 起 assets/ 分資料夾；程式和總表都只寫檔名，例如 hall_3f、joan_1）----
+// bg 背景與地圖（720×360 等）｜bg_hd v0.4 用的大圖（同檔名，.jpg）｜npc 人物立繪｜letter 信紙｜item 商品道具｜wear 裝扮｜ui 介面小圖
+// larva（小球、水缸）由 js/data/sprites.js 自己讀；doll（紙娃娃）由 js/doll.js 自己讀（第一次打開長相登記／玩家設定時）。新增的圖照開頭放進對的資料夾就好。
+const ASSET_DIRS=[['bg',/^(hall_|home_|place_|map$)/],['npc',/^(grete|joan|silence|yanjin|xiaojun|yanjie|yanxiang)_/],['letter',/^letter/],['item',/^item_/],['wear',/^wear_/],['ui',/^(heart_badge|shop_case|suitcase)$/]];
+const ASSET_EXT={map:'jpg'};   // 不是 png 的
+function assetPath(k,hd){
+  const d=(ASSET_DIRS.find(([,re])=>re.test(k))||[''])[0];
+  if(hd&&d==='bg')return 'assets/bg_hd/'+k+'.jpg';
+  return 'assets/'+(d?d+'/':'')+k+'.'+(ASSET_EXT[k]||'png');
+}

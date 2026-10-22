@@ -75,4 +75,4 @@ function showEvent(text,o){
   }
 }
 // 圖片檔名（assets/ 底下，不含副檔名）→ 網址；單檔預覽版用打包好的 ASSETS
-const assetImg=k=>(typeof ASSETS!=='undefined'&&ASSETS[k])||('assets/'+k+'.png');
+const assetImg=k=>(typeof ASSETS!=='undefined'&&ASSETS[k])||assetPath(k);   // 資料夾見 js/utils.js 的 ASSET_DIRS

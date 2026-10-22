@@ -87,7 +87,7 @@
 :root[data-font="plain"]{--font-ui:var(--font-n)}
 body{font-family:var(--font-body)}
 input,textarea,select{font-family:var(--font-body)}
-button,.fbtn,header,.box h2,.box h3,.t2,.t3,.phead,.bagh,#setBody .sl,#pg_about .sl,.etab th,.sname,.pname,.pin{font-family:var(--font-ui)}
+button,.fbtn,header,.box h2,.box h3,.t2,.t3,.phead,.bagh,#setBody .sl,#plBody .sl,#pg_about .sl,.etab th,.sname,.pname,.pin{font-family:var(--font-ui)}
 
 /* ---- 頁面：上方一道光＋往下漸深＋很淡的點點底紋 ---- */
 body{background-color:var(--bg);
@@ -145,7 +145,7 @@ input[type=text]:focus{border-color:var(--acc);outline:none}
 #devp{background:var(--deep)}
 /* 用強調色寫的字、原本寫死的彩色字：改用變數（亮色配色才看得到） */
 .box h3{color:var(--acc-txt)}
-#log p.ev,#log p.voice,.tagc,.phead,.bagh,.t3,#setBody .sl,#pg_about .sl,.etab th,.achrw,.achrow.ready strong,.mapinfo .mname,.shoppts,.ib.on,.ochip,#introStory p.q,.hallscene .hwhere,#devp h4,.box .shopwrap .sslot.sel .stag.spv{color:var(--acc-txt)}
+#log p.ev,#log p.voice,.tagc,.phead,.bagh,.t3,#setBody .sl,#plBody .sl,#pg_about .sl,.etab th,.achrw,.achrow.ready strong,.mapinfo .mname,.shoppts,.ib.on,.ochip,#introStory p.q,.hallscene .hwhere,#devp h4,.box .shopwrap .sslot.sel .stag.spv{color:var(--acc-txt)}
 #log p.voice{border-left-color:var(--acc-txt)}
 .tipc{border-bottom-color:var(--acc-txt)}
 .pname,.scene .sname,.hallscene .sname{color:var(--name-txt)}
@@ -216,3 +216,6 @@ input[type=text]:focus{border-color:var(--acc);outline:none}
   /* 水缸外框往外凸 4px，上面多空一點，和「第 N 日」不要太近；寬度公式多扣同樣的高度，畫面還是不用捲動 */
   :where(:root[data-frame="round"]) .tankwrap{margin-top:8px;width:min(100%,calc(100vh - var(--actsH,200px) - 172px));width:min(100%,calc(100dvh - var(--actsH,200px) - 172px))}
 }
+/* 紙娃娃編輯器（v0.35）：選中的部件／表情／換臉泡泡按鈕＝強調色 */
+.box .dstage button.on,.box .dmode button.on{background-color:var(--acc);color:var(--onacc);border-color:var(--acc-dk);font-weight:700}
+.box .dgrid2 .dcell.on{background-color:var(--panel-hi)}

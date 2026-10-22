@@ -1,12 +1,12 @@
 // ===== 陸地上的小球（已經可以離水的穩定小球）：商店的行李箱、之後大樓背景等地方共用 =====
-// 用法：const L=landStart(canvas,{n:1或2, floor:地面 y, xmin, xmax, look, sc:縮放（預設 1）}); L.poke(x)＝戳離 x 最近的那隻（回傳那隻）；L.stop()
+// 用法：const L=landStart(canvas,{n:1或2, floor:地面 y, xmin, xmax, look, sc:縮放（預設 1）, k:畫布解析度倍數（預設 1；畫布放大顯示時用 2，小球比較清楚，座標照舊用 1 倍）}); L.poke(x)＝戳離 x 最近的那隻（回傳那隻）；L.stop()
 // 動作（每隻自己隨機換）：crawl 爬（往左 idle_a＋flat_a、往右 idle_a＋flat_b，一伸一縮）｜rest 窩著休息（rest）｜wave 揮手（reach_a／reach_b）｜hop 自己跳（open_a 往上、open_b 往下）
 // Q彈：身體的壓扁／拉長用彈簧算（落地、被戳、被壓到都會晃幾下才停）。
 // 兩隻時：靠太近會互相彈開一點（不會像水裡亂飛）；一隻跳起來落在另一隻頭上，會再彈一次，下面那隻被壓扁一下。
 const LAND_RULE={g:.32,hop:5.6,pokeHop:6.4,crawl:.55,push:1.8,bump:2.4,headH:46,near:74,ontop:.45,toward:.6,
   act:{crawl:.45,rest:.25,wave:.18,hop:.12},dur:{crawl:[1800,3600],rest:[2000,4200],wave:[1200,2000],hop:[0,0]}};
 function landStart(c,opt){
-  const g=c.getContext('2d'),W=c.width,H=c.height,o=Object.assign({n:1,floor:H*.7,xmin:60,xmax:W-60,look:larvaLook({day:1,hue:200,col:'#ffffff'}),sc:1},opt);
+  const g=c.getContext('2d'),k=(opt&&opt.k)||1,W=c.width/k,H=c.height/k,o=Object.assign({n:1,floor:H*.7,xmin:60,xmax:W-60,look:larvaLook({day:1,hue:200,col:'#ffffff'}),sc:1},opt);
   const R_=LAND_RULE,rnd=(a,b)=>a+Math.random()*(b-a);
   const span=o.xmax-o.xmin;
   const list=Array.from({length:o.n},(_,i)=>({x:o.n===1?o.xmin+span/2:o.xmin+span*(i?.72:.28),z:0,vz:0,vx:0,dir:i?-1:1,sq:0,sqv:0,
@@ -56,7 +56,7 @@ function landStart(c,opt){
       }
     }
     // 畫
-    g.clearRect(0,0,W,H);g.imageSmoothingEnabled=false;
+    g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,c.width,c.height);g.setTransform(k,0,0,k,0,0);g.imageSmoothingEnabled=false;
     [...list].sort((a,b)=>a.z-b.z).forEach(b=>{
       const air=b.z>0||b.vz>0;
       const pose=air?(b.vz>0?'open_a':'open_b'):b.act==='crawl'?(Math.sin(tt*3.2+b.ph)>0?(b.dir<0?'flat_a':'flat_b'):'idle_a'):b.act==='rest'?'rest':b.act==='wave'?(Math.floor(tt*4)%2?'reach_a':'reach_b'):'idle_a';
@@ -67,7 +67,7 @@ function landStart(c,opt){
     raf=requestAnimationFrame(step);
   };
   raf=requestAnimationFrame(step);
-  return {list,
+  return {list,k,
     poke(x){const b=list.reduce((a,u)=>Math.abs(u.x-x)<Math.abs(a.x-x)?u:a);if(b.z<=0){b.vz=R_.pokeHop;b.vx=(Math.random()-.5)*1.2;b.sq=.2}else b.sqv+=.1;b.act='hop';return b},
     stop(){alive=false;cancelAnimationFrame(raf)}};
 }

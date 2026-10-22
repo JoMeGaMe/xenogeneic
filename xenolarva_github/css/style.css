@@ -229,7 +229,7 @@ body.idle #bAccept{display:block;grid-column:1/-1;padding:14px 6px;font-size:16p
 .cwv{text-align:center;overflow:hidden}
 .acc{margin:8px 0}
 .acc label{display:block;margin-bottom:4px}
-#setBody .sl{display:block;margin:12px 0 4px;color:var(--acc);font-size:13px}
+#setBody .sl,#plBody .sl{display:block;margin:12px 0 4px;color:var(--acc);font-size:13px}
 .mrow{display:block;margin:6px 0}
 /* 開場故事用事件內文框 */
 #introStory{margin-bottom:10px}
@@ -478,7 +478,7 @@ header{position:relative}
 .shopwrap .stabs{position:absolute;left:8px;top:8px;z-index:2;display:flex;gap:4px}
 .box .shopwrap .stabs button{width:auto;margin:0;padding:4px 10px;font-size:13px;background:rgba(18,57,74,.92)}
 .box .shopwrap .stabs button.on{background:var(--acc);color:#1b1b1b;border-color:var(--acc)}
-.shopwrap .sempty{position:absolute;inset:0;width:100%;height:100%;z-index:1;cursor:pointer;image-rendering:pixelated;filter:drop-shadow(0 0 5px rgba(255,255,255,.45))}
+.shopwrap .sempty{position:absolute;inset:0;width:100%;height:100%;z-index:1;cursor:pointer;image-rendering:auto;filter:drop-shadow(0 0 5px rgba(255,255,255,.45))}
 @media (max-width:420px){.box .shopwrap .stabs button{padding:3px 7px;font-size:11px}}
 /* 大樓：戳人物時跳一下 */
 .hallscene .hchr.hop{animation:npchop .45s ease}
@@ -502,7 +502,7 @@ header{position:relative}
 .box h2{font-size:var(--fs-h1);font-weight:700;color:var(--ink)}
 .box h3,.t2{font-size:var(--fs-h2);font-weight:700;color:var(--ink);margin:14px 0 6px}
 .box h3:first-child,.t2:first-child{margin-top:0}
-.t3,.phead,.bagh,#setBody .sl,#pg_about .sl{font-size:var(--fs-h3);font-weight:500;color:var(--acc);margin:10px 0 4px;padding:0;border:0}
+.t3,.phead,.bagh,#setBody .sl,#plBody .sl,#pg_about .sl{font-size:var(--fs-h3);font-weight:500;color:var(--acc);margin:10px 0 4px;padding:0;border:0}
 .t3:first-child,.phead:first-child,.bagh:first-child{margin-top:0}
 #pg_about .t2{flex:none;margin:6px 0 0}
 #aboutBody h3,#newsBody h3{font-size:var(--fs-h2);margin:16px 0 6px}
@@ -564,3 +564,68 @@ header{position:relative}
 @media (min-width:760px){.cgal{display:grid;grid-template-columns:220px minmax(0,1fr);align-items:start}.cginfo{grid-template-columns:1fr;justify-items:center;text-align:center;position:sticky;top:0}.cginfo .cgpic{width:140px;height:140px}.cgtxt{align-items:center}.cginfo .cgtalk{text-align:left;width:100%}}
 /* 打扮：選中的裝扮下面一行言盡的介紹 */
 .dpv .dtalk{margin:0;font-size:14px;line-height:1.55;white-space:pre-line;color:var(--t-warm,#ffd59a)}
+/* ---- 紙娃娃（v0.35）：長相登記 #ovDoll（B1 言曉君、玩家設定）＋玩家設定頁 #pg_player ---- */
+/* 電腦＝左「調整部件」｜中預覽｜右「調整表情」；手機＝表情一列 → 預覽 → 部件一列（橫向捲動）。下面是部件格子｜大小位置顏色 */
+.box.dollbox{max-width:760px;height:90vh;height:90dvh;max-height:90vh;max-height:90dvh}
+/* 整頁不捲：預覽固定，下面的格子、細節各自在框裡捲；畫面太矮時才整頁捲 */
+#pg_doll{display:flex;flex-direction:column;gap:10px;overflow-x:hidden;overflow-y:auto}
+.dstage{flex:none;background:var(--well);border:2px solid var(--line);padding:10px}
+.dstage.dsA{display:grid;grid-template-columns:88px minmax(0,1fr) 64px;gap:10px}
+.dstage.dsB{display:flex;flex-direction:column;gap:8px}
+.dcol{position:relative;min-width:0}
+.dinner{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px}
+.dlab{display:block;font-size:var(--fs-h3,13px);color:var(--acc-txt)}
+.dcol .dlab{text-align:center;white-space:nowrap}
+.dplist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+.delist{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.box .dplist button,.box .delist button,.box .derow button,.box .dprow button,.box .dmode button,.box .dstep button{margin:0;width:auto}
+.box .dplist button{flex:none;padding:6px 2px;font-size:14px}
+.box .delist button{flex:1;min-height:0;padding:0 2px}
+.derow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.box .derow button{padding:6px 0}
+.dprow{display:flex;gap:6px;overflow-x:auto;overscroll-behavior:contain;padding-bottom:4px}
+.box .dprow button{flex:none;min-width:56px;padding:6px 10px;font-size:14px}
+.drowlab{display:flex;justify-content:space-between;align-items:baseline}
+.dpvw{position:relative;align-self:center;justify-self:center;width:100%;max-width:220px;aspect-ratio:186/200}
+.dsB .dpvw{max-width:150px}
+.dpvw canvas,.plcv{display:block;width:100%;height:100%;background:linear-gradient(#2b7f93,#12485c);border:2px solid var(--line)}
+.dtag{position:absolute;left:6px;top:6px;padding:0 8px;font-size:12px;color:var(--acc-txt);background:var(--glass);border:1px solid var(--line)}
+.dname{position:absolute;right:6px;bottom:6px;padding:0 8px;font-size:13px;color:var(--name-txt);background:var(--glass);border:2px solid var(--line)}
+.dwork{flex:1 0 0;min-height:200px;display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px);grid-template-rows:minmax(0,1fr);gap:10px;background:var(--well);border:2px solid var(--line);padding:10px}
+.dgrid2{min-height:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;align-content:start;overflow:auto;overscroll-behavior:contain}
+.box .dgrid2 .dcell{display:flex;flex-direction:column;align-items:center;gap:2px;margin:0;width:auto;padding:4px 2px;font-size:12px;line-height:1.3}
+.dgrid2 .dcell canvas{width:56px;height:56px;background:#e6edef;border-radius:2px}   /* 部件是黑線，縮圖用淺底才看得到 */
+.box .dgrid2 .dcell.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.dempty{grid-column:1/-1;margin:0}
+.ddet{border:2px solid var(--line);background:var(--panel);padding:10px;display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.ddet>*{flex:none}
+.ddet>button{margin:0}
+.dstep{display:grid;grid-template-columns:34px minmax(0,1fr) 34px;gap:4px;align-items:center}
+.box .dstep button{padding:2px 0;height:32px}
+.dnum{text-align:center;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
+.dinh{font-size:11px;color:var(--acc-txt)}
+.dmode{display:flex}
+.box .dmode button{flex:1;padding:4px 6px;font-size:14px}
+.dmode button+button{border-left:0}
+.dsw .sw{margin:4px 0 0;gap:6px}
+.dsw .sw button{width:30px;height:30px}
+.dsw .scust{width:30px;height:30px}
+.dsw .scust span{font-size:9px}
+.dfoot{flex:none;display:flex;justify-content:flex-end;padding-top:10px}
+.box .dfoot button{width:auto;min-width:110px;margin:0;padding:8px 22px}
+@media (max-width:759px){.box.dollbox{height:94vh;height:94dvh;max-height:94vh;max-height:94dvh;padding:12px}.dstage{padding:8px}.dstage.dsB{gap:6px}.box .derow button{padding:4px 0}.box .dprow button{padding:4px 10px}.ddet>button{font-size:13px;padding:6px 2px}}
+@media (max-width:480px){.dwork{grid-template-columns:minmax(0,1fr) 132px;padding:8px;gap:8px}.dgrid2{grid-template-columns:repeat(auto-fill,minmax(60px,1fr))}.dgrid2 .dcell canvas{width:46px;height:46px}.ddet{padding:8px}.dsB .dpvw{max-width:170px}}
+/* 玩家設定頁：紙娃娃（左）｜說明、按鈕或名字（右）；手機上下排 */
+.plcard{display:grid;grid-template-columns:180px minmax(0,1fr);gap:14px;align-items:start}
+.plfig{position:relative;width:180px;aspect-ratio:186/200}
+.plfig.none .plcv{background:var(--deep);border-style:dashed}
+.plside{min-width:0;display:flex;flex-direction:column;gap:8px}
+.plside .sl:first-child{margin-top:0}
+.plside p{margin:0}
+.box .plside button{width:auto;align-self:flex-start;margin:0;padding:8px 18px}
+.dim.pre{white-space:pre-line}
+#plBody .cw{max-width:380px}
+@media (max-width:480px){.plcard{grid-template-columns:1fr}.plfig{width:150px;margin:0 auto}}
+.dchip{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1px;border:1px solid rgba(0,0,0,.4);border-radius:50%}
+.box .deyec button{white-space:nowrap}
+@media (max-width:480px){.deyec{flex-direction:column}.deyec button+button{border-left:2px solid var(--line);border-top:0}.box .deyec button{font-size:13px}}

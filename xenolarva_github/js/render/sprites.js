@@ -12,8 +12,8 @@ function tint(n,rgb){const k=n+rgb;if(TINT[k])return TINT[k];const im=IMG[n];if(
 // 外殼雙色（雜誌染色）：先畫 a 色，再把 b 色疊在下半（v 上下）或右半（h 左右）。soft＝柔和漸層，否則分色（一刀切開）
 // 切線照這個姿勢身體的實際範圍（不透明像素的外框）算中間，每個姿勢各自算一次
 // 每個姿勢身體的實際範圍（不透明像素的外框；用 tools 事先算好，不在瀏覽器讀像素——直接開 index.html 時讀像素會被瀏覽器擋下）
-const BBOX={"body_close":[4,2,88,82],"body_curl":[4,2,88,89],"body_droop":[4,9,95,93],"body_flat_a":[4,9,95,91],"body_flat_b":[5,7,89,92],"body_idle_a":[4,2,95,94],"body_idle_b":[4,2,95,93],"body_open_a":[4,2,96,87],"body_open_b":[1,0,96,84],"body_reach_a":[4,2,95,94],"body_reach_b":[5,3,96,94],"body_rest":[2,11,96,90]};
-function spriteBox(n){return BBOX[n]||[0,0,96,96]}
+const BBOX={"body_close":[8,7,177,163],"body_curl":[10,2,192,177],"body_droop":[6,17,186,187],"body_flat_a":[5,18,191,182],"body_flat_b":[10,16,180,184],"body_idle_a":[8,4,191,188],"body_idle_b":[8,4,189,186],"body_open_a":[8,4,192,174],"body_open_b":[2,2,192,166],"body_reach_a":[8,4,191,188],"body_reach_b":[8,4,191,188],"body_rest":[4,21,191,180]};   // 圖片像素座標（192×192 圖；v0.34 起 2 倍）
+function spriteBox(n){return BBOX[n]||[0,0,(IMG[n]&&IMG[n].width)||96,(IMG[n]&&IMG[n].height)||96]}
 function tint2(n,a,b,mode,soft){
   const k=n+a+'|'+b+mode+(soft?1:0);if(TINT[k])return TINT[k];tintRoom();
   const A=tint(n,a),B=tint(n,b),c=document.createElement('canvas');c.width=A.width;c.height=A.height;const g=c.getContext('2d');

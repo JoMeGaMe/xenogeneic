@@ -29,7 +29,11 @@ def enc(f):
         except ImportError:
             pass
     return ('data:image/jpeg;base64,' if f.endswith('.jpg') else 'data:image/png;base64,') + base64.b64encode(open(f, 'rb').read()).decode()
-assets = {os.path.basename(f)[:-4]: enc(f) for f in glob.glob('assets/larva/*.png')+glob.glob('assets/*.png')+glob.glob('assets/*.jpg')}
+# v0.33.5 起 assets/ 分資料夾：遊戲現在用到的這幾個打包進來（bg_hd 大圖、font 不放；字體走 CSS）
+ASSET_DIRS = ['larva', 'bg', 'npc', 'letter', 'item', 'wear', 'ui']
+assets = {os.path.basename(f)[:-4]: enc(f) for d in ASSET_DIRS for f in glob.glob(f'assets/{d}/*.png') + glob.glob(f'assets/{d}/*.jpg')}
+# v0.35：紙娃娃部件（檔名和小球的圖可能撞名，所以鍵是 doll/檔名；js/doll.js 的 dollSrc 會找這個）
+assets.update({'doll/' + os.path.basename(f)[:-4]: enc(f) for f in glob.glob('assets/doll/*.png')})
 def inline(m):
     path = m.group(1).split('?')[0]
     code = open(path, encoding='utf-8').read()

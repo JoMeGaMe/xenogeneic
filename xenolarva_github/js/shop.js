@@ -9,7 +9,7 @@ function wearIcon(id){
   const W=WEARS[id],c=h('canvas',{class:'sicon swear',width:96,height:96});
   if(!W.img){c.getContext('2d').drawImage(wearImg(id),0,0);return c}
   const im=wearImg(id),[x0,y0,x1,y1]=W.box||[0,0,96,96],w=x1-x0,hh=y1-y0,k=Math.min(1,92/w,92/hh);
-  const draw=()=>{const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.drawImage(im,x0,y0,w,hh,48-w*k/2,48-hh*k/2,w*k,hh*k);
+  const draw=()=>{const g=c.getContext('2d'),q=im.naturalWidth/96||1;g.imageSmoothingEnabled=true;g.drawImage(im,x0*q,y0*q,w*q,hh*q,48-w*k/2,48-hh*k/2,w*k,hh*k);
     if(W.glow){const gc=glowImg(id,'255,233,77');if(gc){g.save();g.shadowColor='#ffe94d';g.shadowBlur=5;g.drawImage(gc,x0,y0,w,hh,48-w*k/2,48-hh*k/2,w*k,hh*k);g.restore()}else setTimeout(draw,200)}};   // 會發光的：商品圖用黃色
   if(im.complete&&im.naturalWidth)draw();else im.addEventListener('load',draw,{once:true});
   return c;
@@ -32,15 +32,16 @@ let SHOP_TAB='rand',SHOP_RAND=[];
 const shopPoolLeft=()=>Object.keys(SHOP_ITEMS).filter(id=>!SHOP_ITEMS[id].fixed&&!SHOP_ITEMS[id].hidden&&(!SHOP_ITEMS[id].cond||SHOP_ITEMS[id].cond())&&!(SHOP_ITEMS[id].wear?META.wears.includes(SHOP_ITEMS[id].wear):SHOP_ITEMS[id].tool?META.tools.includes(SHOP_ITEMS[id].tool):false)).length;
 // ---------- 行李箱裡的小球（隨機商品賣完時）：陸地上的小球（js/render/land.js），偶爾兩隻 ----------
 let SHOP_LARVA=null;
+const SHOP_LARVA_K=2;   // 行李箱畫布（邏輯 360×240）放大到整個行李箱顯示，所以內部用 2 倍解析度，2 倍的小球圖才清楚
 function shopLarvaInit(){const two=Math.random()<.35;SHOP_LARVA={two,land:null};return two}
 function shopLarvaRun(c){
   if(!SHOP_LARVA)shopLarvaInit();
   if(SHOP_LARVA.land)SHOP_LARVA.land.stop();
-  SHOP_LARVA.land=landStart(c,{n:SHOP_LARVA.two?2:1,floor:160,xmin:70,xmax:290});
+  SHOP_LARVA.land=landStart(c,{n:SHOP_LARVA.two?2:1,floor:160,xmin:70,xmax:290,k:SHOP_LARVA_K});   // 畫布放大顯示：用 2 倍解析度畫（v0.35）
 }
 function shopLarvaPoke(c,e){
   if(!SHOP_LARVA||!SHOP_LARVA.land)return;
-  const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*c.width/r.width,T=TEXT.shop;
+  const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*c.width/SHOP_LARVA_K/r.width,T=TEXT.shop;
   SHOP_LARVA.land.poke(x);
   SHOP_SAY=Math.random()<.3?R(T.yanjinLarva):R(T.emptyPoke);$('shopTalk').textContent=SHOP_SAY;
 }
@@ -98,7 +99,7 @@ function shopDraw(){
   W.querySelectorAll(keep?'.sslot,.stabs':'.sslot,.stabs,.sempty').forEach(e=>e.remove());
   W.append(h('div',{class:'stabs'},...[['rand',T.tabRand],['fixed',T.tabFixed]].map(([k,t])=>h('button',{class:SHOP_TAB===k?'on':'',onclick:()=>shopTabSet(k)},t))));
   if(SHOP_TAB==='rand'&&!SHOP_RAND.length&&!keep){                                   // 隨機商品全買完：可以戳的小球
-    const c=h('canvas',{class:'sempty',width:360,height:240});
+    const c=h('canvas',{class:'sempty',width:360*SHOP_LARVA_K,height:240*SHOP_LARVA_K});
     c.onclick=e=>shopLarvaPoke(c,e);W.append(c);shopLarvaRun(c);
   }
   const slots=SHOP_TAB==='fixed'?SHOP_SLOTS6:SHOP_NOW.length>3?SHOP_SLOTS4:SHOP_SLOTS;

@@ -1,6 +1,6 @@
 // 【資料】廢棄大樓的商店（言盡）。名字與言盡的介紹在 js/data/texts.js 的 TEXT.shop。
 //   price：積分｜give：買了會得到的東西（物品 id：數量，放進這一輪的物品欄）｜icon：還沒有商品圖時用的圖示（js/data/icons.js）與顏色
-//   img：商品圖（assets/ 底下的檔名，不含副檔名；200×200 透明背景，檔名 item_*）
+//   img：商品圖（assets/item/ 的檔名，不含副檔名；200×200 透明背景，檔名 item_*）
 // 商品之後要換成正式的（小球裝飾品、互動玩具…），在這裡加減就好。
 const SHOP_ITEMS={
   // 生活物資（fixed：「固定商品」分頁每次都擺；這一輪用，下一輪物品欄會重置；撿得到，應急用，便宜）
@@ -33,6 +33,7 @@ const SHOP_ITEMS={
   minilarva:     {price:10,wear:'minilarva'},
   bunny:         {price:8,wear:'bunny'},
   shushu:        {price:8,wear:'shushu'},
+  phone:         {price:8,wear:'phone'},
   puppy:         {price:8,wear:'puppy'},
   snake:         {price:8,wear:'snake'},
   blackcat:      {price:8,wear:'blackcat'},
@@ -52,8 +53,8 @@ const SHOP_SHOW=3;                                     // 「隨機商品」每�
 const SHOP_SLOTS6=[{x:22,y:36},{x:50,y:36},{x:78,y:36},{x:22,y:74},{x:50,y:74},{x:78,y:74}];   // 「固定商品」六種的位置
 const SHOP_SLOTS=[{x:26,y:38},{x:74,y:38},{x:50,y:74}];   // 商品在行李箱圖上的位置（百分比）
 const SHOP_SLOTS4=[{x:24,y:36},{x:62,y:34},{x:36,y:74},{x:76,y:72}];   // 心等 3：擺 4 種時的位置
-const SHOP_CASE='shop_case';                           // 行李箱（由上往下看）：assets/shop_case.png，3:2（750×500；目前是使用者的圖切掉上蓋）
+const SHOP_CASE='shop_case';                           // 行李箱（由上往下看）：assets/ui/shop_case.png，3:2（750×500；目前是使用者的圖切掉上蓋）
 // 閒聊畫面（商店的「閒聊」）：廢墟背景＋行李箱＋言盡（戳她發呆時換 yanjin_2）＋偶爾一隻小球
 // chatAlt：閒聊畫面打開時那句（TEXT.shop.chat 的第幾句，從 0 起算）用第二張圖 yanjin_2（v0.32.3 使用者在總表指定第 5 則）
-const SHOP_SCENE={bg:'ruins_1',suitcase:'suitcase',chr:['yanjin_1','yanjin_2'],pokeAlt:[2],chatAlt:[4],larva:.35,larvaSc:.85,giftMax:3};   // 閒聊畫面的小球也會送東西（機率、種類同大樓 HALL_RULE），每次去商店最多 giftMax 個
-// （v0.29.2 起商品畫面不放言盡的頭像；assets/yanjin_face.png 先留著）
+const SHOP_SCENE={bg:'place_ruins_in',suitcase:'suitcase',chr:['yanjin_1','yanjin_2'],pokeAlt:[2],chatAlt:[4],larva:.35,larvaSc:.85,giftMax:3};   // 閒聊畫面的小球也會送東西（機率、種類同大樓 HALL_RULE），每次去商店最多 giftMax 個
+// （v0.29.2 起商品畫面不放言盡的頭像；assets/npc/yanjin_face.png 先留著）
