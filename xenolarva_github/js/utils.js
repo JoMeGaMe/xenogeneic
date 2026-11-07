@@ -19,7 +19,7 @@ const hsl2rgb=(h,s,l)=>{s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l)
 const nm=s=>'【'+s+'】';
 const has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 // 轉成安全的 HTML 文字
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));   // 放進 HTML（內文或屬性）的字一律經過這裡
 // 把文字裡的 {key} 換成 vars[key]：fmt('把{item}推開',{item:'甜果'}) → '把甜果推開'
 const fmt=(s,v)=>String(s).replace(/\{(\w+)\}/g,(m,k)=>(v&&k in v)?v[k]:k==='larva'?m:'');   // {larva} 沒給就先留著，顯示時（withLarva）再填
 // {larva}＝這句話的主角小球。顯示時填名字：有指定就用指定的（同伴、玩的那隻…），沒有就用這一輪的小球；都沒有（第 0 日、圖鑑說明）用「幼體」
@@ -39,10 +39,10 @@ function h(tag,attrs,...kids){
   return e;
 }
 
-// ---- 圖片放哪個資料夾（v0.33.5 起 assets/ 分資料夾；程式和總表都只寫檔名，例如 hall_3f、joan_1）----
+// ---- 圖片放哪個資料夾（v0.33.5 起 assets/ 分資料夾；程式和總表都只寫檔名，例如 hall_3f、joan_L_0）----
 // bg 背景與地圖（720×360 等）｜bg_hd v0.4 用的大圖（同檔名，.jpg）｜npc 人物立繪｜letter 信紙｜item 商品道具｜wear 裝扮｜ui 介面小圖
 // larva（小球、水缸）由 js/data/sprites.js 自己讀；doll（紙娃娃）由 js/doll.js 自己讀（第一次打開長相登記／玩家設定時）。新增的圖照開頭放進對的資料夾就好。
-const ASSET_DIRS=[['bg',/^(hall_|home_|place_|map$)/],['npc',/^(grete|joan|silence|yanjin|xiaojun|yanjie|yanxiang)_/],['letter',/^letter/],['item',/^item_/],['wear',/^wear_/],['ui',/^(heart_badge|shop_case|suitcase)$/]];
+const ASSET_DIRS=[['bg',/^(hall_|home_|place_|map$)/],['npc',/^(grete|joan|silence|yanjin|xiaojun|yanjie|yanxiang|yanmo|ayen)_/],['letter',/^letter/],['item',/^item_/],['wear',/^wear_/],['ui',/^(heart_badge|shop_case|suitcase|loading_\d)$/]];
 const ASSET_EXT={map:'jpg'};   // 不是 png 的
 function assetPath(k,hd){
   const d=(ASSET_DIRS.find(([,re])=>re.test(k))||[''])[0];

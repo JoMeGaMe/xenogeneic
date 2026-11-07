@@ -54,6 +54,10 @@ const SAVE_FIELDS={
   achSeen:{def:()=>[],read:d=>_gl(d.achSeen,x=>ACH.some(a=>a.id===x)),merge:'union'},
   heartLv:{def:()=>1,read:d=>Math.max(1,Math.min(HEART_RULE.max,_num(d.heartLv,9)||1)),merge:'max'},
   hallMet:_bool('hallMet'),joanMet:_bool('joanMet'),silenceMet:_bool('silenceMet'),xiaojunMet:_bool('xiaojunMet'),
+  storyDiaryHide:_bool('storyDiaryHide'),
+  wearOwn:{def:()=>[],read:d=>_gl(d.wearOwn,x=>DOLL_SHOP_WEAR.includes(x)),merge:'union'},   // v0.40.65：服飾店拿到的衣物（配飾）   // v0.40.61：主線日記本隱藏還沒觸發的
+  yanxiangMet:_bool('yanxiangMet'),yanjieMet:_bool('yanjieMet'),yanxiangPt:_bool('yanxiangPt'),   // v0.40.59：4F 言巷、5F 言街見過｜言巷給過積分（心等 5）
+  chDone:{def:()=>0,read:d=>Math.max(_num(d.chDone,9),[].concat(d.storyFree||[]).some(x=>x&&typeof x==='object')?1:0),merge:'max'},   // v0.40.59：主線完成到第幾章（舊存檔有中繼存檔＝1）
   farewells:{def:()=>0,read:d=>_num(d.farewells,9999),merge:'max'},
   shopMet:_bool('shopMet'),
   wears:{def:()=>[],read:d=>_gl(d.wears,x=>has(WEARS,x)),merge:'union'},
@@ -69,7 +73,10 @@ const SAVE_FIELDS={
   pname:{def:()=>'',read:d=>String(d.pname||'').slice(0,8),merge:'fill'},
   pcol:{def:()=>'',read:d=>parseColor(String(d.pcol||''))||'',merge:'fill'},
   doll:{def:()=>null,read:d=>dollNorm(d.doll),merge:'fill'},   // v0.35：玩家的長相（紙娃娃，js/data/doll.js）；null＝還沒登記
-  urgentAsked:_bool('urgentAsked'),urgent:_bool('urgent')         // v0.35：言曉君問過要不要接緊急委託｜登記了（選「有」並完成長相登記）
+  urgentAsked:_bool('urgentAsked'),urgent:_bool('urgent'),        // v0.35：言曉君問過要不要接緊急委託｜登記了（選「有」並完成長相登記）
+  story:{def:()=>null,read:d=>storyNorm(d.story),merge:'fill'},   // v0.40：主線進度（這週開始時的狀態；js/story/*.js）
+  storyFree:{def:()=>[null,null,null],read:d=>{const v=d.storyFree,a=Array.isArray(v)?v:[v];return [0,1,2].map(i=>storyNorm(a[i]))},merge:(m,t)=>m.map((x,i)=>x||t[i])},   // 中繼存檔 3 格（章末存；讀取＝自由模式）。v0.40.53 只有一筆（物件）＝讀成第 1 格
+  storySlots:{def:()=>[null,null,null],read:d=>[0,1,2].map(i=>storyNorm(_list(d.storySlots)[i])),merge:(m,t)=>m.map((x,i)=>x||t[i])}   // 主線的手動存檔 3 格
 };
 const metaDefaults=()=>Object.keys(SAVE_FIELDS).reduce((o,k)=>(o[k]=SAVE_FIELDS[k].def(),o),{});
 const META=metaDefaults();
@@ -407,20 +414,47 @@ function showTab(n,sec){
 function openMenu(tab,sec){$('cmsg').textContent='';$('lmsg').textContent='';RENAMING=null;$('ovMenu').classList.add('show');showTab(tab||'larvae',sec)}
 
 // ---------- 下載、上傳、合併 ----------
-function codexDownload(){
-  const b=new Blob([JSON.stringify(saveObj(),null,1)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='xenolarva_save.json';a.click();
+// v0.40.69：日常進度、主線存檔分開下載；上傳自動看檔案裡有哪一邊（舊的整包檔案＝兩邊都有），模式＝合併／覆蓋
+const STORY_SAVE_KEYS=['story','storyFree','storySlots','storyDiaryHide','chDone'];   // 主線那一份（chDone 兩邊都放：完成第幾章也影響日常）
+const savePart=kind=>{const o=saveObj(),r={v:2,kind};
+  if(kind==='story'){STORY_SAVE_KEYS.forEach(k=>r[k]=o[k]);return r}
+  for(const k in o)if(k!=='v'&&(k==='chDone'||!STORY_SAVE_KEYS.includes(k)))r[k]=o[k];return r};
+// artifact 頁面不能用 <a download>：有 downloads 能力就用它（GitHub 版照舊）
+let SAVE_DL=null;try{if(window.claude&&typeof claude.use==='function')claude.use('downloads').then(d=>{SAVE_DL=d}).catch(()=>{})}catch(e){}
+function codexDownload(kind){
+  const txt=JSON.stringify(savePart(kind),null,1),name=kind==='story'?'xenolarva_story.json':'xenolarva_daily.json';
+  if(SAVE_DL){SAVE_DL.save({filename:name,data:txt}).catch(e=>{if(e&&e.code!=='declined')$('cmsg').textContent=TEXT.misc.downBad});return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
-// 合併進度：已經有的小球（相同 id）不會被覆蓋；其他設定取聯集
-function codexMerge(txt){
+let SAVE_MODE='merge';   // 上傳模式：merge 合併（補上沒有的）｜over 覆蓋（檔案裡有的那一邊整個換掉）
+// 這個檔案有哪一邊：kind 標記，沒有標記的舊檔案看欄位
+function savePartsOf(d){if(d.kind==='story')return {story:true,daily:false};if(d.kind==='daily')return {story:false,daily:true};
+  return {story:STORY_SAVE_KEYS.some(k=>k!=='chDone'&&d[k]!=null),daily:'codex' in d||'points' in d||'intro' in d}}
+function codexImport(txt){let d;
+  try{d=JSON.parse(txt);if(!d||typeof d!=='object'||Array.isArray(d))throw 0}catch(e){$('cmsg').textContent=TEXT.misc.mergeBad;return}
+  const P=savePartsOf(d);if(!P.story&&!P.daily){$('cmsg').textContent=TEXT.misc.mergeBad;return}
+  if(SAVE_MODE!=='over'){codexApply(d,P,false);return}
+  const T=TEXT.misc,what=[P.daily&&T.partDaily,P.story&&T.partStory].filter(Boolean).join(T.partAnd);
+  pick(fmt(T.overAsk,{what}),[{id:'go',label:T.overOk,main:true},{id:'back',label:T.overNo}],k=>{if(k==='go')codexApply(d,P,true)},T.overBody);
+}
+function codexApply(d,P,over){
   try{
-    const s=readSave(JSON.parse(txt));let n=0;
-    s.codex.forEach(e=>{if(!findLarva(e.id)&&!META.returned.some(r=>r.id===e.id)){CODEX.push(e);n++}});
-    metaMerge(s);
-    GUEST_IDS=[...new Set([...GUEST_IDS,...s.guests])].slice(-3);
-    prefillPlayer();codexSave();showTab(TAB);
-    $('cmsg').textContent=fmt(TEXT.misc.mergeOk,{n});
+    const s=readSave(d),T=TEXT.misc,msg=[];
+    if(P.daily){
+      if(over){CODEX=s.codex;for(const k in SAVE_FIELDS)if(!STORY_SAVE_KEYS.includes(k))META[k]=s[k];GUEST_IDS=s.guests.slice(-3);if(S)syncGuests(false);msg.push(T.overDaily)}
+      else{let n=0;s.codex.forEach(e=>{if(!findLarva(e.id)&&!META.returned.some(r=>r.id===e.id)){CODEX.push(e);n++}});
+        const SK=STORY_SAVE_KEYS.filter(k=>k!=='chDone'),keep={};SK.forEach(k=>keep[k]=META[k]);metaMerge(s);if(!P.story)SK.forEach(k=>META[k]=keep[k]);
+        GUEST_IDS=[...new Set([...GUEST_IDS,...s.guests])].slice(-3);msg.push(fmt(T.mergeOk,{n}))}}
+    if(P.story){
+      if(over)STORY_SAVE_KEYS.forEach(k=>{META[k]=k==='chDone'?Math.max(META.chDone||0,s.chDone||0):s[k]});
+      else if(!P.daily){const m={...SAVE_FIELDS};STORY_SAVE_KEYS.forEach(k=>{const F=m[k].merge,a=META[k],b=s[k];META[k]=typeof F==='function'?F(a,b):F==='max'?Math.max(a||0,b||0):F==='or'?(a||b):F==='fill'?(a||b):a})}
+      msg.push(over?T.overStory:T.mergeStory)}
+    // 主線存檔裡買過的衣物，日常也能用（同 storyOwnSync）
+    const own=[META.story,...(META.storyFree||[]),...(META.storySlots||[])].filter(Boolean).flatMap(x=>x.wearOwn||[]);
+    if(own.length)META.wearOwn=[...new Set([...(META.wearOwn||[]),...own])];
+    prefillPlayer();codexSave();if(S&&over&&P.daily)refresh();showTab(TAB);
+    $('cmsg').textContent=msg.join(' ');
   }catch(err){$('cmsg').textContent=TEXT.misc.mergeBad}
 }
 codexLoad();

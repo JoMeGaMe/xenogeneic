@@ -1,0 +1,1 @@
+{"v": 2, "wearOwn": ["fan_yellow", "glass_square", "bogus"], "_expect": {"wearOwn": "fan_yellow,glass_square"}}

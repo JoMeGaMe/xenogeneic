@@ -60,7 +60,7 @@ function showEvent(text,o){
   o=o||{};
   pick(o.title||TEXT.misc.evTitle,o.opts||[{id:0,label:o.btn||TEXT.misc.ok}],id=>{if(o.cb)o.cb(id)},text);
   const im=$('pAv'),nm_=$('pTag'),fig=$('pFig'),nt=$('pNote');
-  if(im&&o.img)im.src=o.img;
+  if(im&&o.img){if(/^[\w-]+(\+(acc|配件))?$/.test(o.img))chrSet(im,o.img);else{delete im.dataset.chr;im.style.background='';im.src=o.img}}   // 圖名（grete_L_0）或網址
   if(nm_)nm_.textContent=o.name||'';
   if(nm_)nm_.hidden=!o.name;
   if(fig)fig.hidden=!o.img;
@@ -68,7 +68,7 @@ function showEvent(text,o){
   // 場景：背景（360×180，2:1）上疊角色（靠右、腳貼下緣）與道具（置中），名牌在角色下方。有場景時不用右邊的頭像框
   const sc=$('pScene');sc.hidden=!o.scene;
   if(o.scene){
-    const set=(c,k)=>{const e=sc.querySelector(c);e.hidden=!k;if(k)e.src=assetImg(k)};
+    const set=(c,k)=>{const e=sc.querySelector(c);e.hidden=!k;if(k)chrSet(e,k)};
     set('.sbg',o.scene.bg);set('.schr',o.scene.chr);set('.sitem',o.scene.item);
     const n=sc.querySelector('.sname');n.textContent=o.scene.name||'';n.hidden=!(o.scene.name&&o.scene.chr);
     if(fig)fig.hidden=true;if(nm_)nm_.hidden=true;
@@ -76,3 +76,38 @@ function showEvent(text,o){
 }
 // 圖片檔名（assets/ 底下，不含副檔名）→ 網址；單檔預覽版用打包好的 ASSETS
 const assetImg=k=>(typeof ASSETS!=='undefined'&&ASSETS[k])||assetPath(k);   // 資料夾見 js/utils.js 的 ASSET_DIRS
+// 人物立繪（v0.40.3）：檔名＝人物_方向_表情（xiaojun_L_0；L 面向左＝平常、R 面向右；0 正常 1 喜 2 怒 3 哀 4 樂 5 驚）。
+// 後面加「+acc」（或「+配件」）＝疊上那個方向的配件圖 xiaojun_L_acc（例如言曉君工作時的耳麥）。配件圖和立繪同尺寸，
+// 做法：<img> 的圖＝配件，背景＝立繪（同一個元素，跳動、點擊都跟著）。
+function chrSplit(k){const m=String(k||'').match(/^(.*?)\+(?:acc|配件)$/);return m?{base:m[1],acc:m[1].replace(/_[^_]+$/,'_acc')}:{base:k,acc:''}}
+function chrSet(el,k){el.dataset.chr=k;const o=chrOl(k);if(o){el.src=o;el.style.background='';return}
+  const c=chrSplit(k);el.src=assetImg(c.acc||c.base);el.style.background=c.acc?`url('${assetImg(c.base)}') center/100% 100% no-repeat`:''}
+function chrAttr(k){const o=chrOl(k),c=chrSplit(k);if(o)return `data-chr="${esc(k)}" src="${esc(o)}"`;   // 資安（v0.40.40）：屬性值都 esc
+  return `data-chr="${esc(k)}" src="${esc(assetImg(c.acc||c.base))}"`+(c.acc?` style="background:url('${esc(assetImg(c.base))}') center/100% 100% no-repeat"`:'')}
+// 白邊（v0.40.4）：新格式立繪（人物_L_／_R_）和玩家紙娃娃一樣由程式描白邊（js/doll.js dollOutline 的作法，粗細 DOLL_OUTLINE）。
+// 配件和立繪先合成一張再描（白邊只描在外圍）。畫好轉成圖片網址記在 CHR_OL；畫好之前先顯示原圖，畫好後畫面上那張圖自動換掉。
+// 本機直接開 index.html（file://）時瀏覽器不准把畫布轉成圖片，就維持原圖（GitHub Pages、單檔預覽版都正常）。
+const CHR_OL={},CHR_OL_Q=[];let CHR_OL_BUSY=false;
+const chrNew=k=>/_[LR]_[^_]+$/.test(chrSplit(k).base);
+function chrOl(k){if(!k||!chrNew(k))return '';if(CHR_OL[k]===undefined){CHR_OL[k]=false;CHR_OL_Q.push(k);chrOlRun()}return CHR_OL[k]||''}
+function chrOlRun(){
+  if(CHR_OL_BUSY||!CHR_OL_Q.length)return;CHR_OL_BUSY=true;
+  const k=CHR_OL_Q.shift(),c=chrSplit(k),srcs=[c.base,c.acc].filter(Boolean);
+  const next=()=>{CHR_OL_BUSY=false;setTimeout(chrOlRun,0)};
+  Promise.all(srcs.map(s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=assetImg(s)}))).then(ims=>{
+    if(!ims[0]){CHR_OL[k]=null;next();return}
+    const W=ims[0].naturalWidth,H=ims[0].naturalHeight,cv=()=>{const e=document.createElement('canvas');e.width=W;e.height=H;return e};
+    const s=cv(),sg=s.getContext('2d');ims.forEach(i=>i&&sg.drawImage(i,0,0,W,H));
+    const m=cv(),mg=m.getContext('2d');mg.drawImage(s,0,0);mg.globalCompositeOperation='source-in';mg.fillStyle='#fff';mg.fillRect(0,0,W,H);
+    const o=cv(),og=o.getContext('2d'),r=Math.round(DOLL_OUTLINE*W/DOLL_W);
+    for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++)if(x*x+y*y<=r*r+r)og.drawImage(m,x,y);
+    og.drawImage(s,0,0);
+    try{CHR_OL[k]=o.toDataURL()}catch(e){CHR_OL[k]=null}
+    if(CHR_OL[k])document.querySelectorAll('img[data-chr]').forEach(e=>{if(e.dataset.chr===k)chrSet(e,k)});
+    next();
+  });
+}
+// 開遊戲後先在背景把常用的立繪描好
+function chrOlPreload(){[...Object.values(HALL_FLOORS).flatMap(f=>f.chr||[]),...Object.values(LOBBY_NPC).flatMap(n=>n.chr||[]),...SHOP_SCENE.chr,GRETE_IMG,GRETE_IMG2,
+  ...Object.values(STORY_NPC).flatMap(n=>n.img?[n.img,n.img.replace(/_L_/,'_R_')]:[])].forEach(chrOl)}
+setTimeout(()=>{try{chrOlPreload()}catch(e){}},1200);

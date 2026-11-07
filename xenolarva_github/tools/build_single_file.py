@@ -20,6 +20,14 @@ html = re.sub(r'<link rel="stylesheet" href="(css/[^"?]+)[^"]*">', inline_css, h
 JPEG_IN_SINGLE = ('hall_', 'place_', 'letter_', 'home_')
 def enc(f):
     n = os.path.basename(f)[:-4]
+    if f.endswith('.png') and os.sep + 'npc' + os.sep in f.replace('/', os.sep):   # 人物立繪（v0.40.16）：單檔版改存 WebP（透明保留、小 4 倍），不然超過預覽頁 16MB 的上限
+        try:
+            from PIL import Image
+            import io
+            b = io.BytesIO(); Image.open(f).save(b, 'WEBP', quality=90, method=4)
+            return 'data:image/webp;base64,' + base64.b64encode(b.getvalue()).decode()
+        except Exception:
+            pass
     if f.endswith('.png') and n.startswith(JPEG_IN_SINGLE):
         try:
             from PIL import Image
@@ -41,5 +49,11 @@ def inline(m):
         code = 'const ASSETS=' + json.dumps(assets) + ';\n'
     return '<script>\n' + code + '</script>'
 html = re.sub(r'<script src="([^"]+)"></script>', inline, html)
+# v0.40.40：index.html 的 CSP（只准 'self' 的程式）擋得掉內嵌程式；單一 HTML 全部是內嵌，拿掉（artifact 由外層的沙盒管）
+html = re.sub(r'<!-- 資安（v0\.40\.40）[\s\S]*?-->\n?', '', html)
+html = re.sub(r'<meta http-equiv="Content-Security-Policy"[^>]*>\n?', '', html)
 open('game_inline.html', 'w', encoding='utf-8').write(html)
 print('OK game_inline.html')
+# v0.40.31：順便檢查劇情（條件、標籤、圖片、演出、效果）；有問題只提醒，不擋
+import subprocess, sys
+subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'storycheck.py'), '.'])

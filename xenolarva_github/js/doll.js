@@ -17,9 +17,14 @@ function dollTint(file,col){
   const im=DOLL_IMG[file],c=dollCv(),g=c.getContext('2d'),w=c.width,ht=c.height;
   if(im){g.drawImage(im,0,0,w,ht);
     if(col){g.globalCompositeOperation='multiply';g.fillStyle=col;g.fillRect(0,0,w,ht);g.globalCompositeOperation='destination-in';g.drawImage(im,0,0,w,ht)}}
+  if(!im)return c;                     // 圖還沒讀好：先不記（v0.40：不然讀好之後還是空白）
   if(DOLL_TINT.size>240)DOLL_TINT.clear();
   DOLL_TINT.set(key,c);return c;
 }
+// 褲襪：整片剪影填上顏色（畫的時候 multiply，所以腿的線條、膚色都透出來）
+function dollSheer(file,col){const key='sheer|'+file+'|'+col,hit=DOLL_TINT.get(key);if(hit)return hit;
+  const im=DOLL_IMG[file],c=dollCv(),g=c.getContext('2d');if(!im)return c;
+  g.drawImage(im,0,0,c.width,c.height);g.globalCompositeOperation='source-in';g.fillStyle=col;g.fillRect(0,0,c.width,c.height);DOLL_TINT.set(key,c);return c}
 const dollCol=(st,t)=>t?(DOLL_FIXED[t]||st[t]):null;
 // 眼睛的顏色：有預設色的眼睛（DOLL_EYE_DEF）選「預設色」時用它，其他用瞳色
 const dollEyeCol=(st,id,c)=>DOLL_EYE_DEF[id]&&c!=='eye'?DOLL_EYE_DEF[id]:st.eye;
@@ -39,7 +44,9 @@ function dollCompose(st,emo){
   const pick=k=>face&&DOLL_FACE.includes(k)?dollEmoPart(st,emo,k):st.parts[k];
   DOLL_ORDER.forEach(k=>{
     if(k==='body')return dollFile(g,'body',null,st.skin);
-    if(k==='top'||k==='pants')return st[k]&&st[k]!=='none'?dollFile(g,st[k],null,null):null;
+    if(DOLL_SLOTS.includes(k)){const id=st[k];if(!id||id==='none')return;   // 衣物：可以換色的照 st.wc；褲襪＝顏色片 multiply 疊上去（透明度 st.wa）
+      if(DOLL_SHEER.includes(id)){g.save();g.globalAlpha=st.wa??DOLL_WEAR_DEF.wa;g.globalCompositeOperation='multiply';g.drawImage(dollSheer(id,(st.wc||{})[k]||DOLL_WEAR_DEF.wc[k]),0,0,DOLL_W,DOLL_H);g.restore();return}
+      return dollFile(g,id,null,DOLL_WEAR_TINT.includes(id)?((st.wc||{})[k]||DOLL_WEAR_DEF.wc[k]):null)}
     const p=pick(k);if(p.id==='none')return;
     if(k==='hl'){const e=pick('eye');return dollFile(g,p.id,p,null,e.id==='none'?null:{file:e.id,t:e})}
     dollFile(g,p.id,p,k==='eye'?dollEyeCol(st,p.id,p.c):dollCol(st,DOLL_PARTS[k].tint));
@@ -83,6 +90,8 @@ function dollThumb(file,col){
   g.imageSmoothingEnabled=true;g.drawImage(dollTint(file,col),x0*K,y0*K,w*K,ht*K,60-w*k/2,60-ht*k/2,w*k,ht*k);return c;
 }
 
+function dollThumbSheer(file,col){const c=h('canvas',{width:120,height:120}),g=c.getContext('2d'),[x0,y0,x1,y1]=DOLL_BB[file],w=x1-x0,ht=y1-y0,k=Math.min(100/w,100/ht,6),K=DOLL_K;
+  g.drawImage(dollSheer(file,col||'#2b2b33'),x0*K,y0*K,w*K,ht*K,60-w*k/2,60-ht*k/2,w*k,ht*k);return c}
 // ---------- 編輯器（#ovDoll）----------
 // DOLL_ED：st 正在改的長相（複本；按「確定」才存）｜mode part 部件／emo 表情｜part 選中的部件｜emo 選中的表情｜done 關掉後要做的事
 let DOLL_ED=null;
@@ -159,8 +168,9 @@ function dollSwatches(label,key,list){
 function dollPartMode(grid,det){
   const E=DOLL_ED,T=TEXT.doll,k=E.part;
   if(k==='skin'){grid.append(h('div',{class:'dempty'},dollSwatches(T.skin,'skin',DOLL_SKINS)));det.append(h('span',{class:'dim'},T.skinNote));return}
-  if(k==='top'||k==='pants'){   // 衣服：只挑圖
-    DOLL_LISTS[k].forEach(f=>grid.append(h('button',{class:'dcell'+(E.st[k]===f?' on':''),onclick:()=>{E.st[k]=f;dollDraw()}},dollThumb(f,null),h('span',{},f.split('_')[1]))));
+  if(DOLL_SLOTS.includes(k)){   // 衣服：只挑圖（顏色在主線的收納 → 衣櫃換）
+    if(DOLL_PARTS[k].none)grid.append(h('button',{class:'dcell'+(E.st[k]==='none'?' on':''),onclick:()=>{E.st[k]='none';dollDraw()}},dollThumb(null),h('span',{},T.none)));
+    DOLL_LISTS[k].forEach(f=>grid.append(h('button',{class:'dcell'+(E.st[k]===f?' on':''),onclick:()=>{E.st[k]=f;dollDraw()}},dollThumb(f,DOLL_WEAR_TINT.includes(f)?(E.st.wc||{})[k]:null),h('span',{},(T.wear&&T.wear[f])||f.split('_')[1]))));
     det.append(h('span',{class:'dim'},T.clothNote));return;
   }
   const cur=E.st.parts[k];

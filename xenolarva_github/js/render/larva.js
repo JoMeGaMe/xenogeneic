@@ -44,7 +44,8 @@ function drawLarva(g,x,y,rot,sq,pose,look,tt,alpha,sc){
   g.globalAlpha=alpha*look.ca*.8*LARVA_FX.glow;g.drawImage(tint('core_glow',look.core),kx-20*pul,ky-20*pul,40*pul,40*pul);
   g.globalAlpha=alpha*look.ca;  g.drawImage(tint('core_mask',look.core),kx-12*pul,ky-12*pul,24*pul,24*pul);
   g.globalAlpha=alpha;          g.drawImage(look.body2?tint2('body_'+pose,look.body,look.body2,look.bm,look.soft):tint('body_'+pose,look.body),0,0,96,96);
-  const hl=IMG['body_'+pose+'_L'];if(imgOK(hl)){g.globalAlpha=alpha*LARVA_FX.hl;g.drawImage(hl,0,0,96,96);g.globalAlpha=alpha}   // 光點：白色，不跟著換色
+  if(look.scar&&imgOK(IMG.scar_1)){g.globalAlpha=alpha*look.scar;g.drawImage(IMG.scar_1,0,0,96,96);g.globalAlpha=alpha}   // 傷疤（主線的特殊小球，v0.40）
+  const hl=look.noHl?null:IMG['body_'+pose+'_L'];if(imgOK(hl)){g.globalAlpha=alpha*LARVA_FX.hl;g.drawImage(hl,0,0,96,96);g.globalAlpha=alpha}   // 光點：白色，不跟著換色
   g.imageSmoothingEnabled=sm;
   if(look.wear&&WEARS[look.wear]){                   // 裝扮（js/data/wears.js）
     const w=wearImg(look.wear),W_=WEARS[look.wear];

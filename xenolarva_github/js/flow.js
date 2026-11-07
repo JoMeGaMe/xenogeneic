@@ -50,6 +50,7 @@ function toIdle(){
   $('pname').textContent=META.pname||'';paintName($('pname'),META.pcol||'');
   $('wq').hidden=true;
   $('log').innerHTML='';say(TEXT.idle.msg,'sys');
+  $('bStory').hidden=!(META.urgent&&META.doll);   // v0.40：長相登記過才有主線
 }
 // 接取新委託：取名字後，小球出現並進入第 1 日
 function acceptOpen(){
@@ -77,23 +78,29 @@ function settingsBuild(){
 const settingsOpen=()=>openMenu('save','secSet');
 
 // ---------- 玩家設定（☰「玩家設定」，v0.35）：上面是紙娃娃＋名牌；頁籤切換「長相」｜「名字」（v0.4 會加專屬小球）----------
-let PL_TAB='look';
+let PL_TAB='look',PL_WT='top';
+// v0.40.43：還沒登記長相＝只有「名字」頁籤；登記後「長相」＝衣櫃（和主線收納共用 js/wardrobe.js），預覽上方「更改長相」開長相登記
 function playerBuild(){
-  const P=TEXT.player,U=TEXT.ui,tabs=$('plTabs'),b=$('plBody');
+  const P=TEXT.player,U=TEXT.ui,tabs=$('plTabs'),b=$('plBody'),pg=$('pg_player'),sy=pg?pg.scrollTop:0;
   tabs.textContent='';b.textContent='';
-  Object.keys(P.tabs).forEach(k=>tabs.append(h('button',{class:PL_TAB===k?'on':'',onclick:()=>{PL_TAB=k;playerBuild()}},P.tabs[k])));
-  // 紙娃娃（還沒登記＝空框）＋名牌
+  const keys=Object.keys(P.tabs).filter(k=>k!=='look'||META.doll);if(!keys.includes(PL_TAB))PL_TAB=keys[0];
+  keys.forEach(k=>tabs.append(h('button',{class:PL_TAB===k?'on':'',onclick:()=>{PL_TAB=k;playerBuild()}},P.tabs[k])));
+  tabs.hidden=keys.length<2;
+  // 紙娃娃：正方形框、角色置中、右下名牌（主線收納的預覽也是這樣）
   const cv=h('canvas',{class:'plcv',width:DOLL_W*DOLL_K,height:DOLL_H*DOLL_K,'aria-label':TEXT.doll.preview});
   const tag=h('span',{class:'dname'},META.pname||TEXT.misc.defPlayer);paintName(tag,META.pcol||'');
   const fig=h('div',{class:'plfig'+(META.doll?'':' none')},cv,tag);
-  if(META.doll)dollLoad().then(()=>{if(cv.isConnected)dollPaint(cv,META.doll,'')});
   const side=h('div',{class:'plside'});
-  b.append(h('div',{class:'plcard'},fig,side));
-  if(PL_TAB==='look'){
-    if(META.doll)side.append(h('p',{class:'dim'},P.lookHint),h('button',{class:'main',onclick:()=>dollOpen({done:ok=>{if(ok)playerBuild()}})},P.edit));
-    else side.append(h('p',{class:'dim pre'},P.noDoll));
-    return;
+  if(PL_TAB==='look'&&META.doll){
+    const ward=h('div',{class:'plward'});ward.innerHTML=wardHTML(PL_WT);
+    ward.onclick=e=>{const t=e.target.closest(WARD_SEL);if(t&&wardClick(t,v=>{PL_WT=v}))playerBuild()};
+    ward.onchange=e=>{if(wardChange(e.target))playerBuild()};
+    b.append(h('div',{class:'plcard plcloset'},h('div',{class:'plleft'},h('button',{class:'main pledit',onclick:()=>dollOpen({done:ok=>{if(ok)playerBuild()}})},P.edit),fig),ward));
+    dollLoad().then(()=>{if(cv.isConnected){dollPaint(cv,META.doll,'');wardPaint(ward)}});
+    if(pg)pg.scrollTop=sy;return;
   }
+  if(META.doll)dollLoad().then(()=>{if(cv.isConnected)dollPaint(cv,META.doll,'')});
+  b.append(META.doll?h('div',{class:'plcard'},fig,side):h('div',{class:'plcard nodoll'},side));   // 還沒登記：只有名字
   const nm_=h('input',{type:'text',maxLength:8,value:META.pname||'','aria-label':TEXT.misc.nick});
   const col=colorWidget(()=>META.pcol||selColor,c=>{META.pcol=c;selColor=c;if(S)S.col=c;paintName($('pname'),c);paintName(tag,c);if(S)refresh();codexSave()},()=>nm_.value.trim()||META.pname);
   nm_.oninput=()=>{col.repaint();tag.textContent=nm_.value.trim()||TEXT.misc.defPlayer};

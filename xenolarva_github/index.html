@@ -4,24 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>異種幼體養成模擬器</title>
-<script>
-/* 出錯時在畫面底部顯示訊息（手機沒有主控台，方便回報問題）。點一下可關閉。 */
-(function(){
-  function show(m){var d=document.getElementById('err');
-    if(!d){d=document.createElement('div');d.id='err';d.onclick=function(){d.style.display='none'};(document.body||document.documentElement).appendChild(d)}
-    d.style.display='block';d.textContent='發生錯誤（點一下關閉）：'+m}
-  window.addEventListener('error',function(e){var t=e.target;
-    if(t&&t.tagName==='SCRIPT'){show('檔案載入失敗 '+(t.getAttribute('src')||''));return}
-    if(t&&t!==window)return;
-    if(/ResizeObserver loop/.test(e.message||''))return;   // 瀏覽器的無害警告（版面重算時），不算錯誤
-    show((e.message||'未知錯誤')+' @'+String(e.filename||'').split('/').pop()+':'+e.lineno)},true);
-  window.addEventListener('unhandledrejection',function(e){show(String(e.reason))});
-  window.showErr=show;
-})();
-</script>
-<link rel="stylesheet" href="css/style.css?v=117">
-<link rel="stylesheet" href="css/theme.css?v=117">
-<script src="js/skin.js?v=117"></script>
+<!-- 資安（v0.40.40）：內容安全政策。GitHub Pages 不能設 HTTP 標頭，所以用 meta。
+     只准載入自己網站的程式、樣式、圖片、字體；不准外部連線、外掛、表單送出、改 base。
+     style 允許 inline（程式裡有很多 style="…" 屬性）；圖片允許 data:／blob:（小圖內嵌、canvas）。
+     單一 HTML（tools/build_single_file.py）全部是內嵌程式，打包時會換成允許 inline script 的版本。 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<script src="js/err.js?v=198"></script>
+<link rel="stylesheet" href="css/style.css?v=198">
+<link rel="stylesheet" href="css/story.css?v=198">
+<link rel="stylesheet" href="css/theme.css?v=198">
+<script src="js/skin.js?v=198"></script>
 </head>
 <body>
 <div id="achBanner" role="status" aria-live="polite"></div>
@@ -45,6 +38,7 @@
 </div>
 <button id="end" data-t="ui.end">結束今日</button>
 <button id="bAccept" data-t="idle.accept">接取新委託</button>
+<button id="bStory" data-t="story.idleBtn" hidden>主線：緊急委託</button>
 <button id="bDev" hidden>開發者模式</button>
 </div>
 </div>
@@ -59,6 +53,7 @@
 <div id="introCol"></div>
 <button id="go" class="main" data-t="ui.go">開始工作</button>
 </div></div>
+<div id="ovStory" role="dialog" aria-label="主線"></div>
 <div class="ov" id="ovPick"><div class="box"><button id="pc" class="xbtn" aria-label="關閉">✕</button><h2 id="pt"></h2><div id="pScene" class="scene" hidden><img class="sbg" alt=""><img class="sitem" alt=""><img class="schr" alt=""><span class="sname"></span></div><p id="pp" class="pp"></p><p id="pNote" class="pnote" hidden></p><figure id="pFig" class="pfig" hidden><img id="pAv" class="pav" alt=""><div id="pTag" class="pname" hidden></div></figure><div id="po"></div></div></div>
 <div class="ov" id="ovWatch"><div class="box menu"><button id="watchClose" class="xbtn" aria-label="關閉">✕</button><h2 data-t="ui.watchPick">選擇小球</h2><p class="dim" id="wstat"></p><div class="page" id="wlist"></div></div></div>
 <div class="ov" id="ovMap"><div class="box wide mapbox"><button id="mapClose" class="xbtn" aria-label="關閉">✕</button><h2 id="mapTitle"></h2><div class="mapwrap" id="mapWrap"><img id="mapImg" alt=""></div><div class="pp mapinfo" id="mapInfo"></div></div></div>
@@ -86,76 +81,93 @@
 <hr class="div">
 <section id="secSave"><h3 data-t="ui.save">存檔</h3>
 <p class="dim" data-t="ui.saveHint">進度存在這個瀏覽器裡。換裝置時，請在舊裝置按「下載進度」，再到新裝置按「上傳進度」（會合併，不會覆蓋）。</p>
-<div class="row2"><button id="cDown" data-t="ui.down">下載進度</button><label class="fbtn"><span data-t="ui.up">上傳進度</span><input type="file" id="cUp" accept=".json,application/json" hidden></label></div>
+<div class="row2"><button id="cDown" data-t="ui.down">下載日常進度</button><button id="cDownS" data-t="ui.downS">下載主線存檔</button></div>
+<p class="dim upnote" data-t="ui.upNote">合併：檔案裡有、這裡沒有的才補上（小球、空的存檔格），原本的都留著。覆蓋：檔案裡有的那一邊（日常或主線），整個換成檔案裡的。</p>
+<div class="upmode"><span class="dim" data-t="ui.upMode">上傳模式</span><div class="tabs" id="cMode"><button type="button" data-m="over" data-t="ui.modeOver">覆蓋</button><button type="button" data-m="merge" class="on" data-t="ui.modeMerge">合併</button></div></div>
+<label class="fbtn upbtn"><span data-t="ui.up">上傳</span><input type="file" id="cUp" accept=".json,application/json" hidden></label>
 <p id="cmsg" class="dim" role="status"></p>
 <details><summary class="dim" data-t="ui.code">文字進度碼（備用）</summary><textarea id="saveText" aria-label="進度碼"></textarea><button id="cImport" data-t="ui.import">匯入上方文字</button></details>
 <div class="savefoot"><button id="cWipe" class="danger" data-t="ui.wipe">清除存檔</button></div>
 </section>
 </div>
-<div class="page" id="pg_about" hidden><h3 class="t2" data-t="ui.about">說明</h3><div id="aboutBody" class="pp scr"></div><h3 class="t2" data-t="ui.news">更新公告</h3><div id="newsBody" class="pp scr"></div></div>
+<div class="page" id="pg_about" hidden><h3 class="t2" data-t="ui.about">說明</h3><div class="tabs abtags" id="aboutTags"></div><div id="aboutBody" class="pp scr"></div><h3 class="t2" data-t="ui.news">更新公告</h3><div id="newsBody" class="pp scr"></div></div>
 </div></div>
 <!-- 打扮（v0.33.2 起獨立彈出框；從「小球們」的「打扮」打開）-->
 <!-- 長相登記（紙娃娃，v0.35）：B1 言曉君、玩家設定頁打開 -->
 <div class="ov" id="ovDoll"><div class="box wide menu dollbox"><button id="dollClose" class="xbtn" aria-label="關閉">✕</button><h2 id="dollTitle"></h2><div class="page" id="pg_doll"><div id="dollStage" class="dstage"></div><div class="dwork"><div class="dgrid2" id="dollGrid"></div><div class="ddet" id="dollDet"></div></div></div><div class="dfoot"><button id="dollDone" class="main"></button></div></div></div>
 <div class="ov" id="ovDress"><div class="box wide menu dressbox"><button id="dressClose" class="xbtn" aria-label="關閉">✕</button><h2 id="dressTitle"></h2><div class="page" id="pg_dress"></div></div></div>
 
-<script src="js/utils.js?v=117"></script>
-<script src="js/data/assets-inline.js?v=117"></script>
+<script src="js/utils.js?v=198"></script>
+<script src="js/data/assets-inline.js?v=198"></script>
 <script src="js/data/version.js"></script>
-<script src="js/data/grete.js?v=117"></script>
-<script src="js/data/chat.js?v=117"></script>
-<script src="js/data/assoc.js?v=117"></script>
-<script src="js/data/souvenirs.js?v=117"></script>
-<script src="js/data/texts.js?v=117"></script>
-<script src="js/data/temperaments.js?v=117"></script>
-<script src="js/data/tags.js?v=117"></script>
-<script src="js/data/rules.js?v=117"></script>
-<script src="js/data/items.js?v=117"></script>
-<script src="js/data/endings.js?v=117"></script>
-<script src="js/data/emotes.js?v=117"></script>
-<script src="js/data/about.js?v=117"></script>
-<script src="js/data/icons.js?v=117"></script>
-<script src="js/data/news.js?v=117"></script>
-<script src="js/data/letters.js?v=117"></script>
-<script src="js/data/places.js?v=117"></script>
-<script src="js/data/shop.js?v=117"></script>
-<script src="js/data/hall.js?v=117"></script>
-<script src="js/data/doll.js?v=117"></script>
-<script src="js/data/wears.js?v=117"></script>
-<script src="js/data/decor.js?v=117"></script>
-<script src="js/data/sprites.js?v=117"></script>
-<script src="js/state.js?v=117"></script>
-<script src="js/ui.js?v=117"></script>
-<script src="js/actions.js?v=117"></script>
-<script src="js/tags.js?v=117"></script>
-<script src="js/grete.js?v=117"></script>
-<script src="js/events.js?v=117"></script>
-<script src="js/chat.js?v=117"></script>
-<script src="js/souvenirs.js?v=117"></script>
-<script src="js/settle.js?v=117"></script>
-<script src="js/endings.js?v=117"></script>
-<script src="js/codex.js?v=117"></script>
-<script src="js/render/canvas.js?v=117"></script>
-<script src="js/render/sprites.js?v=117"></script>
-<script src="js/render/larva.js?v=117"></script>
-<script src="js/render/emote.js?v=117"></script>
-<script src="js/render/motion.js?v=117"></script>
-<script src="js/render/social.js?v=117"></script>
-<script src="js/render/creature.js?v=117"></script>
-<script src="js/render/guests.js?v=117"></script>
-<script src="js/render/land.js?v=117"></script>
-<script src="js/minigame.js?v=117"></script>
-<script src="js/render/scene.js?v=117"></script>
-<script src="js/letters.js?v=117"></script>
-<script src="js/places.js?v=117"></script>
-<script src="js/shop.js?v=117"></script>
-<script src="js/hall.js?v=117"></script>
-<script src="js/doll.js?v=117"></script>
-<script src="js/flow.js?v=117"></script>
-<script src="js/main.js?v=117"></script>
-<script src="js/preview.js?v=117"></script>
-<script src="js/dev.js?v=117"></script>
-<script src="js/layout.js?v=117"></script>
+<script src="js/data/grete.js?v=198"></script>
+<script src="js/data/chat.js?v=198"></script>
+<script src="js/data/assoc.js?v=198"></script>
+<script src="js/data/souvenirs.js?v=198"></script>
+<script src="js/data/texts.js?v=198"></script>
+<script src="js/data/temperaments.js?v=198"></script>
+<script src="js/data/tags.js?v=198"></script>
+<script src="js/data/rules.js?v=198"></script>
+<script src="js/data/items.js?v=198"></script>
+<script src="js/data/endings.js?v=198"></script>
+<script src="js/data/emotes.js?v=198"></script>
+<script src="js/data/about.js?v=198"></script>
+<script src="js/data/icons.js?v=198"></script>
+<script src="js/data/news.js?v=198"></script>
+<script src="js/data/letters.js?v=198"></script>
+<script src="js/data/places.js?v=198"></script>
+<script src="js/data/shop.js?v=198"></script>
+<script src="js/data/hall.js?v=198"></script>
+<script src="js/data/lineimg.js?v=198"></script>
+<script src="js/data/doll.js?v=198"></script>
+<script src="js/story/data/texts.js?v=198"></script>
+<script src="js/story/data/story.js?v=198"></script>
+<script src="js/story/data/storyscript.js?v=198"></script>
+<script src="js/data/wears.js?v=198"></script>
+<script src="js/data/decor.js?v=198"></script>
+<script src="js/data/sprites.js?v=198"></script>
+<script src="js/state.js?v=198"></script>
+<script src="js/ui.js?v=198"></script>
+<script src="js/actions.js?v=198"></script>
+<script src="js/tags.js?v=198"></script>
+<script src="js/grete.js?v=198"></script>
+<script src="js/events.js?v=198"></script>
+<script src="js/chat.js?v=198"></script>
+<script src="js/souvenirs.js?v=198"></script>
+<script src="js/settle.js?v=198"></script>
+<script src="js/endings.js?v=198"></script>
+<script src="js/codex.js?v=198"></script>
+<script src="js/render/canvas.js?v=198"></script>
+<script src="js/render/sprites.js?v=198"></script>
+<script src="js/render/larva.js?v=198"></script>
+<script src="js/render/emote.js?v=198"></script>
+<script src="js/render/motion.js?v=198"></script>
+<script src="js/render/social.js?v=198"></script>
+<script src="js/render/creature.js?v=198"></script>
+<script src="js/render/guests.js?v=198"></script>
+<script src="js/render/land.js?v=198"></script>
+<script src="js/minigame.js?v=198"></script>
+<script src="js/render/scene.js?v=198"></script>
+<script src="js/letters.js?v=198"></script>
+<script src="js/places.js?v=198"></script>
+<script src="js/shop.js?v=198"></script>
+<script src="js/hall.js?v=198"></script>
+<script src="js/doll.js?v=198"></script>
+<script src="js/wardrobe.js?v=198"></script>
+<script src="js/story/main.js?v=198"></script>
+<script src="js/story/week.js?v=198"></script>
+<script src="js/story/script.js?v=198"></script>
+<script src="js/story/vn.js?v=198"></script>
+<script src="js/story/sys.js?v=198"></script>
+<script src="js/story/art.js?v=198"></script>
+<script src="js/story/view.js?v=198"></script>
+<script src="js/story/free.js?v=198"></script>
+<script src="js/story/render.js?v=198"></script>
+<script src="js/flow.js?v=198"></script>
+<script src="js/main.js?v=198"></script>
+<script src="js/preview.js?v=198"></script>
+<script src="js/dev.js?v=198"></script>
+<script src="js/layout.js?v=198"></script>
 
 </body>
 </html>

@@ -77,12 +77,14 @@ function shopView(v){
   if(v==='goods'){shopSceneStop();shopDraw();return}
   SHOP_PV=null;SHOP_SEL=null;SHOP_CHR=0;
   const S_=SHOP_SCENE;$('shopSBg').src=assetImg(S_.bg);$('shopSCase').src=assetImg(S_.suitcase);
-  const ci=Math.floor(Math.random()*T.chat.length);SHOP_SAY=T.chat[ci];SHOP_CHR=(S_.chatAlt||[]).includes(ci)?1:0;shopSceneDraw();
+  const ci=Math.floor(Math.random()*T.chat.length);SHOP_SAY=T.chat[ci];SHOP_CHR=(S_.chatAlt||[]).includes(ci)?1:0;shopLineImg('shop.chat['+ci+']',SHOP_SAY);shopSceneDraw();
   shopSceneStop();
   if(Math.random()<S_.larva){const c=$('shopLand'),sc=S_.larvaSc;
     SHOP_LAND=landStart(c,{n:1,floor:c.height-36*sc-14,xmin:150,xmax:420,sc,look:larvaLook({day:HALL_RULE.strangerDay,hue:Math.floor(Math.random()*360),col:'#ffffff'})})}
 }
-function shopSceneDraw(){$('shopChr').src=assetImg(SHOP_SCENE.chr[SHOP_CHR]);$('shopTalk').textContent=SHOP_SAY;$('shopPts').textContent=fmt(TEXT.shop.points,{n:META.points})}
+let SHOP_IMG=null;   // 這句專用的人物圖 {say,img}（js/data/lineimg.js）
+const shopLineImg=(key,t)=>{const im=lineImg(key);SHOP_IMG=im?{say:t,img:im}:null};
+function shopSceneDraw(){chrSet($('shopChr'),(SHOP_IMG&&SHOP_IMG.say===SHOP_SAY&&SHOP_IMG.img)||SHOP_SCENE.chr[SHOP_CHR]);$('shopTalk').textContent=SHOP_SAY;$('shopPts').textContent=fmt(TEXT.shop.points,{n:META.points})}
 function shopSceneStop(){if(SHOP_LAND){SHOP_LAND.stop();SHOP_LAND=null}const c=$('shopLand');c.getContext('2d').clearRect(0,0,c.width,c.height)}
 // 這件商品現在能不能買：sold 賣完｜have 已經有了（玩具每種只能有一個；裝扮永久持有）
 function shopState(id){
@@ -171,12 +173,12 @@ function shopLarvaTap(x){
   if(SHOP_GIFT<SHOP_SCENE.giftMax&&Math.random()<HALL_RULE.gift){       // 送東西（同大樓：換水劑或點心）
     SHOP_GIFT++;let k=R(HALL_RULE.gifts);if(k==='snack')k=R(GIFTS);S.inv[k]=(S.inv[k]||0)+1;seeItem(k);
     const got=fmt(TEXT.hall.larvaGot,{item:NAME[k]});SHOP_SAY=got+'\n'+T.larvaGive;say(got,'ev');codexSave();npcHop($('shopChr'),'shop');
-  }else SHOP_SAY=R(T.sceneLarva);
+  }else{const li=Math.floor(Math.random()*T.sceneLarva.length);SHOP_SAY=T.sceneLarva[li];shopLineImg('shop.sceneLarva['+li+']',SHOP_SAY)}
   $('shopTalk').textContent=SHOP_SAY;
 }
 $('shopChr').onclick=e=>{                                          // 戳言盡：發呆那句換第二張圖；跳得很小
   const lx=shopLarvaHit(e);if(lx!==false){shopLarvaTap(lx);return}
-  const L=TEXT.shop.poke,i=Math.floor(Math.random()*L.length);SHOP_SAY=L[i];SHOP_CHR=SHOP_SCENE.pokeAlt.includes(i)?1:0;shopSceneDraw();npcHop($('shopChr'),'shop')};
+  const L=TEXT.shop.poke,i=Math.floor(Math.random()*L.length);SHOP_SAY=L[i];SHOP_CHR=SHOP_SCENE.pokeAlt.includes(i)?1:0;shopLineImg('shop.poke['+i+']',SHOP_SAY);shopSceneDraw();npcHop($('shopChr'),'shop')};
 $('shopLand').onclick=e=>{const x=shopLarvaHit(e);if(x!==false)shopLarvaTap(x)};   // 戳閒聊畫面裡的小球
 $('shopChat').onclick=()=>shopView(SHOP_VIEW==='goods'?'chat':'goods');
 $('shopClose').onclick=shopClose;$('shopLeave').onclick=shopClose;

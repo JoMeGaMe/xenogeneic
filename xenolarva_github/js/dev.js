@@ -21,6 +21,7 @@ function devBuild(){
   p.append(h('div',{class:'dg'},h('label',{},'信紙（畢業小球）'),
     ...[['normal','一般'],['young','未滿兩個月'],['farewell','離開前轉述']].map(([k,t])=>h('button',{onclick:()=>letterShow(letterMake(fake(),k),true)},t)),
     h('div',{class:'dim'},`可寄信的畢業小球：${letterCands().length} 隻｜已完成 ${META.rounds} 輪`)));
+  p.append(h('div',{class:'dg'},h('label',{},'主線劇情'),h('button',{onclick:()=>{p.hidden=true;stPvMenu()}},'劇情預覽（一段一段播）')));
   // 裝扮：全部拿到／全部拿掉（拿掉時，正在戴的也一起脫下）
   p.append(h('div',{class:'dg'},h('label',{},`裝扮（有 ${META.wears.length}／${Object.keys(WEARS).length} 種）`),
     h('button',{onclick:()=>{META.wears=Object.keys(WEARS);codexSave();refresh();devBuild()}},'取得全部裝扮'),

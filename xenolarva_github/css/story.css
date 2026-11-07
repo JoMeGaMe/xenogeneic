@@ -1,0 +1,900 @@
+/* ===== 主線（故事模式）的樣式（v0.40.34 從 style.css 分出來；載入順序 style.css → story.css → theme.css）===== */
+/* ===== 主線（故事模式，v0.40；js/story/*.js）=====
+   #ovStory 蓋滿整個畫面；裡面的 .sstage 是固定大小的舞台（.sD 電腦／橫放 1280×720｜.sP 手機直放寬 390），程式整張縮放。
+   顏色都用 theme.css 的變數。舞台裡的大小寫 px（舞台座標，會跟著縮放）。 */
+#ovStory{display:none;position:fixed;inset:0;z-index:5;background:#000;overflow:hidden;touch-action:pan-y}
+#ovStory.show{display:block}
+body.story{overflow:hidden}
+#ovStory .sstage{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;font:15px/1.5 var(--font-body,"Noto Sans TC",sans-serif);color:var(--ink);user-select:none}
+#ovStory .sstage *{box-sizing:border-box}
+#ovStory button{font-family:var(--font-ui,inherit);color:var(--ink);cursor:pointer;margin:0;padding:0}
+#ovStory .sbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+#ovStory .sdimmer{position:absolute;inset:0;z-index:5;background:var(--scrim);opacity:.6}
+#ovStory .sdim{color:var(--dim)}
+#ovStory .sbad{color:var(--t-danger,#ff9a9a)}
+#ovStory canvas.sdoll{position:absolute;z-index:3;width:auto}
+/* 選單（電腦＝右邊一欄｜手機＝下面兩排）與資訊列 */
+#ovStory .sside{position:absolute;z-index:8;display:flex;background:var(--glass);border:2px solid var(--line)}
+#ovStory .sbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:2px solid transparent}
+#ovStory .sbtn.on{border-color:var(--acc);color:var(--acc-txt)}
+#ovStory .sico{display:block;border:2px dashed currentColor;border-radius:50%;text-align:center;font-family:var(--font-ui,inherit);opacity:.8}
+#ovStory .sbtn.run,#ovStory button.run{background:var(--acc);color:var(--onacc);border:2px solid var(--acc-dk);box-shadow:0 3px 0 var(--acc-sh,var(--shadow))}
+#ovStory .sbar{position:absolute;z-index:8;display:flex;align-items:center;background:var(--glass);border:2px solid var(--line);font-family:var(--font-ui,inherit);white-space:nowrap}
+#ovStory .sbar b{color:var(--acc-txt);font-weight:normal}
+#ovStory .sch{height:100%;display:flex;align-items:center;background:var(--acc);color:var(--onacc)}
+#ovStory .smn{margin-left:auto}
+#ovStory .sgcall{position:absolute;z-index:8;border-radius:50%;overflow:hidden;border:3px solid var(--line);background:var(--glass)}
+#ovStory .sgcall.on{border-color:var(--acc)}
+#ovStory .sgcall img{display:block;width:100%;transform:scale(1.9) translateY(18%)}
+#ovStory .sgrete{position:absolute;z-index:4}
+#ovStory .sgrete>img{display:block;width:100%}
+#ovStory .sbub{position:absolute;background:#fffdf4;color:#2a2a2a;border:2px solid #d8c9a0;line-height:1.5;cursor:pointer}
+#ovStory .sbub small{color:#8a7a50}
+#ovStory .stoast{position:absolute;z-index:20;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.78);color:#fff;font-family:var(--font-ui,inherit);white-space:nowrap}
+/* 面板 */
+#ovStory .spane{position:absolute;z-index:6;background:var(--panel);border:3px solid var(--line);box-shadow:0 6px 0 var(--shadow);display:flex;flex-direction:column}
+#ovStory .spane h4{margin:0;font-family:var(--font-ui,inherit);font-weight:normal;color:var(--head,var(--acc))}
+#ovStory .sxb{position:absolute;z-index:7;background:var(--well);border:2px solid var(--line);font-family:var(--font-ui,inherit)}
+#ovStory .stabs{display:flex}
+#ovStory .stabs button{flex:1;background:var(--well);border:2px solid var(--line)}
+#ovStory .stabs button.on{background:var(--acc);color:var(--onacc);border-color:var(--acc-dk)}
+/* 行程 */
+#ovStory .sweek{display:flex;flex-direction:column;background:var(--well);border:2px solid var(--line-dk)}
+#ovStory .swhead{text-align:center;font-family:var(--font-ui,inherit)}
+#ovStory .sday{display:grid;align-items:center;background:none;border:0;border-top:1px dashed var(--line-dk);text-align:left;width:100%}
+#ovStory .sday.sel{background:color-mix(in srgb,var(--acc) 12%,transparent)}
+#ovStory .sdn{font-family:var(--font-ui,inherit);color:var(--dim)}
+#ovStory .sday.we .sdn{color:var(--t-danger,#f3a3a3)}
+#ovStory .sslot{border:2px dashed var(--line-dk);display:flex;align-items:center;gap:8px;color:var(--dim);min-width:0}
+#ovStory .sslot.f{border-style:solid;border-color:var(--line);color:var(--ink);background:var(--panel)}
+#ovStory .sday.sel .sslot{border-color:var(--acc)}
+#ovStory .stg{font-size:.8em;padding:0 6px;border:1px solid var(--acc);color:var(--acc-txt);font-family:var(--font-ui,inherit)}
+#ovStory .sx{margin-left:auto;font-size:.8em;color:var(--dim)}
+#ovStory .sempty{font-size:.85em}
+#ovStory .ssum{border-top:1px dashed var(--line-dk);color:var(--dim)}
+#ovStory .scmdp{display:flex;flex-direction:column;min-width:0;min-height:0;flex:1}
+#ovStory .sclist{flex:1;min-height:0;overflow:auto;background:var(--well);border:2px solid var(--line-dk);border-top:0}
+#ovStory .scmd{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px dashed var(--line-dk)}
+#ovStory .scmd:hover:not(.off){background:color-mix(in srgb,var(--acc) 8%,transparent)}
+#ovStory .scmd.off{opacity:.5;cursor:not-allowed}
+#ovStory .scrow{display:flex;align-items:center;gap:10px}
+#ovStory .scrow strong{font-family:var(--font-ui,inherit);font-weight:normal}
+#ovStory .scrt{margin-left:auto;display:flex;align-items:center;gap:10px}
+#ovStory .spay{text-align:right;white-space:nowrap;color:var(--acc-txt);font-family:var(--font-ui,inherit)}
+#ovStory .sef{display:block;color:var(--dim)}
+#ovStory .sef i,#ovStory .svg i{font-style:normal;color:var(--t-good,#9be3a5)}
+#ovStory .sef u,#ovStory .svg u{text-decoration:none;color:var(--t-danger,#ff9a8a)}
+#ovStory .scav{display:flex;justify-content:center;flex:none}
+#ovStory .scavi{display:flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;border:2px solid #fff;background:#cfe3ea;color:#2b6b80;font-family:var(--font-ui,inherit);font-size:12px;flex:none}
+#ovStory .scavi img{width:170%;max-width:none;margin-top:55%}
+#ovStory .scavi.many{background:var(--acc);color:var(--onacc);font-size:11px;cursor:pointer}
+#ovStory .sencpop{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;background:color-mix(in srgb,var(--acc) 8%,transparent);border-bottom:1px dashed var(--line-dk);color:var(--dim)}
+#ovStory .sepi{display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
+#ovStory .spfoot{display:flex;align-items:center}
+#ovStory .sgtip{display:flex;align-items:center;gap:8px;min-width:0;flex:1;color:var(--t-warm,#ffd59a)}
+#ovStory .sgtip img{flex:none;object-fit:cover;object-position:top;border:2px solid var(--line);background:var(--well)}
+#ovStory .sbtns{margin-left:auto;display:flex;gap:8px}
+#ovStory .sbtns button{background:var(--well);border:2px solid var(--line);white-space:nowrap}
+#ovStory .sbtns button.run,#ovStory .srfoot button.run{background:var(--acc);color:var(--onacc);border-color:var(--acc-dk)}
+/* 狀態 */
+#ovStory .sbody{flex:1;min-height:0;overflow:auto;background:var(--well);border:2px solid var(--line-dk);border-top:0}
+#ovStory .shead{display:flex;gap:12px;align-items:center;border-bottom:1px dashed var(--line-dk)}
+#ovStory .shead canvas{position:static;border:2px solid var(--line);background:var(--deep)}
+#ovStory .shead b{font-family:var(--font-ui,inherit);font-weight:normal}
+#ovStory .skv{display:grid;align-items:center;border-bottom:1px dashed var(--line-dk)}
+#ovStory .sk{font-family:var(--font-ui,inherit);color:var(--acc-txt)}
+#ovStory .sv{text-align:right}
+#ovStory .smeter{position:relative;height:14px;background:var(--deep);border:1px solid var(--line-dk)}
+#ovStory .smeter i{position:absolute;top:0;bottom:0;left:0;background:var(--line)}
+#ovStory .smeter i.g{background:#4ea886}#ovStory .smeter i.w{background:#d9a43a}#ovStory .smeter i.r{background:#c96a5a}
+#ovStory .sgoal{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--acc)}
+#ovStory .szero{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--dim)}
+#ovStory .snpc{display:grid;align-items:center;border-bottom:1px dashed var(--line-dk)}
+#ovStory .snpc img,#ovStory .snph{border:2px solid var(--line);background:var(--deep);object-fit:cover;object-position:top;display:block}
+#ovStory .snph{border-style:dashed}
+#ovStory .snpc.unk{opacity:.55}
+#ovStory .snpc b{font-family:var(--font-ui,inherit);font-weight:normal}
+#ovStory .shs{color:#e8909c;font-family:var(--font-ui,inherit)}
+/* 背包、水缸 */
+#ovStory .sbwear{flex:1;min-height:0;display:grid;gap:12px;background:var(--well);border:2px solid var(--line-dk);border-top:0}
+#ovStory .sbpv{position:relative;background:linear-gradient(#2b7f93,#12485c);border:2px solid var(--line);overflow:hidden}
+#ovStory .sbpv canvas{position:absolute;left:50%;transform:translateX(-50%)}
+#ovStory .sbgrid{display:grid;gap:8px;align-content:start;overflow:auto}
+#ovStory .sbcell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--well);border:2px solid var(--line)}
+#ovStory .sbcell.on{border-color:var(--acc)}
+#ovStory .sbcell.lock{border-style:dashed;color:var(--dim);cursor:default}
+#ovStory .ssw{display:block;border:2px dashed var(--line);border-radius:4px}
+#ovStory .sbitem{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;background:var(--well);border:2px solid var(--line-dk);border-top:0}
+#ovStory .sdesk{flex:1;position:relative;overflow:hidden;background:#3a3530;border:2px solid var(--line)}
+#ovStory .sdinfo{flex:none;background:var(--deep);border:2px solid var(--line-dk);color:var(--dim)}
+#ovStory .stankbox{position:relative;flex:none;border:3px solid var(--line);overflow:hidden;background:var(--deep)}
+#ovStory .stankbox::after{content:'';position:absolute;inset:0;background:rgba(4,20,30,.22);pointer-events:none}
+#ovStory .stankbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+#ovStory .stankbox canvas{position:absolute;z-index:1}
+#ovStory .stanktxt p{margin:0 0 10px;line-height:1.7}
+/* 執行這週 */
+#ovStory .srunov{position:absolute;inset:0;z-index:15;background:color-mix(in srgb,var(--scrim) 70%,transparent);display:flex;align-items:center;justify-content:center}
+#ovStory .srunbox{background:var(--panel);border:3px solid var(--line);box-shadow:0 6px 0 var(--shadow);display:flex;flex-direction:column;cursor:pointer}
+#ovStory .ssumbox{cursor:default}
+#ovStory .srhead{display:flex;align-items:baseline;justify-content:space-between;font-family:var(--font-ui,inherit)}
+#ovStory .srscene{position:relative;overflow:hidden;border:2px solid var(--line);background:var(--deep)}
+#ovStory .srbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+#ovStory .srscene .srw{position:absolute;z-index:3;transform-origin:50% 100%}
+#ovStory .srscene .srw>canvas.sdoll,#ovStory .srscene .srw>img{position:static;display:block;height:100%;width:auto;max-width:none}
+#ovStory .srscene .srw.srnpc{z-index:2}
+#ovStory .srscene .srl{position:absolute;z-index:2;max-width:none;transform-origin:50% 100%}
+#ovStory .srit{position:absolute;z-index:4;left:50%;transform:translateX(-50%);border:2px dashed #fff;border-radius:50%;color:#fff;font-family:var(--font-ui,inherit);text-align:center;background:rgba(0,0,0,.25);animation:sfloat 1.4s ease-in-out both}
+#ovStory .szz{position:absolute;z-index:4;color:#fff;font-family:var(--font-ui,inherit);animation:sfloat 1.4s ease-in-out both}
+#ovStory .sencn{position:absolute;z-index:4;background:var(--glass);border:2px solid var(--line);padding:0 8px;font-family:var(--font-ui,inherit);color:var(--name-txt)}
+#ovStory .snoimg{position:absolute;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #fff;border-radius:8px;color:#fff;background:rgba(0,0,0,.3);font-family:var(--font-ui,inherit)}
+#ovStory .sres{display:grid;gap:2px;align-content:start}
+#ovStory .sln{display:flex;gap:10px;align-items:center}
+#ovStory .srk{font-family:var(--font-ui,inherit);padding:0 8px;border:2px solid var(--line)}
+#ovStory .srk.great{background:var(--acc);color:var(--onacc);border-color:var(--acc-dk)}
+#ovStory .srk.fail{color:var(--t-danger,#ff9a8a);border-color:currentColor}
+#ovStory .srk.bad{background:#7a2326;color:#ffd6d6;border-color:#e5484d}
+#ovStory .svg{display:grid;grid-template-columns:auto minmax(0,1.7fr) minmax(0,1fr) minmax(0,.9fr);gap:3px 14px;align-items:baseline}
+#ovStory .svl{font-family:var(--font-ui,inherit);color:var(--acc-txt);white-space:nowrap}
+#ovStory .svc{display:flex;flex-wrap:wrap;gap:2px 12px;min-width:0}
+#ovStory .svv{white-space:nowrap}
+#ovStory .svv b{font-weight:normal;color:var(--ink)}
+#ovStory .svk{color:var(--dim);margin-right:4px}
+#ovStory .srfoot{display:flex;align-items:center;justify-content:space-between}
+#ovStory .srfoot button{background:var(--well);border:2px solid var(--line)}
+#ovStory .sdots{display:flex;gap:6px}
+#ovStory .sdots span{display:block;border:2px solid var(--line);border-radius:50%}
+#ovStory .sdots span.on{background:var(--acc);border-color:var(--acc)}
+#ovStory .sdots span.done{background:var(--line)}
+#ovStory .ssumlist{overflow:auto;min-height:0;display:grid;gap:6px}
+#ovStory .ssrow{display:grid;border-bottom:1px dashed var(--line-dk);align-items:start}
+#ovStory .ssd{font-family:var(--font-ui,inherit);color:var(--dim)}
+#ovStory .ssd b{font-weight:normal;color:var(--ink)}
+#ovStory .ssrow.stot{border-top:2px solid var(--line);border-bottom:0}
+#ovStory .ssrow.stot .ssd{color:var(--acc-txt)}
+/* 動作 */
+#ovStory .sfadein{animation:sfade .35s ease-out both}
+#ovStory .a-care{animation:slean 1.4s ease-in-out both}
+#ovStory .a-work{animation:sbob 1.4s ease-in-out both}
+#ovStory .a-rest,#ovStory .a-sleep{animation:ssway 1.4s ease-in-out both}
+#ovStory .a-ok{animation:shop .5s ease both}
+#ovStory .a-great{animation:shop2 .9s ease both}
+#ovStory .a-fail{animation:sshake .6s ease both}
+#ovStory .a-bad{animation:ssquash .5s ease both}
+#ovStory .sq{transform:scaleY(.86) scaleX(1.05)}
+@keyframes sfade{from{opacity:0}to{opacity:1}}
+@keyframes sfloat{0%{opacity:0;transform:translate(-50%,20%)}30%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+@keyframes slean{30%,70%{transform:translateX(-8%)}}
+@keyframes sbob{15%,45%,75%{transform:translateY(-5%)}30%,60%,90%{transform:none}}
+@keyframes ssway{25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+@keyframes shop{40%{transform:translateY(-14%)}}
+@keyframes shop2{25%{transform:translateY(-22%)}50%{transform:none}75%{transform:translateY(-12%)}}
+@keyframes sshake{20%{transform:translateX(-4%)}40%{transform:translateX(4%)}60%{transform:translateX(-3%)}80%{transform:translateX(2%)}}
+@keyframes ssquash{to{transform:scaleY(.86) scaleX(1.05)}}
+@media (prefers-reduced-motion:reduce){#ovStory *{animation:none!important}}
+/* ---- 電腦／橫放（1280×720）---- */
+#ovStory .sD .sside{right:0;top:0;bottom:0;width:118px;flex-direction:column;gap:6px;padding:10px 8px;border-right:0;border-top:0;border-bottom:0}
+#ovStory .sD .sbtn{height:84px;font-size:15px}
+#ovStory .sD .sico{width:44px;height:44px;font-size:18px;line-height:40px}
+#ovStory .sD .sbar{left:0;right:118px;bottom:0;height:64px;font-size:20px;gap:22px;padding:0 24px 0 0;border:0;border-top:2px solid var(--line)}
+#ovStory .sD .sch{padding:0 22px}
+#ovStory .sD .sbar .sdim{font-size:15px}
+#ovStory .sD .sgcall{left:20px;top:20px;width:64px;height:64px}
+#ovStory .sD canvas.shome{height:470px;left:36%;bottom:60px}
+#ovStory .sD .sgrete{width:180px;left:6%;bottom:76px}
+#ovStory .sD .sbub{left:40px;bottom:190px;width:270px;padding:10px 14px;font-size:18px}
+#ovStory .sD .stoast{top:24px;padding:10px 22px;font-size:18px}
+#ovStory .sD .spane{left:40px;top:26px;width:1100px;height:604px;padding:18px}
+#ovStory .sD .sxb{left:1090px;top:36px;width:36px;height:36px}
+#ovStory .sD .spane h4{font-size:20px;margin-bottom:12px}
+#ovStory .sD .stabs button{padding:8px 0;font-size:16px}
+#ovStory .sD .splanD{display:flex;gap:16px;flex:1;min-height:0}
+#ovStory .sD .sweek{width:410px}
+#ovStory .sD .swhead{padding:10px 14px;font-size:19px}
+#ovStory .sD .sday{grid-template-columns:54px 1fr;gap:10px;padding:7px 12px}
+#ovStory .sD .sdn{font-size:18px}
+#ovStory .sD .sslot{height:44px;padding:0 12px;font-size:17px}
+#ovStory .sD .ssum{padding:10px 14px;font-size:14px}
+#ovStory .sD .scmd{padding:10px 14px}
+#ovStory .sD .scrow strong{font-size:18px}
+#ovStory .sD .spay{font-size:14px;width:150px}
+#ovStory .sD .scavi{width:32px;height:32px}
+#ovStory .sD .scav{width:32px}
+#ovStory .sD .sef{font-size:14px}
+#ovStory .sD .sencpop{padding:6px 14px 8px;font-size:14px}
+#ovStory .sD .sencpop .scavi{width:30px;height:30px}
+#ovStory .sD .spfoot{gap:12px;margin-top:12px}
+#ovStory .sD .sgtip{font-size:15px}
+#ovStory .sD .sgtip img{width:48px;height:48px}
+#ovStory .sD .sbtns button{padding:10px 24px;font-size:16px}
+#ovStory .sD .sstat{left:470px;width:660px}
+#ovStory .sD canvas.sstatdoll{height:470px;left:6%;bottom:60px;z-index:6}
+#ovStory .sD .shead{padding:9px 16px}
+#ovStory .sD .shead b{font-size:19px}
+#ovStory .sD .skv{grid-template-columns:110px 1fr 100px;gap:10px;padding:9px 16px;font-size:17px}
+#ovStory .sD .snpc{grid-template-columns:56px 1fr auto;gap:12px;padding:9px 16px;font-size:17px}
+#ovStory .sD .snpc img,#ovStory .sD .snph{width:56px;height:56px}
+#ovStory .sD .sbwear{grid-template-columns:240px 1fr;padding:12px}
+#ovStory .sD canvas.sbagdoll{height:92%;top:4%}
+#ovStory .sD .sbgrid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
+#ovStory .sD .sbcell{height:130px;font-size:13px}
+#ovStory .sD .ssw{width:58px;height:58px}
+#ovStory .sD .sbitem{padding:12px}
+#ovStory .sD .sdinfo{height:96px;padding:12px 16px;font-size:16px}
+#ovStory .sD .stank{flex-direction:row;gap:24px;align-items:center;padding:24px}
+#ovStory .sD .stankbox{width:550px;height:440px}
+#ovStory .sD .stankbox canvas{width:130px;height:130px;left:6%;bottom:6%}
+#ovStory .sD .stanktxt{font-size:18px}
+#ovStory .sD .stanktxt .sdim{font-size:14px}
+#ovStory .sD .srunbox{width:760px;padding:20px;gap:12px}
+#ovStory .sD .ssumbox{width:860px;max-height:620px;gap:10px}
+#ovStory .sD .srhead{font-size:20px}
+#ovStory .sD .srscene{width:720px;height:360px}
+#ovStory .sD .srscene .srw.srme{height:288px;right:10%;bottom:2%}
+#ovStory .sD .srscene .srw.srme.scare{right:6%;bottom:-72px}
+#ovStory .sD .srscene .slarvaT{width:158px;left:16%;bottom:20%}
+#ovStory .sD .srscene .srw.srnpc{height:288px;left:8%;bottom:2%}
+#ovStory .sD .sencn{left:8%;bottom:4%;font-size:14px}
+#ovStory .sD .snoimg{left:10%;bottom:12%;width:120px;height:150px;font-size:24px}
+#ovStory .sD .snoimg small{font-size:13px}
+#ovStory .sD .srit{bottom:30%;width:64px;height:64px;line-height:60px;font-size:14px}
+#ovStory .sD .szz{right:16%;top:12%;font-size:28px}
+#ovStory .sD .sresday{height:112px;font-size:16px}
+#ovStory .sD .sres{font-size:14px}
+#ovStory .sD .srk{font-size:15px}
+#ovStory .sD .srfoot{font-size:14px}
+#ovStory .sD .srfoot button{padding:8px 18px;font-size:15px}
+#ovStory .sD .ssumbox .srfoot button{padding:10px 30px;font-size:17px}
+#ovStory .sD .sdots span{width:12px;height:12px}
+#ovStory .sD .ssrow{grid-template-columns:220px 1fr;gap:4px 12px;padding:6px 0}
+#ovStory .sD .ssd{font-size:15px}
+/* ---- 手機直放（寬 390）---- */
+#ovStory .sP .sbar{left:0;right:0;top:0;height:46px;font-size:14px;gap:10px;padding:0 12px 0 0;border:0;border-bottom:2px solid var(--line)}
+#ovStory .sP .sch{padding:0 10px}
+#ovStory .sP .sside{left:0;right:0;bottom:0;height:128px;flex-direction:column;gap:4px;padding:4px 6px;border:0;border-top:2px solid var(--line)}
+#ovStory .sP .srow{display:flex;flex:1;gap:4px}
+#ovStory .sP .srow .sbtn{flex:1;font-size:12px}
+#ovStory .sP .sico{width:30px;height:30px;font-size:13px;line-height:26px}
+#ovStory .sP .sgcall{left:10px;top:56px;width:50px;height:50px}
+#ovStory .sP canvas.shome{height:390px;left:50%;transform:translateX(-46%);bottom:134px}
+#ovStory .sP .sgrete{width:120px;left:4px;bottom:138px}
+#ovStory .sP .sbub{left:8px;bottom:126px;width:200px;padding:8px 10px;font-size:14px}
+#ovStory .sP .stoast{top:56px;padding:8px 14px;font-size:14px}
+#ovStory .sP .spane{left:8px;right:8px;top:54px;bottom:8px;z-index:9;padding:10px;gap:8px}   /* v0.40.63：手機的彈出框（行程、狀態、收納…）一律蓋過下面的按鈕列，大小一致 */
+#ovStory .sP .sxb{right:16px;top:62px;width:32px;height:32px;z-index:10}   /* v0.40.64：彈出框改成 z-index 9 之後叉叉被蓋住 */
+#ovStory .sP .spane h4{font-size:17px}
+#ovStory .sP .stabs button{padding:5px 0;font-size:13px}
+#ovStory .sP .sweek{flex:none}
+#ovStory .sP .swhead{padding:6px 10px;font-size:15px}
+#ovStory .sP .sday{grid-template-columns:30px 1fr;gap:6px;padding:3px 8px}
+#ovStory .sP .sdn{font-size:14px}
+#ovStory .sP .sslot{height:30px;padding:0 8px;font-size:14px}
+#ovStory .sP .ssum{padding:4px 10px;font-size:12px}
+#ovStory .sP .scmd{padding:7px 10px}
+#ovStory .sP .scrow strong{font-size:15px}
+#ovStory .sP .spay{font-size:12px;width:96px}
+#ovStory .sP .scavi{width:26px;height:26px}
+#ovStory .sP .scav{width:26px}
+#ovStory .sP .sef{font-size:12px}
+#ovStory .sP .sencpop{padding:5px 10px 7px;font-size:12px}
+#ovStory .sP .sencpop .scavi{width:24px;height:24px}
+#ovStory .sP .spfoot{gap:8px}
+#ovStory .sP .sgtip{font-size:12px}
+#ovStory .sP .sgtip img{width:34px;height:34px}
+#ovStory .sP .sbtns button{padding:7px 12px;font-size:13px}
+#ovStory .sP .shead{padding:7px 10px}
+#ovStory .sP .shead b{font-size:16px}
+#ovStory .sP .skv{grid-template-columns:56px 1fr 72px;gap:10px;padding:7px 10px;font-size:14px}
+#ovStory .sP .snpc{grid-template-columns:40px 1fr auto;gap:12px;padding:7px 10px;font-size:14px}
+#ovStory .sP .snpc img,#ovStory .sP .snph{width:40px;height:40px}
+#ovStory .sP .sbwear{grid-template-columns:1fr;grid-template-rows:200px 1fr;padding:8px}
+#ovStory .sP canvas.sbagdoll{height:96%;top:2%}
+#ovStory .sP .sbgrid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}
+#ovStory .sP .sbcell{height:98px;font-size:11px}
+#ovStory .sP .ssw{width:38px;height:38px}
+#ovStory .sP .sbitem{padding:8px}
+#ovStory .sP .sdinfo{height:104px;padding:8px 10px;font-size:13px}
+#ovStory .sP .stank{align-items:center;padding:14px;gap:14px}
+#ovStory .sP .stankbox{width:330px;height:264px}
+#ovStory .sP .stankbox canvas{width:90px;height:90px;left:6%;bottom:6%}
+#ovStory .sP .stanktxt{font-size:15px}
+#ovStory .sP .stanktxt .sdim{font-size:12px}
+#ovStory .sP .srunbox{width:370px;padding:10px;gap:8px}
+#ovStory .sP .ssumbox{width:374px;max-height:calc(100% - 80px);padding:12px}
+#ovStory .sP .srhead{font-size:15px}
+#ovStory .sP .srscene{width:350px;height:175px}
+#ovStory .sP .srscene .srw.srme{height:140px;right:10%;bottom:2%}
+#ovStory .sP .srscene .srw.srme.scare{right:6%;bottom:-35px}
+#ovStory .sP .srscene .slarvaT{width:77px;left:16%;bottom:20%}
+#ovStory .sP .srscene .srw.srnpc{height:140px;left:8%;bottom:2%}
+#ovStory .sP .sencn{left:8%;bottom:4%;font-size:11px}
+#ovStory .sP .snoimg{left:10%;bottom:12%;width:70px;height:88px;font-size:18px}
+#ovStory .sP .snoimg small{font-size:10px}
+#ovStory .sP .srit{bottom:30%;width:32px;height:32px;line-height:28px;font-size:10px}
+#ovStory .sP .szz{right:16%;top:12%;font-size:18px}
+#ovStory .sP .sresday{height:104px;font-size:11px}
+#ovStory .sP .sres{font-size:11px}
+#ovStory .sP .srk{font-size:12px}
+#ovStory .sP .srfoot{font-size:11px}
+#ovStory .sP .srfoot button{padding:6px 10px;font-size:12px}
+#ovStory .sP .ssumbox .srfoot button{padding:8px 20px;font-size:14px}
+#ovStory .sP .sdots span{width:9px;height:9px}
+#ovStory .sP .ssrow{grid-template-columns:1fr;gap:2px;padding:5px 0}
+#ovStory .sP .ssd{font-size:12px}
+/* 第 0 日：主線按鈕 */
+body.idle #bStory:not([hidden]){display:block;grid-column:1/-1;padding:14px 6px;font-size:16px}
+/* ---- 主線 v0.40.1：固定配色（不跟日常模式的外觀設定）、行程本樣式、手機行程格、劇情 ---- */
+#ovStory,body.story #ovPick{--panel:#2a3140;--panel-hi:#323a4b;--well:#222836;--deep:#1a1f2a;--line:#8c7a5e;--line-dk:#4a4c55;--rowline:#3a3d47;--ink:#f3ece0;--dim:#b4ab9c;--head:#e8bd7a;
+  --acc:#e3b26a;--acc-dk:#a9793a;--acc-sh:#6b4a1f;--onacc:#2a2116;--acc-txt:#e8bd7a;--glass:rgba(30,35,46,.86);--scrim:rgba(10,12,18,.85);--shadow:#11141b;
+  --t-good:#a8dcae;--t-danger:#f0a090;--t-warm:#f2d29b;--name-txt:#f2b37a;color-scheme:dark}
+/* 行程本：紙＋點點花紋（像冊子） */
+#ovStory .spane,body.story:not(.storyday) #ovPick .box{background-color:var(--panel);background-image:radial-gradient(var(--dot) 1px,transparent 1.4px),linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.06));background-size:9px 9px,100% 100%;border-color:var(--line);box-shadow:0 6px 0 var(--shadow),inset 0 0 0 4px var(--panel),inset 0 0 0 6px var(--line-dk)}
+#ovStory .splan .sweek,#ovStory .splan .sclist{background-color:var(--well)}
+#ovStory .splan .sbtns button:not(.run){background:var(--well);color:var(--ink)}
+/* 手機直放的行程：七天排成兩排格子（一～四｜五～日＋換藥水次數） */
+#ovStory .sP .sweek{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:6px}
+#ovStory .sP .swhead{grid-column:1/-1;padding:0 0 2px;font-size:14px}
+#ovStory .sP .sday{display:flex;flex-direction:column;align-items:stretch;gap:2px;padding:3px;border:0;border-radius:4px}
+#ovStory .sP .sday .sdn{text-align:center;font-size:13px;line-height:1.2}
+#ovStory .sP .sday .sslot{height:42px;padding:2px 3px;justify-content:center;text-align:center;font-size:13px;line-height:1.25;word-break:break-all;position:relative}
+#ovStory .sP .sday .stg{position:absolute;top:0;right:2px;border:0;padding:0;font-size:8px}
+#ovStory .sP .ssum{display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-line;border:1px dashed var(--line-dk);border-radius:4px;padding:2px;font-size:11px;line-height:1.3}
+/* 劇情（對話框） */
+#ovStory .svn{position:absolute;inset:0;z-index:30;background:#000}
+#ovStory .svbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+/* 背景上下搖晃稍微放大（演出 walk）：像往前走幾步；放大後維持到換背景（svzoom），v0.40.60 */
+#ovStory .svbg.svwalk{animation:swalk 1.6s ease-in-out both;transform-origin:50% 55%}
+#ovStory .svbg.svzoom{transform:scale(1.06);transform-origin:50% 55%}
+@keyframes swalk{0%{transform:scale(1) translateY(0)}20%{transform:scale(1.012) translateY(-.8%)}40%{transform:scale(1.024) translateY(0)}60%{transform:scale(1.036) translateY(-.8%)}80%{transform:scale(1.048) translateY(0)}100%{transform:scale(1.06) translateY(0)}}
+#ovStory .svchr{position:absolute;z-index:2;max-width:none;transform-origin:50% 100%}
+#ovStory canvas.svlarva{position:absolute;z-index:2}
+#ovStory .svflash{position:absolute;inset:0;z-index:5;background:#fff;animation:sflash .6s ease-out both;pointer-events:none}
+@keyframes sflash{from{opacity:.9}to{opacity:0}}
+#ovStory .svdlg{position:absolute;z-index:6;background:var(--glass);border:2px solid var(--line);display:flex;cursor:pointer}
+#ovStory .svwho{position:absolute;font-family:var(--font-ui,inherit);color:var(--onacc);background:var(--acc);border:2px solid var(--acc-dk);line-height:1}
+#ovStory .svava{flex:none;border:2px solid var(--line);background:rgba(255,255,255,.08);overflow:hidden;position:relative}
+#ovStory .svava canvas{position:absolute;inset:0;width:100%;height:100%}
+#ovStory .svdlg p{margin:0;min-width:0;line-height:1.65}
+#ovStory .svnarr{color:var(--dim);font-style:italic}
+#ovStory .svnx{position:absolute;right:14px;bottom:8px;color:var(--acc-txt);font-family:var(--font-ui,inherit);animation:sblink 1.2s infinite}
+@keyframes sblink{50%{opacity:.2}}
+#ovStory .svchoices{position:absolute;z-index:7;left:50%;transform:translate(-50%,-50%);display:grid}
+#ovStory .svchoices button{background:var(--glass);border:2px solid var(--line);font-family:var(--font-ui,inherit)}
+#ovStory .svchoices button:hover{border-color:var(--acc);color:var(--acc-txt)}
+#ovStory .sD .svchr{height:400px;right:7%;bottom:192px}
+#ovStory .sD canvas.svlarva{width:130px;height:130px;left:30%;bottom:250px}
+#ovStory .sD .svdlg{left:90px;right:90px;bottom:26px;min-height:176px;padding:26px 34px;gap:20px}
+#ovStory .sD .svwho{left:28px;top:-34px;font-size:21px;padding:6px 14px}
+#ovStory .sD .svava{width:118px;height:118px}
+#ovStory .sD .svdlg p{font-size:25px}
+#ovStory .sD .svnx{font-size:16px}
+#ovStory .sD .svchoices{top:40%;width:560px;gap:14px}
+#ovStory .sD .svchoices button{font-size:23px;padding:14px}
+#ovStory .sP .svchr{height:280px;right:-6%;bottom:196px}
+#ovStory .sP canvas.svlarva{width:90px;height:90px;left:8%;bottom:250px}
+#ovStory .sP .svdlg{left:10px;right:10px;bottom:14px;min-height:190px;padding:22px 16px;gap:12px}
+#ovStory .sP .svwho{left:14px;top:-28px;font-size:16px;padding:5px 12px}
+#ovStory .sP .svava{width:66px;height:66px}
+#ovStory .sP .svdlg p{font-size:17px}
+#ovStory .sP .svnx{font-size:13px}
+#ovStory .sP .svchoices{top:42%;width:320px;gap:10px}
+#ovStory .sP .svchoices button{font-size:17px;padding:12px}
+#ovStory .splan .swhead{color:var(--ink);font-weight:700;background:none}
+/* v0.40.3：人物頭像圖（xiaojun_face 等，正方形）不用裁 */
+#ovStory .scavi img.fc{width:100%;margin:0}
+#ovStory .sgcall img.fc{transform:none}
+/* 劇情：左邊第二個人物（面向右）；兩個人時沒說話的那個暗一點 */
+#ovStory .svchr.off{filter:brightness(.62)}
+#ovStory .sD .svchl{right:auto;left:7%}
+#ovStory .sP .svchr.two{height:280px}
+#ovStory .sP .svchr.two:not(.svchl){right:-6%}
+#ovStory .sP .svchl{right:auto;left:-6%}
+
+/* v0.40.6：劇情演出——強調字、蹲下、晃一晃、好感提示（左下浮出）、預覽的結束鍵 */
+#ovStory .svem{font-weight:700;color:var(--acc-txt,var(--acc));font-style:normal}
+#ovStory .svchr.a-crouch{animation:scrouch 1.1s ease both}
+@keyframes scrouch{0%{transform:none}25%{transform:translateY(9%)}40%{transform:translateY(9%) rotate(-2deg)}55%{transform:translateY(9%) rotate(2deg)}70%{transform:translateY(9%)}100%{transform:none}}
+#ovStory .svchr.a-sway{animation:ssway .8s ease both}
+@keyframes ssway{20%{transform:rotate(-3deg)}45%{transform:rotate(3deg)}70%{transform:rotate(-1.5deg)}100%{transform:none}}
+#ovStory .svfavs{position:absolute;z-index:8;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+#ovStory .sD .svfavs{left:24px;bottom:262px}
+#ovStory .sP .svfavs{left:10px;bottom:252px}
+#ovStory .svfav{background:var(--glass);border:2px solid var(--acc);color:var(--acc-txt,var(--acc));padding:4px 12px;font-family:var(--font-ui,inherit);animation:sfav 2.6s ease both}
+#ovStory .sD .svfav{font-size:20px}
+#ovStory .sP .svfav{font-size:15px}
+#ovStory .svfav.bad{border-color:var(--bad);color:var(--bad)}
+@keyframes sfav{0%{opacity:0;transform:translateY(24px)}15%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-16px)}}
+#ovStory .svpvx{position:absolute;z-index:9;top:10px;right:10px;background:var(--glass);border:2px solid var(--line);font-size:14px;padding:4px 10px}
+
+/* v0.40.7：對話框固定高度（內容多就捲動）、逐字顯示、背景淡入、讀取中、對話顯示方式設定 */
+#ovStory .svdlg{min-height:0}
+#ovStory .sD .svdlg{height:176px}
+#ovStory .sP .svdlg{height:190px}
+#ovStory .svdlg p{flex:1;align-self:stretch;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#ovStory .svdlg .tw{visibility:hidden}
+#ovStory .svblack{background:#000}
+#ovStory .svfade{animation:svfade .7s ease both}
+@keyframes svfade{from{opacity:0}to{opacity:1}}
+#ovStory .svload{position:absolute;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:flex-end;padding:24px 30px;background:#000;color:var(--acc-txt,var(--acc));font-size:20px;letter-spacing:.1em}
+#ovStory .svlw{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+#ovStory .svlb{position:relative;width:56px;height:56px;margin-left:calc(1.65em - 28px)}
+#ovStory .svlb img{position:absolute;inset:0;width:100%;height:100%;opacity:0;animation:svlf .75s infinite}
+#ovStory .svlb img:nth-child(2){animation-delay:-.5s}
+#ovStory .svlb img:nth-child(3){animation-delay:-.25s}
+@keyframes svlf{0%,33.3%{opacity:1}33.4%,100%{opacity:0}}
+.stxtset{margin-bottom:6px}
+.stxtset .prow button{margin:0}
+#ovStory .svpvno{position:absolute;z-index:9;top:12px;left:12px;background:var(--glass);border:1px solid var(--line);padding:2px 8px;font-size:13px;color:var(--dim)}
+
+/* v0.40.9：電腦版兩個人＝畫面 1/3、2/3（圖寬 372）；人物淡入淡出、跑進來；小球晃一晃 */
+#ovStory .sD .svchr.two:not(.svchl){right:241px}
+#ovStory .sD .svchl.two{left:241px}
+#ovStory .svchr.svin{animation:svfade .5s ease both}
+#ovStory .svchr.svout{animation:svfadeout .5s ease both;pointer-events:none}
+@keyframes svfadeout{from{opacity:1}to{opacity:0}}
+#ovStory .svchr.a-runL{animation:srunL .9s ease-out both}
+#ovStory .svchr.a-runR{animation:srunR .9s ease-out both}
+@keyframes srunL{0%{transform:translateX(-260%)}15%{transform:translate(-215%,-3%)}30%{transform:translateX(-170%)}45%{transform:translate(-120%,-3%)}60%{transform:translateX(-70%)}75%{transform:translate(-25%,-3%)}90%,100%{transform:none}}
+@keyframes srunR{0%{transform:translateX(260%)}15%{transform:translate(215%,-3%)}30%{transform:translateX(170%)}45%{transform:translate(120%,-3%)}60%{transform:translateX(70%)}75%{transform:translate(25%,-3%)}90%,100%{transform:none}}
+#ovStory canvas.svlarva.a-lsway{animation:slsway .9s ease both}
+@keyframes slsway{0%,100%{transform:none}12%{transform:translateX(-3%) rotate(-4deg)}25%{transform:translateX(3%) rotate(4deg)}38%{transform:translateX(-3%) rotate(-3deg)}51%{transform:translateX(2%) rotate(3deg)}64%{transform:translateX(-1%) rotate(-2deg)}77%{transform:rotate(1deg)}}
+#ovStory .sD canvas.svlarva.two{left:575px}
+#ovStory .sP canvas.svlarva.two{left:150px;bottom:470px}
+
+/* v0.40.10：電腦版一個人也站在 1/3、2/3；教學（畫面＋縮小的立繪＋調暗）；跳過；收納的日記本；立繪蹲下起來 */
+#ovStory .sD .svchr{right:241px}
+#ovStory .sD .svchl{right:auto;left:241px}
+#ovStory .svchr.a-squat{animation:ssquat .6s ease both}
+@keyframes ssquat{0%,100%{transform:none}40%,60%{transform:translateY(9%)}}
+#ovStory .svn.guide{background:transparent}
+#ovStory .svn.guide .svchr{left:auto;z-index:7}
+#ovStory .sD .svn.guide .svchr{height:250px;right:-20px;bottom:0}
+#ovStory .sP .svn.guide .svchr{height:150px;right:-18px;bottom:0}
+#ovStory .sD .svn.guide .svdlg{right:60px;left:60px;height:150px}
+#ovStory .sP .svn.guide .svdlg{height:150px}
+#ovStory .sD .svn.guide .svdlg.top{bottom:auto;top:56px}
+#ovStory .sP .svn.guide .svdlg.top{bottom:auto;top:60px}
+#ovStory .svdim{position:absolute;z-index:1;overflow:hidden;pointer-events:none}
+#ovStory .svhole{position:absolute;box-shadow:0 0 0 3000px rgba(0,0,0,.25);border:2px solid var(--acc);border-radius:4px}
+#ovStory .svskip{position:absolute;z-index:9;top:10px;right:120px;background:var(--glass);border:2px solid var(--line);font-size:14px;padding:4px 10px}
+#ovStory .svn:not(:has(.svpvx)) .svskip{right:10px}
+#ovStory .sdiary{display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+#ovStory .sdrow{display:flex;gap:12px;align-items:baseline;text-align:left;padding:10px 12px}
+#ovStory .sdch{font-size:.8em;color:var(--dim)}
+/* 日記本：支線、小事件的頭像；還沒觸發的＝灰的、不能按、標題下面寫條件（v0.40.60） */
+#ovStory .sdrow{align-items:center}
+#ovStory .sdico{flex:none;width:30px;height:30px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--dim);font-weight:700}
+#ovStory .sdico img{width:100%;height:100%;object-fit:cover}
+#ovStory .sdico img.fc{object-fit:contain}
+#ovStory .sdico .sdlarva{width:100%;height:100%}
+#ovStory .sdrow small{display:block;font-size:.78em;color:var(--dim);margin-top:2px}
+#ovStory .sdlock{opacity:.5;filter:grayscale(1);cursor:default;border:1px dashed var(--line);border-radius:8px;margin:4px 0}
+#ovStory .svskip{right:10px}
+#ovStory .svn:has(.svpvx) .svskip{right:130px}
+#ovStory .svskip:hover,#ovStory .svpvx:hover{border-color:var(--acc)}
+#ovStory .sdiary{margin-top:12px}
+/* ===== v0.40.14 早晨配色：執行這週、自由行動（排行程的家＝夜晚）。只換底色和文字色，邊框淡黃、章名黃底不變 ===== */
+#ovStory .pday,body.storyday #ovPick{--panel:#fbf8f1;--panel-hi:#fffdf8;--well:#f4efe3;--deep:#ebe3d2;--line:#e6cf94;--line-dk:#eadfc4;--rowline:#efe6d3;--ink:#3d3a36;--dim:#8a8172;--head:#a8742a;
+  --acc:#e3b26a;--acc-dk:#c08f45;--acc-sh:#a6773a;--onacc:#2a2116;--acc-txt:#a8742a;--glass:rgba(252,249,241,.9);--scrim:rgba(245,240,230,.7);--shadow:rgba(150,120,70,.35);
+  --t-good:#3f8a5a;--t-danger:#c2523e;--t-warm:#a8742a;--name-txt:#b8742f;color-scheme:light}
+/* ===== v0.40.14 自由行動：滿版地圖（可拖）＋文字名牌＋地點卡 ===== */
+#ovStory .sfmap{position:absolute;left:0;top:0;cursor:grab;touch-action:none}
+#ovStory .sfmap:active{cursor:grabbing}
+#ovStory .sfbg{display:block;width:100%;height:100%;pointer-events:none;max-width:none}
+#ovStory .sfpin{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;background:none;border:0;padding:0;box-shadow:none;cursor:pointer;color:var(--ink);font-family:var(--font-ui,inherit)}
+#ovStory .sfpin span{background:var(--panel);border:2px solid var(--line);border-radius:10px;font-weight:700;white-space:nowrap;box-shadow:0 3px 0 var(--shadow)}
+#ovStory .sfpin::after{content:'';width:0;height:0;border:7px solid transparent;border-top-color:var(--line);margin-top:-1px}
+#ovStory .sfpin.home span{border-color:var(--acc)}
+#ovStory .sfpin.on span{background:var(--acc);color:var(--onacc);border-color:var(--acc-dk)}
+#ovStory .sfpin.on::after{border-top-color:var(--acc-dk)}
+#ovStory .sftop{position:absolute;z-index:8;display:flex;gap:8px;align-items:center}
+#ovStory .sftitle{background:var(--glass);border:2px solid var(--line);border-radius:10px;font-weight:700;font-family:var(--font-ui,inherit)}
+#ovStory .sfout{background:var(--acc);color:var(--onacc);border:2px solid var(--acc-dk);border-radius:10px;font-weight:700;font-family:var(--font-ui,inherit);padding:4px 14px;align-self:stretch}
+#ovStory .sfbar{z-index:8}
+#ovStory .sffree{color:var(--acc-txt);font-weight:700}
+#ovStory .sfcard{position:absolute;z-index:9;background:var(--panel);border:3px solid var(--line);border-radius:14px;box-shadow:0 6px 0 var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+#ovStory .sfthumb{position:relative;flex:none}
+#ovStory .sfthumb img{display:block;width:100%;height:100%;object-fit:cover;max-width:none}
+#ovStory .sfnm{position:absolute;left:10px;bottom:8px;background:var(--panel);border:2px solid var(--line);border-radius:8px;padding:1px 10px;font-weight:700;font-family:var(--font-ui,inherit)}
+#ovStory .sfwho{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
+#ovStory .sfhd{position:relative;flex:none;padding:12px 14px;font-family:var(--font-ui,inherit)}
+#ovStory .sfstat .stabs{padding:0 12px}
+#ovStory .sfbody{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px 12px}
+#ovStory .sfdesc{margin:0 0 2px;color:var(--ink)}
+#ovStory .sfact{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--well);border:2px solid var(--line-dk);border-radius:10px;color:var(--ink);cursor:pointer;flex:none}
+#ovStory .sfact.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+#ovStory .sfact.off{opacity:.55;cursor:not-allowed}
+#ovStory .sfact .scrow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#ovStory .sfact .spay{color:var(--acc-txt);font-weight:700}
+#ovStory .sfact .sef{color:var(--dim)}
+#ovStory .sfact .sef i{color:var(--t-good);font-style:normal}#ovStory .sfact .sef u{color:var(--t-danger);text-decoration:none}
+#ovStory .sffirst{align-self:flex-start;background:var(--acc);color:var(--onacc);border-radius:6px;padding:0 6px;font-weight:700}
+#ovStory .sfgo{flex:none;display:flex;justify-content:flex-end;gap:8px;padding:0 12px 12px}
+#ovStory .sfgo button{background:var(--well);border:2px solid var(--line);border-radius:10px;color:var(--ink);font-weight:700;font-family:var(--font-ui,inherit)}
+#ovStory .sfgo button.run{background:var(--acc);color:var(--onacc);border-color:var(--acc-dk)}
+#ovStory .sfgo button:disabled{opacity:.5;cursor:not-allowed}
+/* 電腦：狀態列在下、卡片在名牌另一側 */
+#ovStory .sD .sfpin span{padding:6px 14px;font-size:17px}
+#ovStory .sD .sftop{left:16px;top:14px}#ovStory .sD .sftitle{padding:6px 16px;font-size:18px}
+#ovStory .sD .sfbar{right:0}
+#ovStory .sD .sfcard{right:18px;top:70px;bottom:82px;width:400px}
+#ovStory .sD .sfcard.lft{right:auto;left:18px}
+#ovStory .sD .sfthumb{height:180px}
+#ovStory .sD .sfact{padding:8px 12px;font-size:15px}#ovStory .sD .sfact .sef,#ovStory .sD .sffirst{font-size:13px}
+#ovStory .sD .sfdesc{font-size:15px}
+#ovStory .sD .sfgo button{padding:9px 22px;font-size:16px}
+#ovStory .sD .sfwho .scavi{width:34px;height:34px}
+/* 手機：狀態列在上、卡片固定在下半（高度固定，裡面捲動） */
+#ovStory .sP .sfpin span{padding:4px 10px;font-size:14px}
+#ovStory .sP .sftop{left:10px;top:56px}#ovStory .sP .sftitle{padding:4px 12px;font-size:15px}
+#ovStory .sP .sfcard{left:8px;right:8px;bottom:8px;height:390px}
+#ovStory .sP .sfthumb{height:96px}
+#ovStory .sP .sfact{padding:6px 10px;font-size:14px}#ovStory .sP .sfact .sef,#ovStory .sP .sffirst{font-size:11px}
+#ovStory .sP .sfdesc{font-size:13px}
+#ovStory .sP .sfgo button{padding:7px 18px;font-size:14px}
+#ovStory .sP .sfwho .scavi{width:28px;height:28px}
+#ovStory .sP .sfstat .sbody{font-size:13px}
+#ovStory .sP .sfbar{gap:8px;font-size:13px;padding-right:8px}
+#ovStory .sP .sfbar .sffree{display:none}
+#ovStory .svdlg.still{cursor:default}
+/* ===== v0.40.15 配色：黃框只留最外圈（--frame），裡面的線、頁籤、選中用灰藍（--line、--tab）；按鈕只有「確定／執行」是黃色 ===== */
+#ovStory,body.story #ovPick{--frame:#8c7a5e;--line:#5a6780;--line-dk:#3f4758;--tab:#4b5873;--tabink:#f3ece0}
+#ovStory .pday,body.storyday #ovPick{--frame:#f2d0a4;--acc:#f2d0a4;--acc-dk:#dcb17c;--acc-sh:#c79a63;--line:#c2ceda;--line-dk:#e2e8ee;--rowline:#e8edf1;--tab:#8ea4b8;--tabink:#fff}
+#ovStory .spane,#ovStory .srunbox,#ovStory .sfcard,#ovStory .svdlg,#ovStory .splan,body.story #ovPick .box{border-color:var(--frame)}
+#ovStory .sbar,#ovStory .sside{border-color:var(--frame)}
+#ovStory .sD .sbar{border-top-color:var(--frame)}#ovStory .sP .sbar{border-bottom-color:var(--frame)}#ovStory .sP .sside{border-top-color:var(--frame)}
+#ovStory .stabs button.on,#ovStory .sbtn.on,#ovStory .sfcirc.on,#ovStory .sfpin.on span,#ovStory .sffirst{background:var(--tab);color:var(--tabink);border-color:var(--tab)}
+#ovStory .sbtn.on{background:color-mix(in srgb,var(--tab) 35%,transparent)}
+#ovStory .sday.sel{background:color-mix(in srgb,var(--tab) 18%,transparent)}
+#ovStory .sday.sel .sslot,#ovStory .sbcell.on,#ovStory .sgcall.on{border-color:var(--tab)}
+#ovStory .stg{border-color:var(--line);color:var(--dim)}
+#ovStory .scmd:hover:not(.off){background:color-mix(in srgb,var(--tab) 12%,transparent)}
+#ovStory .sencpop{background:color-mix(in srgb,var(--tab) 12%,transparent)}
+#ovStory .sfact.on{border-color:var(--tab);box-shadow:inset 0 0 0 1px var(--tab);background:color-mix(in srgb,var(--tab) 14%,var(--well))}
+#ovStory .sfpin.on::after{border-top-color:var(--tab)}
+#ovStory .svchoices button:hover{border-color:var(--tab);color:var(--ink)}
+/* ===== v0.40.15 自由行動：小的地點卡（地圖＝右下、裡面＝左下）、點兩次決定、？在狀態旁邊 ===== */
+#ovStory .sfout{background:var(--well);color:var(--ink);border:2px solid var(--line)}
+#ovStory .sfpin.soon span{opacity:.6}
+#ovStory .sD .sfcard{top:auto;bottom:82px;right:18px;left:auto;width:360px;max-height:calc(100% - 110px)}
+#ovStory .sD .sfcard.lft{right:auto;left:18px}
+#ovStory .sD .sfthumb{height:130px}
+#ovStory .sP .sfcard{height:320px}
+#ovStory .sP .sfthumb{height:84px}
+#ovStory .sP .sftop{top:56px}
+#ovStory .sfcrop{width:100%;height:100%;background-size:280% auto;background-repeat:no-repeat}
+#ovStory .sP .sfbar{font-size:12px;gap:6px}#ovStory .sP .sfbar .sch{padding:0 8px}
+/* v0.40.22 人際：五顆心（一顆 20 點）＋數字；半顆＝左半邊；超過這章上限＝灰 */
+#ovStory .shs{display:flex;align-items:center;gap:8px;white-space:nowrap}
+#ovStory .shs small{min-width:2.2em;text-align:right;color:var(--dim);font-size:.8em}
+#ovStory .shr{display:inline-flex;gap:1px}
+#ovStory .sh{font-style:normal;color:#e8909c;font-size:1.25em;line-height:1}
+#ovStory .sh.e{color:rgba(232,144,156,.3)}
+#ovStory .sh.h{background:linear-gradient(90deg,#e8909c 50%,rgba(232,144,156,.3) 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
+#ovStory .sh.x{color:rgba(150,160,175,.22)}
+/* v0.40.23 走進來／走開（walkL／walkR／leaveL／leaveR）：比跑步慢，一步一點起伏；走開的人停在畫面外 */
+#ovStory .svchr.a-walkL,#ovStory canvas.svlarva.a-walkL{animation:swalkL 4s linear both}
+#ovStory .svchr.a-walkR,#ovStory canvas.svlarva.a-walkR{animation:swalkR 4s linear both}
+#ovStory .svchr.a-leaveL,#ovStory canvas.svlarva.a-leaveL{animation:sleaveL 2.4s linear both;pointer-events:none}
+#ovStory .svchr.a-leaveR,#ovStory canvas.svlarva.a-leaveR{animation:sleaveR 2.4s linear both;pointer-events:none}
+@keyframes swalkL{0.0%{transform:translate(-150.0%,0%)}6.25%{transform:translate(-140.6%,-3%)}12.5%{transform:translate(-131.2%,0%)}18.75%{transform:translate(-121.9%,-3%)}25.0%{transform:translate(-112.5%,0%)}31.25%{transform:translate(-103.1%,-3%)}37.5%{transform:translate(-93.8%,0%)}43.75%{transform:translate(-84.4%,-3%)}50.0%{transform:translate(-75.0%,0%)}56.25%{transform:translate(-65.6%,-3%)}62.5%{transform:translate(-56.2%,0%)}68.75%{transform:translate(-46.9%,-3%)}75.0%{transform:translate(-37.5%,0%)}81.25%{transform:translate(-28.1%,-3%)}87.5%{transform:translate(-18.8%,0%)}93.75%{transform:translate(-9.4%,-3%)}100.0%{transform:none}}
+@keyframes swalkR{0.0%{transform:translate(150.0%,0%)}6.25%{transform:translate(140.6%,-3%)}12.5%{transform:translate(131.2%,0%)}18.75%{transform:translate(121.9%,-3%)}25.0%{transform:translate(112.5%,0%)}31.25%{transform:translate(103.1%,-3%)}37.5%{transform:translate(93.8%,0%)}43.75%{transform:translate(84.4%,-3%)}50.0%{transform:translate(75.0%,0%)}56.25%{transform:translate(65.6%,-3%)}62.5%{transform:translate(56.2%,0%)}68.75%{transform:translate(46.9%,-3%)}75.0%{transform:translate(37.5%,0%)}81.25%{transform:translate(28.1%,-3%)}87.5%{transform:translate(18.8%,0%)}93.75%{transform:translate(9.4%,-3%)}100.0%{transform:none}}
+@keyframes sleaveL{0%{transform:none}8.33%{transform:translate(-22%,-3%)}16.67%{transform:translate(-43%,0%)}25%{transform:translate(-65%,-3%)}33.33%{transform:translate(-87%,0%)}41.67%{transform:translate(-108%,-3%)}50%{transform:translate(-130%,0%)}58.33%{transform:translate(-152%,-3%)}66.67%{transform:translate(-173%,0%)}75%{transform:translate(-195%,-3%)}83.33%{transform:translate(-217%,0%)}91.67%{transform:translate(-238%,-3%)}100%{transform:translate(-260%,0%);visibility:hidden}}
+@keyframes sleaveR{0%{transform:none}8.33%{transform:translate(22%,-3%)}16.67%{transform:translate(43%,0%)}25%{transform:translate(65%,-3%)}33.33%{transform:translate(87%,0%)}41.67%{transform:translate(108%,-3%)}50%{transform:translate(130%,0%)}58.33%{transform:translate(152%,-3%)}66.67%{transform:translate(173%,0%)}75%{transform:translate(195%,-3%)}83.33%{transform:translate(217%,0%)}91.67%{transform:translate(238%,-3%)}100%{transform:translate(260%,0%);visibility:hidden}}
+/* 立繪格裡的小球（右／左立繪寫「小球」）：站在那一格的地上，比人小 */
+#ovStory .sD canvas.svlslot{width:150px;height:150px;bottom:196px;left:auto}
+#ovStory .sD canvas.svlslotR{right:352px}
+#ovStory .sD canvas.svlslotL{left:352px;right:auto}
+#ovStory .sP canvas.svlslot{width:96px;height:96px;bottom:200px;left:auto}
+#ovStory .sP canvas.svlslotR{right:14%}
+#ovStory .sP canvas.svlslotL{left:14%;right:auto}
+#ovStory canvas.svlarva.svin{animation:svfade .5s ease both}
+#ovStory canvas.svlarva.svout{animation:svfadeout .5s ease both;pointer-events:none}
+/* v0.40.33 收納 → 道具：擺在櫃子上的書 */
+#ovStory .sditems{position:absolute;left:0;right:0;bottom:12%;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:0 8%}
+#ovStory .sditem{background:var(--panel);border:2px solid var(--line);color:var(--ink);font-family:var(--font-ui,inherit);padding:6px 12px;box-shadow:0 3px 0 var(--shadow)}
+#ovStory .sditem.on{background:var(--tab);color:var(--tabink);border-color:var(--tab)}
+/* 面板的文字顏色（v0.40.45 起面板跟著舞台的早／晚配色） */
+#ovStory .spane,#ovStory .sxb{color:var(--ink)}
+body.story #ovPick .box{color:var(--ink)}
+body.story #ovPick .box h2{color:var(--head,var(--ink))}
+body.story #ovPick .pp{background:var(--well);color:var(--ink);border-color:var(--line)}
+body.story #ovPick .box button:not(.main){background:var(--well);color:var(--ink);border-color:var(--line)}
+body.story #ovPick .box button:not(.main):hover:not(:disabled){border-color:var(--tab)}
+body.story #ovPick .box .phead{color:var(--head,var(--acc))}
+
+/* ===== v0.40.35：狀態頭像、小球底色、收納衣櫃、水缸動畫、遇到的人 ===== */
+#ovStory .shead canvas.sstathead{width:64px;height:64px;border-radius:50%;border:2px solid var(--line);background:var(--well,#0b2330);flex:none}
+#ovStory .shead canvas.sstatlarva{border-radius:8px;border:2px solid var(--line);background:linear-gradient(#2b7f93,#12485c);flex:none}   /* 木質、水的樣式底色太亮：小球放在水色的底上 */
+#ovStory .stankbox{cursor:pointer}
+#ovStory .stankbox canvas.stanklv{left:30%;top:60%;bottom:auto;transform:translate(-50%,-50%);pointer-events:none;will-change:left,top,transform,opacity}
+#ovStory .sencpop{gap:6px}
+#ovStory .sbwr{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1}
+#ovStory .swtabs{display:flex;gap:6px}
+#ovStory .swtabs button{flex:1;padding:4px 2px;font-size:13px;margin:0;border:2px solid var(--line);background:transparent;color:var(--ink)}
+#ovStory .swtabs button.on{background:var(--tab);color:var(--tabink);border-color:var(--tab)}
+/* ===== v0.40.44：異生會大樓＝樓層的圖就是按鈕（左下只有樓層），鎖著的變灰 ===== */
+#ovStory .sfhbg{filter:brightness(.55)}
+#ovStory .sfhall{position:absolute;z-index:7;background:var(--panel);border:3px solid var(--frame);border-radius:14px;box-shadow:0 6px 0 var(--shadow);overflow:hidden;display:flex}
+#ovStory .sfhlist{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:8px}
+#ovStory .sfflr{position:relative;flex:1;min-height:0;padding:0;border:2px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;background:#000}
+#ovStory .sfflr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+#ovStory .sfflab{position:absolute;left:8px;bottom:6px;padding:2px 10px;border-radius:8px;background:rgba(0,0,0,.6);color:#fff;font-weight:700}
+#ovStory .sfflr.lock{cursor:not-allowed}#ovStory .sfflr.lock img{filter:grayscale(1) brightness(.45)}#ovStory .sfflr.lock .sfflab{color:#bbb}
+#ovStory .sfflr.on{border-color:var(--tab);box-shadow:0 0 0 2px var(--tab)}
+#ovStory .sfflr:not(.lock):hover img{filter:brightness(1.1)}
+#ovStory .sD .sfhall{right:16px;top:66px;bottom:80px;width:340px}
+#ovStory .sD .sfflab{font-size:18px}
+#ovStory .sP .sfhall{left:8px;right:8px;top:98px;bottom:8px}
+#ovStory .sP .sfflab{font-size:15px}
+/* 「？」說明卡（只有說明）、鎖著的原因 */
+#ovStory .sfinfo .sfeff{margin:0;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#ovStory .sfinfo .sfeff .sef i{color:var(--t-good);font-style:normal}#ovStory .sfinfo .sfeff .sef u{color:var(--t-danger);text-decoration:none}
+#ovStory .sfinfo .spay{color:var(--acc-txt);font-weight:700}
+#ovStory .sfinfo{height:auto!important;max-height:calc(100% - 110px)}
+#ovStory .sfpin[disabled]{cursor:not-allowed}
+/* 白天的家（v0.40.45）：睡覺、說話、觸碰、紀錄狀況（點了就做）＋出門（另一個顏色、隔開） */
+#ovStory .sfhub{position:absolute;z-index:6;background:var(--panel);border:3px solid var(--frame);border-radius:14px;box-shadow:0 6px 0 var(--shadow);display:flex;flex-direction:column;gap:6px;padding:10px;color:var(--ink)}
+#ovStory .sfhb{display:flex;flex-direction:column;gap:1px;text-align:left;background:var(--well);border:2px solid var(--line-dk);border-radius:10px;color:var(--ink);cursor:pointer}
+#ovStory .sfhb:hover{border-color:var(--tab)}
+#ovStory .sfhb .sef{color:var(--dim)}#ovStory .sfhb .sef i{color:var(--t-good);font-style:normal}#ovStory .sfhb .sef u{color:var(--t-danger);text-decoration:none}
+#ovStory .sfhb.sfhout{margin-top:6px;align-items:center;background:var(--tab);border-color:var(--tab);color:var(--tabink)}
+#ovStory .sD .sfhub{left:24px;bottom:90px;width:260px}
+#ovStory .sD .sfhb{padding:8px 12px;font-size:16px}#ovStory .sD .sfhb .sef{font-size:12px}
+#ovStory .sP .sfhub{left:10px;right:10px;top:54px;display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:7px}
+#ovStory .sP .sfhb{padding:5px 8px;font-size:13px}#ovStory .sP .sfhb .sef{font-size:10px}
+#ovStory .sP .sfhb.sfhout{grid-column:1/-1;margin-top:2px;padding:6px}
+/* 資訊列右邊：狀態、「？」＝同樣大小的圓形，上下置中 */
+#ovStory .sfbtns{display:flex;gap:8px;align-items:center;align-self:center;flex:none}
+#ovStory .sfcirc{width:38px;height:38px;border-radius:50%;padding:0;display:inline-flex;align-items:center;justify-content:center;background:var(--well);border:2px solid var(--line);color:var(--ink);font-family:var(--font-ui,inherit);font-weight:700;font-size:16px;line-height:1;cursor:pointer}
+#ovStory .sP .sfcirc{width:32px;height:32px;font-size:14px}
+#ovStory .sfgood.poor .spay{color:var(--t-danger)}
+#ovStory .sday.past{opacity:.5;cursor:default}
+/* 店：沒有臉的店員（之後換圖）＋今天的商品 */
+#ovStory .sfshop{position:absolute;z-index:7;background:var(--panel);border:3px solid var(--frame);border-radius:14px;box-shadow:0 6px 0 var(--shadow);display:flex;flex-direction:column;gap:8px;padding:12px;color:var(--ink)}
+#ovStory .sfglist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:8px}
+#ovStory .sfshhd{display:flex;justify-content:space-between;align-items:baseline}
+#ovStory .sfgood{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--well);border:2px solid var(--line-dk);border-radius:10px;color:var(--ink);cursor:pointer;padding:8px 12px}
+#ovStory .sfgood .scrow{display:flex;justify-content:space-between;gap:8px}#ovStory .sfgood .spay{color:var(--acc-txt);font-weight:700}
+#ovStory .sfgood .sef{color:var(--dim);font-size:13px}
+#ovStory .sfgood.lock{opacity:.5;cursor:not-allowed}#ovStory .sfgood.on{border-color:var(--tab);box-shadow:inset 0 0 0 1px var(--tab)}
+#ovStory .sfshop>.sdim{margin:0;font-size:12px}
+#ovStory .sfleave{flex:none;padding:10px;font-size:16px;font-weight:700;border-radius:10px;border:2px solid var(--tab);background:var(--tab);color:var(--tabink);cursor:pointer}
+#ovStory .sD .sfshop{right:18px;top:70px;bottom:82px;width:400px}
+#ovStory .sP .sfshop{left:8px;right:8px;bottom:8px;height:360px;padding:10px}
+
+/* ===== v0.40.37／38：執行這週的小動畫：路人小球（行動模式 m-*）、圍著玩家的小球（5F）、來陪你的小球；人物包在 .srw（頭上的小球跟著人物動）===== */
+#ovStory .srscene canvas.srpass{position:absolute;z-index:2;transform-origin:50% 100%;animation:spbob 1.6s ease-in-out infinite}
+#ovStory .sD .srscene canvas.srpass{width:72px;height:72px;margin-left:-36px}
+#ovStory .sP .srscene canvas.srpass{width:36px;height:36px;margin-left:-18px}
+#ovStory .srscene canvas.srcrowd.fr{z-index:4}
+#ovStory .srscene canvas.m-run{z-index:1;left:0}                                   /* 人物後面跑過去 */
+#ovStory .srscene canvas.m-side{bottom:2%;z-index:4}                               /* 旁邊（跟著動｜窩著） */
+#ovStory .srscene canvas.m-side.a-work,#ovStory .srscene canvas.m-side.a-care{animation:sbob 1.4s ease-in-out both}
+#ovStory .srscene canvas.m-nest{animation:snest 2.4s ease-in-out infinite}
+#ovStory .srscene .srw canvas.m-head{left:50%;bottom:86%;z-index:1;animation:snest 2.4s ease-in-out infinite}   /* 頭上：在 .srw 裡，跟著人物跳、晃 */
+#ovStory .srscene .srnpc canvas.m-head{bottom:90%}
+#ovStory .srscene canvas.m-big{z-index:6;bottom:-14%;animation:snest 3s ease-in-out infinite}   /* 大隻的，窩在角落（擋住其他人） */
+#ovStory .sD .srscene canvas.m-big{width:170px;height:170px;margin-left:0}
+#ovStory .sP .srscene canvas.m-big{width:84px;height:84px;margin-left:0}
+#ovStory .srscene canvas.m-big.bl{left:-3%}
+#ovStory .srscene canvas.m-big.br{left:auto;right:-3%}
+#ovStory .srscene canvas.m-pair{animation:spair .9s ease-in-out infinite}
+#ovStory .srscene canvas.m-pair.p2{animation-delay:-.45s}
+#ovStory .srscene canvas.m-watch{left:50%;bottom:36%;z-index:2;animation:swave 1.2s ease-in-out infinite}   /* 照顧時在後面看、揮手 */
+#ovStory .srscene canvas.a-phop{animation:sphop .5s ease 2 both}
+#ovStory .srscene canvas.a-go{animation:sgo .9s ease-in-out both,spbob .3s ease-in-out 3}
+@keyframes spbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8%)}}
+@keyframes sphop{0%,100%{transform:translateY(0)}40%{transform:translateY(-30%)}}
+@keyframes sgo{from{left:var(--x0)}to{left:var(--x1)}}
+@keyframes srunx{from{left:-12%}to{left:112%}}
+@keyframes snest{0%,100%{transform:scale(1,1)}50%{transform:scale(1.04,.95)}}
+@keyframes spair{0%,100%{transform:translateY(0)}35%{transform:translateY(-40%) scale(.96,1.05)}55%{transform:translateY(0) scale(1.06,.92)}}
+@keyframes swave{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+#ovStory .srscene .sencn{z-index:5}
+#ovStory .srscene canvas.m-side.a-ok{animation:shop .5s ease both}
+#ovStory .srscene canvas.m-side.a-great{animation:shop2 .9s ease both}
+#ovStory .srscene canvas.m-side.a-fail{animation:sshake .6s ease both}
+#ovStory .srscene canvas.m-side.a-bad{animation:ssquash .5s ease both}
+#ovStory .srscene canvas.m-side.a-rest,#ovStory .srscene canvas.m-side.a-sleep{animation:ssway 1.4s ease-in-out both}
+#ovStory .srscene canvas.m-side.sq{animation:none;transform:scaleY(.86) scaleX(1.05)}
+
+/* v0.40.39：照顧時來陪你的小球在玩家頭上（揮手）或右邊偏下；5F 的小球一直跳 */
+#ovStory .srscene canvas.m-watch{left:94%;bottom:3%;z-index:4}
+#ovStory .srscene .srw canvas.m-head.m-wave{animation:swave 1.2s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes sjump{0%,100%{transform:translateY(0) scale(1.04,.94)}45%{transform:translateY(-34%) scale(.96,1.05)}}
+
+/* ===== v0.40.41：衣櫃（基礎衣物、換色、褲襪透明度）===== */
+#ovStory .sbcell.swc canvas.swthumb{display:block;background:#e6edef;border-radius:4px}
+#ovStory .sD .sbcell.swc canvas.swthumb{width:72px;height:72px}
+#ovStory .sP .sbcell.swc canvas.swthumb{width:50px;height:50px}
+#ovStory .swhead{grid-column:1/-1;color:var(--head,var(--acc));font-size:13px;margin-top:2px}
+#ovStory .swcol{display:flex;flex-direction:column;gap:6px;flex:none}
+#ovStory .swlab{font-size:13px;color:var(--head,var(--acc))}
+#ovStory .swsw{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#ovStory .swsw button{width:28px;height:28px;padding:0;margin:0;border:2px solid var(--line);border-radius:50%}
+#ovStory .swsw button.on{outline:2px solid var(--tab);outline-offset:2px}
+#ovStory .swown{position:relative;width:28px;height:28px;border:2px dashed var(--line);border-radius:50%;overflow:hidden;cursor:pointer}
+#ovStory .swown input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+#ovStory .swa{display:flex;align-items:center;gap:8px;font-size:13px}
+#ovStory .swa input{flex:1;min-width:0}
+#ovStory .sbwr .sbgrid{flex:1;min-height:0}
+#ovStory .sbwear{min-height:0;overflow:hidden}
+#ovStory .sD .sbwear{grid-template-rows:minmax(0,1fr)}
+#ovStory .sP .sbwear{grid-template-rows:170px minmax(0,1fr)}
+#ovStory .sbwr{min-height:0;overflow:hidden}
+#ovStory .sbwr .sbgrid{grid-auto-rows:min-content;overflow-y:auto;overscroll-behavior:contain}
+#ovStory .swhead{text-align:left;font-weight:700}
+#ovStory .sP .swsw button,#ovStory .sP .swown{width:24px;height:24px}
+#ovStory .sD canvas.sbagdoll{width:100%;height:auto;max-height:96%;top:50%;transform:translate(-50%,-50%)}
+
+/* v0.40.42：衣櫃：分類按鈕和格子之間一條線；換色區固定在下面（不會被框切到）；褲襪＝電腦左顏色右透明度 */
+#ovStory .sbwr .swtabs{padding-bottom:10px;border-bottom:2px dashed var(--line);flex:none}
+#ovStory .sbwr{display:flex;flex-direction:column;gap:10px}
+#ovStory .swcol{flex:none;border-top:2px dashed var(--line);padding:8px 0 2px;margin-bottom:4px}
+#ovStory .swc1{display:flex;flex-direction:column;gap:6px;min-width:0}
+#ovStory .swcol .swa{flex-direction:column;align-items:stretch;gap:4px}
+#ovStory .swcol .swa span{color:var(--head,var(--acc))}
+#ovStory .sD .swcol.two{flex-direction:row;gap:16px}
+#ovStory .sD .swcol.two>*{flex:1 1 50%;min-width:0}
+#ovStory .sP .swcol.two{gap:8px}
+#ovStory .swa .swar{display:flex;align-items:center;gap:8px}
+#ovStory .swcol .swa{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 8px}
+#ovStory .swcol .swa span{grid-column:1/-1}
+
+/* v0.40.43：收納的角色預覽＝正方形框、角色置中、右下名牌（和日常的玩家設定一樣） */
+#ovStory .sbpv{align-self:start;aspect-ratio:1/1;width:100%}
+#ovStory .sD .sbwear{align-items:start}
+#ovStory .sP .sbwear{grid-template-rows:auto minmax(0,1fr)}
+#ovStory .sP .sbpv{width:170px;justify-self:center}
+#ovStory .sbpv canvas.sbagdoll{width:auto;height:94%;max-height:none;top:50%;left:50%;transform:translate(-50%,-50%)}
+#ovStory .sbpv .dname{position:absolute;right:6px;bottom:6px;padding:0 8px;font-size:13px;background:var(--glass);border:2px solid var(--line);color:var(--name-txt)}
+#ovStory .sD .sbwr{height:100%}
+/* v0.40.47：唱歌（言默）＝慢慢左右晃｜遊戲結束畫面 */
+#ovStory .srscene .srw.a-sing{transform-origin:50% 100%;animation:ssing 2.8s ease-in-out infinite}
+@keyframes ssing{0%,100%{transform:rotate(0)}25%{transform:rotate(-2.5deg)}75%{transform:rotate(2.5deg)}}
+#ovStory .sover{position:absolute;inset:0;z-index:30;background:#000;color:#eee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
+#ovStory .sover b{font-size:28px;letter-spacing:.2em}
+#ovStory .sover div{display:flex;gap:14px}
+#ovStory .sover button{min-width:120px;padding:10px 18px;font-size:16px;background:transparent;color:#eee;border:2px solid #777;border-radius:10px;cursor:pointer}
+#ovStory .sover button:hover{border-color:#ccc}
+
+/* v0.40.50：右下角的小助手（教學的格蕾特、「右下角冒出」）：從畫面下緣冒出來，露出整張圖的 --hp（從上面算），擋住對話框右邊；對話框的字縮短（.hhelp） */
+#ovStory .svhelp{position:absolute;z-index:8;bottom:0;overflow:hidden;pointer-events:none;height:calc(var(--H) * var(--hp))}
+#ovStory .svhelp img{display:block;height:var(--H);width:auto;max-width:none}
+#ovStory .sD .svhelp{--H:440px;right:40px}
+#ovStory .sP .svhelp{--H:180px;right:0}
+#ovStory .svhelp.in img{animation:shelpin .5s ease-out both;animation-delay:var(--dl,0ms)}
+#ovStory .svhelp.out img{animation:shelpout .4s ease-in both;animation-delay:var(--dl,0ms)}
+@keyframes shelpin{from{transform:translateY(100%)}to{transform:none}}
+@keyframes shelpout{from{transform:none}to{transform:translateY(100%)}}
+#ovStory .sD .svdlg.hhelp{padding-right:370px}
+#ovStory .sD .svn.guide .svdlg.hhelp{padding-right:400px}
+#ovStory .sP .svdlg.hhelp{padding-right:150px}
+#ovStory .sP .svdlg.hhelp.hlow{padding-right:16px}   /* 手機：小助手只露 45% 以下（大概到頭）＝只壓在對話框下緣，字不用縮短（電腦版的頭比較大，會蓋到字，照樣縮短） */
+/* 一群小球（立繪格「小球×2」）：那一側由外往內站；動作：跳跳｜揮手（伸手＋晃）｜睡睡（休息＋慢慢起伏） */
+#ovStory .svn canvas.svlg{position:absolute;z-index:7;transform-origin:50% 100%}
+#ovStory .sD .svn canvas.svlg{width:150px;height:150px;bottom:224px}
+#ovStory .sP .svn canvas.svlg{width:76px;height:76px;bottom:236px}
+#ovStory .svn canvas.svlg.a-lvjump{animation:sjump .7s ease-in-out infinite}
+#ovStory .svn canvas.svlg.a-lvwave{animation:slvwave .9s ease-in-out infinite}
+#ovStory .svn canvas.svlg.a-lvsleep{animation:snest 2.6s ease-in-out infinite}
+#ovStory .svn canvas.svlg.a-lvsway{animation:slsway .9s ease both}
+@keyframes slvwave{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+/* 大臉飄過（v0.40.50）：只擷取頭部、邊緣淡化；從畫面上方中間淡入，往左平移淡出 */
+#ovStory .svbigface{position:absolute;z-index:4;top:3%;left:50%;overflow:hidden;opacity:0;pointer-events:none;   /* 正方形、四邊淡化（v0.40.52） */
+  --fm:linear-gradient(to right,transparent,#000 22%,#000 78%,transparent),linear-gradient(to bottom,transparent,#000 22%,#000 78%,transparent);
+  -webkit-mask-image:var(--fm);-webkit-mask-composite:source-in;mask-image:var(--fm);mask-composite:intersect;animation:sbigface 4.5s ease-in-out both}
+#ovStory .svbigface img{position:absolute;left:50%;top:-6%;transform:translateX(-50%);width:auto;max-width:none}   /* max-width:none：artifact 頁面有 img{max-width:100%}，不加會被壓扁 */
+#ovStory .sD .svbigface{width:320px;height:320px;--mv:-420px}#ovStory .sD .svbigface img{height:560px}
+#ovStory .sP .svbigface{width:180px;height:180px;--mv:-150px}#ovStory .sP .svbigface img{height:340px}
+@keyframes sbigface{0%{opacity:0;transform:translateX(-50%)}20%{opacity:.42;transform:translateX(calc(-50% + var(--mv) * .15))}75%{opacity:.42}100%{opacity:0;transform:translateX(calc(-50% + var(--mv)))}}
+
+/* 日記本：種類的小標＋分隔線（v0.40.57） */
+#ovStory .sdhead{margin:10px 0 4px;padding-bottom:3px;border-bottom:2px dashed var(--line);color:var(--head,var(--acc-txt));font-size:13px;font-weight:700}
+#ovStory .sdhead:first-child{margin-top:0}
+
+/* 立繪移動（演出 moveRF／moveR／moveRB／moveC／moveLF／moveL／moveLB，v0.40.62）：位置在 ST_POS；--mx 註冊成數字才能做動畫 */
+@property --mx{syntax:'<number>';inherits:false;initial-value:1}
+#ovStory .svmv{position:absolute;inset:0;pointer-events:none}
+#ovStory .sD .svmv{left:241px;right:241px}
+#ovStory .sP .svmv{left:-6%;right:-6%}
+#ovStory .svmb{position:absolute;--mx:var(--x1);left:calc(var(--mx)*100%);transform:translateX(calc(var(--mx)*-100%))}
+#ovStory .sD .svmb{bottom:192px}
+#ovStory .sP .svmb{bottom:196px}
+#ovStory .svmv .svmb>.svchr{position:relative;left:auto!important;right:auto!important;bottom:auto!important;display:block}
+#ovStory .svmb.mving{animation:smv .9s ease-in-out both;animation-delay:var(--dl)}
+@keyframes smv{from{--mx:var(--x0)}to{--mx:var(--x1)}}
+/* 小球（一群或單隻）：整群平移，(x−原位)×（從這一側整群搬到對面的距離） */
+@property --md{syntax:'<number>';inherits:false;initial-value:0}
+#ovStory .svlgw{position:absolute;inset:0;pointer-events:none;--md:var(--x1)}
+#ovStory .sD .svlgw{transform:translateX(calc(var(--md)*(68% - (var(--n) - 1)*10% - 150px)))}   /* 一群小球：左邊那群（16%＋每隻 10%，寬 150px）整群移到對面＝這個距離 */
+#ovStory .sP .svlgw{transform:translateX(calc(var(--md)*(92% - (var(--n) - 1)*14% - 76px)))}
+#ovStory .svlgw.mving{animation:smd .9s ease-in-out both;animation-delay:var(--dl)}
+@keyframes smd{from{--md:var(--x0)}to{--md:var(--x1)}}
+/* 立繪晃一晃倒下（fall）：晃一晃、往後倒，一路掉出畫面下面；之後藏著到那格換圖為止（v0.40.62） */
+#ovStory .svchr.a-fall{animation:sfall 1.4s ease-in both}
+#ovStory .svchr.fallen{visibility:hidden}
+#ovStory .svchl.a-fall{animation-name:sfallL}
+@keyframes sfall{0%{transform:none}12%{transform:rotate(-5deg)}24%{transform:rotate(5deg)}36%{transform:rotate(-4deg)}50%{transform:translate(0,0) rotate(70deg)}100%{transform:translate(25%,140%) rotate(110deg)}}
+@keyframes sfallL{0%{transform:none}12%{transform:rotate(5deg)}24%{transform:rotate(-5deg)}36%{transform:rotate(4deg)}50%{transform:translate(0,0) rotate(-70deg)}100%{transform:translate(-25%,140%) rotate(-110deg)}}
+
+/* 日記本右上的開關（未解鎖／開發者的全開，v0.40.61） */
+#ovStory .sdtop{display:flex;justify-content:flex-end;gap:6px;margin-bottom:-26px;position:relative;z-index:1}
+#ovStory .sdtog{width:auto;padding:3px 10px;font-size:12px;border-radius:999px;opacity:.55}
+#ovStory .sdtog.on{opacity:1;background:color-mix(in srgb,var(--acc) 30%,transparent)}
+#ovStory .sdico canvas.sdoll.sdme{position:static;width:100%;height:100%}
+
+/* 收納 → 道具：消耗品的「使用」（v0.40.62） */
+#ovStory .sduse{width:auto;margin-left:10px;padding:3px 14px}
+
+/* 收納 → 道具：清單（v0.40.63） */
+#ovStory .silist{display:flex;flex-direction:column;gap:6px;overflow:auto;min-height:0;flex:1}
+#ovStory .sirow{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+#ovStory .sitx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#ovStory .sitx span{font-size:.85em;color:var(--dim)}
+#ovStory .sirow .sduse{margin-left:0;flex:none}
+#ovStory .sD .silist{margin-top:12px}
+
+
+#ovStory .sfwd{flex:none;min-height:86px;max-height:120px;overflow-y:auto;background:var(--well);border:2px dashed var(--line-dk);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:3px;font-size:14px}
+#ovStory .sfwd span{color:var(--ink)}
+#ovStory .sfwd small{color:var(--dim);font-size:11px}
+#ovStory .sP .sfwd{min-height:70px;max-height:92px;font-size:13px}
+
+/* 服飾店（v0.40.66，省略店員）：玩家站左邊試穿；右邊＝說明、分類、小圖格子｜自言自語閃一下（放在玩家下半身） */
+#ovStory .sfme{position:absolute;z-index:3;pointer-events:none}
+#ovStory .sfme canvas{position:absolute;left:50%;bottom:0;height:100%;width:auto;transform:translateX(-50%)}
+#ovStory .sD .sfme{left:14%;bottom:64px;width:250px;height:430px}
+#ovStory .sP .sfme{left:50%;transform:translateX(-50%);top:156px;width:140px;height:140px}
+#ovStory .sD .sfshop.bq{width:620px}
+#ovStory .sP .sfshop.bq{top:clamp(236px,calc(100% - 540px),300px);height:auto}   /* v0.40.69：矮的手機面板往上，人物跟著縮 */
+#ovStory .sP .sfme{top:60px;height:calc(clamp(236px,calc(100% - 540px),300px) - 64px)}   /* 自言自語點一下就收掉，人物不用讓位：面板上面全給人物（172～236px，v0.40.69） */
+#ovStory .sP .sfshop.bq .sfwd{height:60px;min-height:0;max-height:none}   /* 說明欄固定高度（字多就捲），選了東西也不會把格子擠扁 */
+#ovStory .sfwdh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#ovStory .sfwd small{flex:none}
+#ovStory .sfbtabs{flex:none}
+#ovStory .sfwgrid{flex:1;min-height:0;overflow-y:auto;align-content:start;grid-auto-rows:min-content}   /* v0.40.69：格子不被壓扁（列高照內容，放不下就捲） */
+#ovStory .sfwc .spay{font-size:12px;color:var(--acc-txt)}
+#ovStory .sfwc.own{opacity:.55}
+#ovStory .sfwc.poor .spay{color:var(--t-danger)}
+#ovStory .sfwempty{grid-column:1/-1;text-align:center;margin:20px 0}
+/* 捲軸（主線全部，v0.40.66）：細、圓角、跟著配色 */
+#ovStory,#ovStory *{scrollbar-width:thin;scrollbar-color:var(--line-dk) transparent}
+#ovStory ::-webkit-scrollbar{width:6px;height:6px}
+#ovStory ::-webkit-scrollbar-thumb{background:var(--line-dk);border-radius:3px}
+#ovStory ::-webkit-scrollbar-track{background:transparent}
+#ovStory .sbcell.sfwc{height:auto;min-height:0;padding:6px 4px;justify-content:flex-start}
+#ovStory .sfwc canvas{width:64px;height:64px;flex:none}
+#ovStory .sP .sfwc canvas{width:48px;height:48px}
+#ovStory .sfwc span{text-align:center;line-height:1.25}
+#ovStory .sfwc .spay{display:block;text-align:center;font-weight:700}
+
+/* 道具店的店員（v0.40.67 加回來）：賽倫絲／阿言，點了會說話；說的話在店員下半身 */
+#ovStory .sfclerk{position:absolute;z-index:3;cursor:pointer}
+#ovStory .sfclerk img{position:absolute;left:50%;bottom:0;height:100%;width:auto;max-width:none;transform:translateX(-50%)}
+#ovStory .sfclerk.hop img{animation:sfhop .45s ease}   /* 點店員跳一下（同日常 npchop） */
+@keyframes sfhop{0%,100%{transform:translate(-50%,0)}35%{transform:translate(-50%,var(--hop,-12px))}65%{transform:translate(-50%,0)}80%{transform:translate(-50%,calc(var(--hop,-12px) * .25))}}
+#ovStory .sD .sfclerk{left:26%;bottom:64px;width:230px;height:400px}
+#ovStory .sP .sfclerk{left:50%;transform:translateX(-50%);bottom:380px;width:140px;height:240px}
+
+/* 收納 → 衣櫃：人物下面（手機在人物右邊）一格衣物說明（v0.40.67） */
+#ovStory .sbleft{display:flex;gap:10px;min-width:0;min-height:0}
+#ovStory .sD .sbleft{flex-direction:column;align-self:stretch}
+#ovStory .sP .sbleft{flex-direction:row;align-items:stretch}
+#ovStory .sP .sbleft .sbpv{width:150px;flex:none;justify-self:auto}
+#ovStory .swdesc{flex:1;min-height:0;overflow-y:auto;background:var(--panel);border:2px dashed var(--line-dk);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink)}
+#ovStory .swdesc b{color:var(--acc-txt)}
+#ovStory .swdesc small{color:var(--dim);font-size:11px}
+#ovStory .sP .sbleft{height:150px}
+
+/* 店裡的話（v0.40.68）：在說話的人頭上、不和圖重疊；和劇情的對話框同一個樣子，固定配色（不跟早晚的主題） */
+#ovStory .sfsay{position:absolute;z-index:6;background:rgba(30,35,46,.86);border:2px solid #8c7a5e;color:#f3ece0;line-height:1.6;transform:translateX(-50%)}
+#ovStory .sfsay b{position:absolute;left:12px;font-family:var(--font-ui,inherit);color:#2a2116;background:#e3b26a;border:2px solid #a9793a;line-height:1;font-weight:400}
+#ovStory .sD .sfsay{width:380px;padding:18px 18px 12px;font-size:17px}
+#ovStory .sD .sfsay b{top:-26px;font-size:16px;padding:4px 10px}
+#ovStory .sP .sfsay{width:calc(100% - 20px);padding:14px 12px 8px;font-size:14px}
+#ovStory .sP .sfsay b{top:-22px;font-size:13px;padding:3px 9px}
+#ovStory .sD .sfsay.ck{left:calc(26% + 115px);bottom:484px}
+#ovStory .sP .sfsay.ck{left:50%;top:max(86px,calc(100% - 700px))}
+#ovStory .sD .sfsay.me{left:calc(14% + 125px);bottom:514px}
+#ovStory .sP .sfsay.me{left:50%;top:92px}

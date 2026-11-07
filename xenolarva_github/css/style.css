@@ -29,6 +29,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 button small{display:block;color:var(--dim);font-size:11px}
 #end{grid-column:1/-1;background:var(--acc);color:#1b1b1b;border-color:var(--acc);font-weight:700}
 .ov{position:fixed;inset:0;background:rgba(5,15,22,.88);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+#ovPick{z-index:6}   /* 問題框蓋過選單（存檔頁的「要覆蓋嗎？」，v0.40.69） */
 .ov.show{display:flex}
 .box{background:var(--panel);border:3px solid var(--line);padding:18px;width:100%;max-width:400px;overflow:auto}
 .box h2{margin:0 0 8px;padding-right:38px}
@@ -219,7 +220,8 @@ body.pv #log{height:150px}
 .cmid .chatinfo{margin:0;line-height:1.5;font-size:13px;align-self:center;text-align:center}
 /* 第 0 日（沒有小球）、開場故事、設定 */
 #bAccept{display:none}
-body.idle #acts>*:not(#bAccept):not(#bDev){display:none!important}
+body.idle #acts>*:not(#bAccept):not(#bStory):not(#bDev){display:none!important}
+#bStory{display:none}
 body.idle #bAccept{display:block;grid-column:1/-1;padding:14px 6px;font-size:16px}
 #introStory p{margin:0 0 10px;line-height:1.75}
 #introStory p.q{color:var(--acc)}
@@ -432,7 +434,7 @@ header{position:relative}
 .hallscene{grid-area:scene;position:relative;min-width:0;aspect-ratio:2/1;border:2px solid var(--line);overflow:hidden;background:#123}
 .hallscene .hbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hallscene .hland{position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
-.hallscene .hchr{position:absolute;right:10%;bottom:0;height:70%;image-rendering:auto;cursor:pointer;max-height:200px}/* 視窗再大也不放大超過原圖（200px） */
+.hallscene .hchr{position:absolute;right:10%;bottom:0;height:70%;image-rendering:auto;cursor:pointer}/* 視窗再大也不放大超過原圖（js 依圖片高度設 max-height） */
 .hallscene .sname{position:absolute;right:10%;bottom:4px;transform:translateX(10%);pointer-events:none;padding:0 6px;font-size:12px;color:#ffb066;background:rgba(11,35,48,.88);border:2px solid var(--line)}
 /* 名牌：有框，背景再亮也看得到 */
 .hallscene .hwhere{position:absolute;left:6px;top:6px;background:rgba(8,26,36,.82);border:1px solid var(--line);padding:2px 8px;font-size:12px;color:var(--acc)}
@@ -629,3 +631,45 @@ header{position:relative}
 .dchip{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1px;border:1px solid rgba(0,0,0,.4);border-radius:50%}
 .box .deyec button{white-space:nowrap}
 @media (max-width:480px){.deyec{flex-direction:column}.deyec button+button{border-left:2px solid var(--line);border-top:0}.box .deyec button{font-size:13px}}
+
+/* ===== v0.40.43：玩家設定 → 長相＝衣櫃（js/wardrobe.js，和主線收納共用）；預覽＝正方形框、角色置中、右下名牌 ===== */
+.plfig{width:180px;aspect-ratio:1/1;background:linear-gradient(#2b7f93,#12485c);border:2px solid var(--line);overflow:hidden}
+.plfig .plcv{position:absolute;left:50%;top:50%;width:auto;height:96%;transform:translate(-50%,-50%);background:none;border:0}
+.plcard.nodoll{grid-template-columns:1fr}
+.plleft{display:flex;flex-direction:column;gap:8px;align-items:stretch;width:180px}
+.box .plleft .pledit{width:100%;margin:0;padding:8px 6px;align-self:stretch}
+.plcloset{grid-template-columns:180px minmax(0,1fr)}
+.plward{display:flex;flex-direction:column;gap:10px;min-width:0}
+.plward .swtabs{display:flex;gap:6px;padding-bottom:10px;border-bottom:2px dashed var(--line)}
+.box .plward .swtabs button{flex:1 1 0;min-width:0;margin:0;padding:5px 2px;font-size:13px}
+.box .plward .swtabs button.on{background:var(--acc);color:#1b1b1b;border-color:var(--acc);font-weight:700}
+.plward .sbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.box .plward .sbcell{display:flex;flex-direction:column;align-items:center;gap:4px;margin:0;width:auto;padding:6px 2px;font-size:12px;line-height:1.3;background:var(--well,#0b2330);border:2px solid var(--line)}
+.box .plward .sbcell.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.box .plward .sbcell.lock{border-style:dashed;opacity:.55}
+.plward canvas.swthumb{width:56px;height:56px;background:#e6edef;border-radius:4px}
+.plward .ssw{display:block;width:56px;height:56px;border:2px dashed var(--line);border-radius:4px}
+.plward .swcol{display:flex;gap:16px;border-top:2px dashed var(--line);padding-top:8px}
+.plward .swcol>*{flex:1 1 0;min-width:0}
+.plward .swc1{display:flex;flex-direction:column;gap:6px}
+.plward .swlab,.plward .swa span{font-size:13px;color:var(--acc)}
+.plward .swsw{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.box .plward .swsw button{width:26px;height:26px;padding:0;margin:0;border-radius:50%;border:2px solid var(--line)}
+.box .plward .swsw button.on{outline:2px solid var(--acc);outline-offset:2px}
+.plward .swown{position:relative;display:block;width:26px;height:26px;border:2px dashed var(--line);border-radius:50%;overflow:hidden;cursor:pointer}
+.plward .swown input{position:absolute;inset:0;opacity:0;width:100%;height:100%;padding:0;border:0;cursor:pointer}
+.plward .swa{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:center}
+.plward .swa span{grid-column:1/-1}
+@media (max-width:480px){.plcloset{grid-template-columns:1fr}.plleft{width:150px;margin:0 auto}.plleft .plfig{width:150px}.plward .swcol{flex-direction:column;gap:8px}}
+
+/* 說明頁的標籤（點了捲到那一段，v0.40.69）：可以換行 */
+.tabs.abtags{flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px}
+.box .tabs.abtags button{flex:1 0 auto;width:auto;margin:0;padding:5px 10px;font-size:13px}
+
+/* 存檔：上傳模式（v0.40.69） */
+.upnote{margin:8px 0 10px;font-size:13px}
+.upmode{display:flex;align-items:center;gap:10px}
+.upmode>span{flex:none}
+#cMode{flex:1;display:flex;gap:6px;margin:0;padding:0;border:0}
+#cMode button{flex:1;width:auto;margin:0}
+.upbtn{display:block;margin-top:8px}

@@ -15,7 +15,8 @@ $('bGrete').onclick=()=>{S.grete=!S.grete;if(!S.grete)S.trans=false;say(S.grete?
 $('bTrans').onclick=()=>{S.trans=!S.trans;say(S.trans?TEXT.grete.transOn:TEXT.grete.transOff,'ev');refresh()};
 
 // ---------- 說明／圖鑑選單（三頁：說明與存檔、收藏、小球們）----------
-if(typeof ABOUT_HTML!=='undefined')$('aboutBody').innerHTML=ABOUT_HTML;
+if(typeof ABOUT_HTML!=='undefined'){$('aboutBody').innerHTML=ABOUT_HTML;   // 說明頁上面一排標籤（h3 的 data-tag）：點了捲到那一段（v0.40.69）
+  const ab=$('aboutBody'),tg=$('aboutTags');ab.querySelectorAll('h3[data-tag]').forEach(h3=>{const b=h('button',{type:'button'},h3.dataset.tag);b.onclick=()=>{ab.scrollTop+=h3.getBoundingClientRect().top-ab.getBoundingClientRect().top-4};tg.append(b)})}
 if(typeof NEWS_HTML!=='undefined')$('newsBody').innerHTML=NEWS_HTML;
 $('bMenu').onclick=()=>openMenu('larvae');
 $('again').textContent=TEXT.idle.wait;
@@ -23,9 +24,10 @@ $('eLarvae').onclick=()=>openMenu('larvae');
 $('menuClose').onclick=()=>$('ovMenu').classList.remove('show');
 $('dressClose').onclick=dressClose;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')['ovMenu','ovPick','ovBag','ovWatch'].forEach(i=>$(i).classList.remove('show'))});
-$('cDown').onclick=()=>codexDownload();
-$('cUp').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(codexMerge);e.target.value=''};
-$('cImport').onclick=()=>codexMerge($('saveText').value);
+$('cDown').onclick=()=>codexDownload('daily');$('cDownS').onclick=()=>codexDownload('story');
+$('cMode').querySelectorAll('button').forEach(b=>b.onclick=()=>{SAVE_MODE=b.dataset.m;$('cMode').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
+$('cUp').onchange=e=>{const f=e.target.files[0];if(f&&f.size<=20*1024*1024)f.text().then(codexImport);e.target.value=''};   // 存檔檔案上限 20MB（資安 v0.40.40）
+$('cImport').onclick=()=>codexImport($('saveText').value);
 $('ver').textContent='v'+VERSION;
 // 清除存檔：第一次按先變成「再按一次確認」，4 秒內再按才真的清除
 (()=>{let t=0,tm=null;const b=$('cWipe');

@@ -8,7 +8,7 @@ const FONTS=[['mix'],['pixel'],['plain']];
 const FRAMES=[['round'],['flat']];
 const SKIN_KEY='xenolarva_skin';
 let SKIN={skin:'classic',font:'mix',frame:'round'};
-try{Object.assign(SKIN,JSON.parse(localStorage.getItem(SKIN_KEY)||'{}'))}catch(e){}
+try{const o=JSON.parse(localStorage.getItem(SKIN_KEY)||'{}');for(const k of ['skin','font','frame'])if(typeof o[k]==='string')SKIN[k]=o[k]}catch(e){}   // 只讀認得的欄位（資安 v0.40.40）
 function skinApply(){const d=document.documentElement;
   if(!SKINS.some(s=>s[0]===SKIN.skin))SKIN.skin='classic';
   if(!FONTS.some(s=>s[0]===SKIN.font))SKIN.font='mix';

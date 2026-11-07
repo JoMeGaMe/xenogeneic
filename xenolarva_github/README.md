@@ -50,12 +50,14 @@
 | 事件頁的場景（背景＋角色＋道具） | 事件頁面加 `bg`／`chr`／`item`（只寫檔名，不含資料夾和副檔名）＝`js/events.js` 的 showEvent；圖片 `assetImg(檔名)` |
 | 裝扮道具（像素圖、戴的位置） | `js/data/wears.js`（商品在 `js/data/shop.js` 加一筆 `wear:'id'`；畫在 `js/render/larva.js` 的 drawLarva） |
 | 互動玩耍（指揮棒、氣泡棒、小鈴鐺、軟球） | `js/minigame.js`（文字 `TEXT.game`；開始＝`gameStart`，由 actPlay 在「遊玩」方式時呼叫）；表情氣泡圖案 `js/data/emotes.js` |
-| 異生會大樓（樓層、電梯、瓊的成就與心等、背景小球、交還的小球回來） | `js/hall.js`（資料 `js/data/hall.js`：`HALL_FLOORS`、`HALL_RULE`、`NPC_HOP`、`ACH`；文字 `TEXT.hall`） |
+| 異生會大樓（樓層、電梯、瓊的成就與心等、背景小球、交還的小球回來） | `js/hall.js`（資料 `js/data/hall.js`：`HALL_FLOORS`、`HALL_RULE`、`NPC_HOP`、`ACH`；文字 `TEXT.hall`；大樓／商店台詞的專用人物圖 `js/data/lineimg.js` 的 `LINE_IMG`） |
 | 特殊委託（2F 賽倫絲：名單、預約→下一輪） | `js/hall.js` 的 `specialOpen`（文字 `TEXT.special`） |
 | 商店閒聊畫面（言盡、行李箱、送東西的小球） | `js/shop.js` 的 `shopView`（`SHOP_SCENE` 在 `js/data/shop.js`） |
 | 雜誌染色（外殼上下／左右漸層） | `js/chat.js`（`MAG_SPLIT`）＋ `js/render/sprites.js` 的 `tint2` |
 | 打扮（獨立視窗 `#ovDress`）、發光裝扮顏色 | `js/codex.js`（`DRESS`、`dressOpen`／`dressRender`）＋ `js/data/wears.js` |
+| 衣櫃（主線收納、日常玩家設定共用）：分頁、格子、換色、褲襪透明度 | `js/wardrobe.js`（衣服清單與能不能換色在 `js/data/doll.js`：`DOLL_LISTS`、`DOLL_WEAR_TINT`、`DOLL_SHEER`；名字 `TEXT.doll.wear`、介面字 `TEXT.doll.ward`） |
 | 存檔欄位（新增跨輪資料） | `js/codex.js` 的 `SAVE_FIELDS` |
+| 主線（故事模式）：家、行程、執行這週、狀態、背包、水缸、系統 | `js/story/*.js`（資料 `js/story/data/story.js`：`STORY_CMDS` 指令、`STORY_RULE` 規則、`STORY_START` 起始數值；文字 `js/story/data/texts.js`（`TEXT.story`）；樣式 `css/story.css`） |
 | 圖片載入與失敗提示 | `js/render/sprites.js`（`IMG_MISSING`、`imgOK`） |
 
 ## 分工原則
@@ -82,3 +84,30 @@
 | `assets/larva/` | 小球（`body_*` 192×192＝2 倍、`body_*_L` 光點層、`core_*` 2 倍）、水缸背景與裝飾（`js/data/sprites.js` 自己讀；光點／光暈強度 `LARVA_FX`） | 小球 192×192（畫成 96） |
 | `assets/doll/` | 紙娃娃部件（v0.35 起遊戲在用：長相登記、玩家設定；清單與範圍在 `js/data/doll.js`） | 372×400（程式當 186×200） |
 | `assets/font/` | 像素字體 | — |
+
+## 主線（v0.4）
+主線和日常模式分開放：日常模式（和共用的）在 `js/`、`js/data/`；主線全部在 `js/story/`（v0.40.34 整理）。
+| 檔案 | 內容 |
+|---|---|
+| `js/story/main.js` | 全域狀態（`STY`、`STRUN`、`SUI`）、進入／離開、新遊戲／讀取、存檔內容 `storyPack`（週中多存這週的進度）、自動存檔 |
+| `js/story/week.js` | 行程規則（`ST_GATES`、`stOff`、`stShown`、新出現的打工 `stJobNews`）、一天的結果 `stRoll`、執行這週（`stStep`、當天的劇情 `stDayEvs`）、週結算、章末 |
+| `js/story/script.js` | 劇情引擎：條件 `stCond`／`ST_COND_GET`、找劇情 `stEvents`／`stMeetEv`、播放 `stPlay`、`stVnEnter`、效果 `stEff`、好感 `stFavAdd` |
+| `js/story/vn.js` | 劇情畫面：逐字、對話框、立繪演出 `stVn`、跳過、日記本重看、劇情預覽 `stPvPlay` |
+| `js/story/sys.js` | 系統：儲存、讀取、設定（對話顯示、畫面配色 `ST_THEME`） |
+| `js/story/art.js` | 圖：背景 `stBg`、人物圖、紙娃娃、小球 |
+| `js/story/view.js` | 各畫面：家、行程本、狀態、收納、水缸、執行這週 |
+| `js/story/free.js` | 自由行動（點了就去）：地圖、異生會大樓、店、白天的家（週中回家改行程、存檔 `stRunPack`／`stResume`）、「？」說明卡 |
+| `js/story/render.js` | 重畫 `stRender`、點擊 `stClick`、拖曳 |
+| `js/story/data/texts.js` | 主線的字 `STORY_TEXT`（＝`TEXT.story`，主線總表「主線介面」頁） |
+| `js/story/data/story.js` | 數值、指令 `STORY_CMDS`、地圖 `STORY_MAP`、店 `STORY_SHOP`、家／大樓 `STORY_SCENES`、人物、條件表 `STORY_COND`、讀存檔檢查 `storyNorm`／`storyRunNorm` |
+| `js/story/data/storyscript.js` | 劇情 `STORY_SCRIPT`（主線總表三頁劇情） |
+| `css/story.css` | 主線樣式（載入順序 style.css → story.css → theme.css） |
+- 主線總表：`python3 tools/storysheet.py build . xenolarva_主線總表.xlsx`／`apply`；改完跑 `python3 tools/storycheck.py .`。
+- 存檔樣本：`tests/fixtures/story_*.json`；改存檔欄位時加一份，跑 `node tools/test_harness.js . tests/check_fixtures.js`。
+- 玩法模擬：`node tools/test_harness.js . tests/storysim.js 300`（五種玩法跑完第一章：過關率、各段劇情的觸發率）。
+- 劇情預覽：日常的開發者模式 →「劇情預覽（一段一段播）」（v0.40.69 起沒有預覽頁）。
+
+## 資安（v0.40.40）
+- `index.html` 有 CSP（meta）：只准載入自己網站的程式／樣式／圖片／字體，不准外部連線。**不要再寫 `<script>…</script>` 內嵌程式或 `onclick="…"`**，程式一律放 js 檔；要用外部網址（字體、CDN）得先改 CSP。單一 HTML（build_single_file.py）會拿掉 CSP。
+- 放進 innerHTML 的字一律 `esc()`（內文、屬性都是）；玩家名字、小球名字、匯入的東西尤其要注意。圖片名稱（背景、立繪）只用英文數字。
+- 匯入：存檔上限 20MB（讀進來後 SAVE_FIELDS 的 read 會過濾）；預覽頁匯入 Excel 上限 10MB、解壓縮後單檔 50MB。
