@@ -5,7 +5,7 @@
    ・字體：html 的 data-font＝mix（標題、按鈕用像素字）｜pixel（全部）｜plain（都不用）。像素字是俐方體11號（Cubic 11，OFL 授權，assets/font/）。
    ・按鈕三種質感：一般（面板色＋底部硬陰影）｜主要 .main／#end（強調色）｜選中的頁籤（同主要）。按下去往下沉 2px。
    ・新寫的東西：底色用 --well（內框）／--deep（輸入框、訊息區），分隔線用 --rowline，文字壓在強調色上用 --onacc，彈出框標題用 --head。 */
-@font-face{font-family:"Cubic 11";src:url(../assets/font/Cubic_11.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Cubic 11";src:url(../assets/font/Cubic_11.woff2?h=854bc755) format("woff2");font-display:swap}
 
 /* 經典：原本的深海藍＋黃（預設） */
 :root,[data-skin="classic"]:not(#_){

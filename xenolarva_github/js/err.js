@@ -7,7 +7,10 @@
     if(t&&t.tagName==='SCRIPT'){show('檔案載入失敗 '+(t.getAttribute('src')||''));return}
     if(t&&t!==window)return;
     if(/ResizeObserver loop/.test(e.message||''))return;   // 瀏覽器的無害警告（版面重算時），不算錯誤
-    show((e.message||'未知錯誤')+' @'+String(e.filename||'').split('/').pop()+':'+e.lineno)},true);
+    var f=String(e.filename||'').split('/').pop().split('?')[0],ln=e.lineno;
+    // 發布版的程式合成一個 game.js（v0.40.69 續 16）：SRC_LINES＝每個原始檔從第幾行開始，換回原本的檔名和行號
+    if(f==='game.js'&&window.SRC_LINES){var L=window.SRC_LINES;for(var i=L.length-1;i>=0;i--)if(ln>=L[i][1]){f=L[i][0];ln=ln-L[i][1]+1;break}}
+    show((e.message||'未知錯誤')+' @'+f+':'+ln)},true);
   window.addEventListener('unhandledrejection',function(e){show(String(e.reason))});
   window.showErr=show;
 })();

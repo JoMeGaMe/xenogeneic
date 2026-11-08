@@ -1,4 +1,0 @@
-{"_note":"v0.40.43 的主線存檔（週初）：有 jobs（領到的工作，v0.44 起不用）、seen 有已刪掉的 buyStr","_expect":{"week":2,"money":1180,"items":"bookStr","seen":"walk,cvs","run":null,"jobSeen":null},
- "favV":2,"ch":1,"week":2,"st":{"hp":12,"calm":-6,"mood":45,"tired":10,"str":12,"soc":11,"know":13,"fat":30,"money":1180},"medDone":2,"meds":2,
- "fav":{"grete":30,"xiaojun":20,"joan":20,"silence":20,"yanjin":20,"yanjie":10},"num":"2048","at":"2026-10-30","done":["C1-01","C1-02","C1-03"],
- "seen":["walk","buyStr","cvs"],"visit":["park","itemShop","cvs"],"open":["f4","f5"],"items":{"bookStr":1},"jobs":["f5"]}
