@@ -3050,7 +3050,7 @@ const STORY_SCRIPT=[
     {"tag": "yes", "who": "grete", "face": "4", "text": "「嘿嘿～」", "go": "end"},
     {"tag": "no", "who": "grete", "face": "2", "text": "「欸——！」"}
   ]},
-  {"id": "L08-01", "kind": "event", "ch": 1, "trig": "meet", "arg": "yanjie@volunteer,fav.yanjie==0", "note": "支線：活動中心義工第一次遇到言街", "title": "龍潭虎穴的活動中心","lines":[
+  {"id": "L08-01", "kind": "event", "ch": 1, "trig": "roll", "arg": "volunteer,alone==0", "note": "支線：活動中心義工遇到言街", "title": "龍潭虎穴的活動中心","lines":[
     {"who": "narr", "text": "你來到活動中心，這個堪稱龍潭虎穴的地方，原因是……\n", "bg": "place_community", "chr": "yanjie_L_0+acc", "chl": "larvae:3", "fx": "lvJump"},
     {"who": "yanjie", "face": "1", "text": "「別、別急，點心大家都有！」", "fx": "moveRF:L,sway:R"},
     {"who": "narr", "text": "看，例如眼前這名男子，他正被一群跳來跳去的小球圍著，這些頑皮的小東西看中了他手裡的點心，用短短的觸肢抓住了他的褲管與外套衣角。\n\n注意到你來，他抽空朝你揮了揮手——看起來像是打招呼，也很像是在求救。", "fx": "lvJump"},
