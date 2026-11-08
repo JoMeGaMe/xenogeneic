@@ -7,9 +7,12 @@ let ST_HD=typeof ASSETS==='undefined'||!Object.keys(ASSETS).length;   // GitHub 
 if(!ST_HD){const t=new Image();t.onload=()=>{ST_HD=true;if($('ovStory').classList.contains('show'))stRender()};t.src=assetPath('home_night',true)}
 const stBg=(k,hd)=>{const p=hd&&ST_HD&&assetPath(k,true);return p&&p.includes('bg_hd')?p:(typeof ASSETS!=='undefined'&&ASSETS[k])||assetPath(k,hd)};
 let ST_PRE=[];   // 先讀好的圖（留著參考，瀏覽器才不會丟掉）
+// 行程會用到的大背景先在背景讀（v0.41.0：一次讀一張、劇情在「讀取中」時先停，不和眼前要用的圖搶網路；不強制解碼，省記憶體）
 function stPreload(){if(ST_PRE.length)return;
-  const ks=new Set([...Object.values(STORY_HOME),...Object.values(STORY_CMDS).map(c=>c.big).filter(Boolean)]);
-  ks.forEach(k=>{const im=new Image();im.src=stBg(k,true);if(im.decode)im.decode().catch(()=>{});ST_PRE.push(im)});}
+  const ks=[...new Set([...Object.values(STORY_HOME),...Object.values(STORY_CMDS).map(c=>c.big).filter(Boolean)])];ST_PRE.push(null);
+  const next=()=>{if(!ks.length)return;if(SUI.loading){setTimeout(next,500);return}
+    const im=new Image();im.onload=im.onerror=()=>setTimeout(next,50);im.src=stBg(ks.shift(),true);ST_PRE.push(im)};
+  setTimeout(next,1500)}
 const stNpcImg=id=>STORY_NPC[id].img?assetImg(STORY_NPC[id].img):'';
 // 小頭像：有頭像圖（xiaojun_face）就用，沒有就用立繪裁上半（class 不同）
 // 面向右的版本：新格式的立繪（人物_L_表情）都有對應的 _R_
@@ -20,6 +23,9 @@ const stFaceL=k=>String(k).replace(/_R_(?=[^_]+$)/,'_L_');
 const stIsLarva=k=>!!k&&String(k).startsWith('larva');   // 立繪格放小球：larva 或 larva:姿勢（curl 縮著…）
 const stNpcAva=id=>{const N=STORY_NPC[id];return N.face?`<img class="fc" alt="" src="${assetImg(N.face)}">`:N.img?`<img alt="" src="${assetImg(N.img)}">`:''};
 let STORY_DOLL={},ST_DOLL_OK=false;     // 紙娃娃每種表情畫一次就記住（白邊很花時間）
+// 讀紙娃娃（v0.41.0）：先讀身上穿的部件（畫玩家），好了就畫；其他部件（衣櫃縮圖、服飾店試穿）接著在背景讀，讀好再重畫一次
+function stDollLoad(){return dollLoad(META.doll).then(()=>{ST_DOLL_OK=true;STORY_DOLL={};stRender();
+  dollLoad().then(()=>{STORY_DOLL={};if($('ovStory').classList.contains('show'))stRender()})})}
 function stDollCv(emo){
   if(STORY_DOLL[emo||''])return STORY_DOLL[emo||''];
   const c=document.createElement('canvas');c.width=DOLL_W*DOLL_K;c.height=DOLL_H*DOLL_K;

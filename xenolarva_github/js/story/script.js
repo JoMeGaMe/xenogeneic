@@ -65,9 +65,9 @@ function stLoadEv(ev){
       if(mine(chr))chr=sw(chr);else if(mine(chl))chl=sw(chl);else chr=sw(N.img);}
     if(chr&&!stIsLarva(chr))chrs.add(chr);if(chl&&!stIsLarva(chl))chrs.add(stFaceR(chl));});
   const img=src=>new Promise(r=>{const i=new Image();i.onload=i.onerror=()=>r();i.src=src;if(i.complete)r()});
-  const ol=k=>new Promise(r=>{chrOl(k);if(!chrNew(k))return img(assetImg(k.replace(/\+acc$/,''))).then(r);const t0=Date.now(),w=()=>{if(CHR_OL[k]!==false||Date.now()-t0>6000)r();else setTimeout(w,80)};w()});
-  const all=[...[...bgs].map(b=>img(stBg(b,true))),...[...chrs].map(ol),img(assetImg('scar_1'))];
-  if(me)all.push(dollLoad().then(()=>{ST_DOLL_OK=true}));
+  const ol=k=>new Promise(r=>{chrOl(k,true);if(!chrNew(k))return img(assetImg(k.replace(/\+acc$/,''))).then(r);const t0=Date.now(),w=()=>{if(CHR_OL[k]!==false||Date.now()-t0>6000)r();else setTimeout(w,80)};w()});
+  const all=[...[...bgs].map(b=>img(stBg(b,true))),...[...chrs].map(ol),img(IMG.scar_1?IMG.scar_1.src:BASE+'scar_1.png')]   // 傷疤在 assets/larva（sprites.js 開頭就讀了；v0.40.69 續 15：原本走 assetImg 會找成 assets/scar_1.png）;
+  if(me)all.push(dollLoad(META.doll).then(()=>{ST_DOLL_OK=true}));
   return Promise.race([Promise.all(all),new Promise(r=>setTimeout(r,8000))]);
 }
 // 進到某一行：套用背景、立繪、演出、數值；選項行一起顯示

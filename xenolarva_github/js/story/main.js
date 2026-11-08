@@ -54,7 +54,7 @@ SUI.bgx=null;STORY_DOLL={};stResume();stJobNews(!Array.isArray(STY.jobSeen));if(
   if(META.doll&&['glass','hold'].some(k=>META.doll[k]!=='none'&&!wearHas(META.doll[k])))wardSet(o=>{['glass','hold'].forEach(k=>{if(!wearHas(o[k]))o[k]='none'})});   // 這個存檔沒有的配飾就拿掉（衣物分存檔，v0.40.69）
 
   if(fresh)SUI.loading=true;   // 新遊戲：先黑畫面讀取，不要先閃出房間（開場讀好就會換掉）
-  dollLoad().then(()=>{ST_DOLL_OK=true;STORY_DOLL={};stRender()});
+  stDollLoad();
   if(fresh)stPlay([...stEvents('start'),...stEvents('weekStart',1)],()=>storyAutoSave());
   stRender();
 }

@@ -4,9 +4,14 @@
 // 畫到畫布上：dollPaint(canvas, META.doll, 表情 id 或 '')；畫布大小隨意（建議 186×200 的倍數）。
 const DOLL_IMG={};let DOLL_READY=null;
 const dollSrc=k=>(typeof ASSETS!=='undefined'&&ASSETS['doll/'+k])||'assets/doll/'+k+'.png?v='+VERSION;   // ?v：換圖後不會讀到瀏覽器裡的舊圖
-function dollLoad(){
-  if(!DOLL_READY)DOLL_READY=Promise.all(['body',...Object.values(DOLL_LISTS).flat()].map(k=>new Promise(r=>{const i=new Image();i.onload=()=>{DOLL_IMG[k]=i;r()};i.onerror=r;i.src=dollSrc(k)})));
-  return DOLL_READY;
+const DOLL_ONE={};   // 每個部件的讀取（Promise），讀過就不再讀
+const dollOne=k=>DOLL_ONE[k]||(DOLL_ONE[k]=new Promise(r=>{const i=new Image();i.onload=()=>{DOLL_IMG[k]=i;r()};i.onerror=r;i.src=dollSrc(k)}));
+// dollLoad()＝全部部件（長相登記、衣櫃縮圖要用）｜dollLoad(長相)＝只讀這個長相用到的部件（含各表情），比較快（v0.41.0）
+function dollLoad(st){
+  const all=['body',...Object.values(DOLL_LISTS).flat()];
+  if(!st){if(!DOLL_READY)DOLL_READY=Promise.all(all.map(dollOne));return DOLL_READY}
+  const has=new Set(all),need=new Set(['body']),walk=v=>{if(typeof v==='string'){if(has.has(v))need.add(v)}else if(v&&typeof v==='object')Object.values(v).forEach(walk)};
+  walk(st);return Promise.all([...need].map(dollOne));
 }
 // ---------- 繪製 ----------
 const dollCv=()=>{const c=document.createElement('canvas');c.width=DOLL_W*DOLL_K;c.height=DOLL_H*DOLL_K;return c};
@@ -58,9 +63,18 @@ function dollOutline(src){
   const r=DOLL_OUTLINE*DOLL_K,s=dollCv(),sg=s.getContext('2d');
   sg.drawImage(src,0,0);sg.globalCompositeOperation='source-in';sg.fillStyle='#fff';sg.fillRect(0,0,s.width,s.height);
   const o=dollCv(),og=o.getContext('2d');
-  for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++)if(x*x+y*y<=r*r+r)og.drawImage(s,x,y);
+  olStamp(og,s,r);
   og.drawImage(src,0,0);return o;
 }
+// 描白邊：把白色剪影蓋在「原本那個圓（x²+y²≤r²+r）的邊界」上，再加一圈半徑一半的內圈（很小的碎點才不會描成空心圈）。
+// v0.41.0：原本把整個圓裡的每一點都蓋一次（r=6 要 113 次，31 張立繪在手機上要跑 30 秒以上），改成 49 次；和原本比只差幾個像素
+const OL_OFS={};
+function olOffsets(r){if(OL_OFS[r])return OL_OFS[r];const seen=new Set(),out=[],add=(x,y)=>{const k=x+','+y;if(!seen.has(k)){seen.add(k);out.push([x,y])}};
+  const inD=(x,y)=>x*x+y*y<=r*r+r;
+  for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++)if(inD(x,y)&&(!inD(x+1,y)||!inD(x-1,y)||!inD(x,y+1)||!inD(x,y-1)))add(x,y);
+  const R=r/2,n=Math.max(8,Math.ceil(2*Math.PI*R/1.5));for(let i=0;i<n;i++){const a=i/n*2*Math.PI;add(Math.round(R*Math.cos(a)),Math.round(R*Math.sin(a)))}
+  return OL_OFS[r]=out}
+function olStamp(g,mask,r){olOffsets(r).forEach(([x,y])=>g.drawImage(mask,x,y))}
 function dollLine(g,col,w,pts){g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(pts[0][0],pts[0][1]);pts.slice(1).forEach(p=>g.lineTo(p[0],p[1]));g.stroke()}
 // 泡泡（表情選「泡泡」時）：之後可以換成畫好的圖
 function dollBubble(g,emo){

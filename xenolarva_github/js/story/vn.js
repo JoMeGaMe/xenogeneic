@@ -160,7 +160,7 @@ function stPvPlay(id,after){
   ST_PV=true;$('ovPick').classList.remove('show');if(!META.doll)META.doll=dollDef();
   STY=storyNew();SUI.scr='home';SUI.sched=stFixedFill();SUI.sel=0;SUI.greteOn=false;STRUN=null;STORY_DOLL={};ST_FAVPOP=[];
   $('ovStory').classList.add('show');document.body.classList.add('story');
-  dollLoad().then(()=>{ST_DOLL_OK=true;STORY_DOLL={};stRender()});
+  stDollLoad();
   stPlay([ev],stPvEnd);
 }
 let ST_PV_AFTER=null;

@@ -38,7 +38,7 @@
 | 禮物與偷偷七逃 | `js/souvenirs.js`、`js/data/souvenirs.js` |
 | 開發者模式（連點版本號 5 次或網址 `?dev=1`） | `js/dev.js` |
 | 離線測試（不開瀏覽器跑遊戲邏輯） | `tools/test_harness.js`（用法在檔案開頭） |
-| 打包成單一 HTML（Claude 預覽用） | `python3 tools/build_single_file.py` |
+| 打包成單一 HTML（Claude 預覽用）＋遊戲頁版 | `python3 tools/build_single_file.py`（`game_inline.html`＝圖片全內嵌；`game_artifact.html`＋`dist_artifact/a/…`＝遊戲頁 artifact 用，圖片是附加檔案） |
 | ☰ 選單（順序與文字）、設定與存檔頁的跳段按鈕、手機版底部固定行動區、訊息區展開 | `js/layout.js`（樣式在 `css/style.css` 最後一段；選單順序與文字 `TEXT.layout.ham`） |
 | 選單頁面（小球們／收藏品／設定與存檔／說明與公告；設定內容在 `js/flow.js` 的 `settingsBuild`） | `index.html` 的 `#ovMenu`、`js/codex.js` 的 `showTab`；說明 `js/data/about.js`；更新公告 `js/data/news.js` |
 | 按鈕上的單色圖示（16×16 像素，或換成自己的圖片路徑） | `js/data/icons.js` |
@@ -69,6 +69,8 @@
 
 ## 預覽用單檔
 `python tools/build_single_file.py` 會產生 `game_inline.html`（含所有圖片，一個檔案就能開）。
+建置一開始會把 `assets/npc/*.png`（原圖）自動轉成同名 `.webp`（png 比較新才重轉），遊戲讀的是 webp（`js/utils.js` 的 `assetPath`）。
+同時產生遊戲頁（artifact）用的 `game_artifact.html`（約 1.5MB，只有程式）＋`dist_artifact/a/資料夾/檔名`（圖片，用到才讀；網址帶 `?h=內容雜湊`）。發布時 `files` 照 `dist_artifact/files.json` 帶（一次最多 255 個；`dist_artifact/changed.txt`＝和上次比有變的，平常只傳這些）。人物立繪的白邊：`js/events.js` 的 `chrOlRun` 會先 fetch 成 blob 再畫，畫布才能輸出。
 
 ## 圖片資料夾（v0.33.5 起）
 程式與設定總表都只寫**檔名**（例 `hall_3f`、`joan_1`），放哪個資料夾由 `js/utils.js` 的 `ASSET_DIRS` 依檔名開頭決定（`assetPath(檔名)`）。新增圖片照開頭放進對的資料夾即可。

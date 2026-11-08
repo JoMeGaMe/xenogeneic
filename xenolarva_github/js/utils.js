@@ -47,5 +47,5 @@ const ASSET_EXT={map:'jpg'};   // 不是 png 的
 function assetPath(k,hd){
   const d=(ASSET_DIRS.find(([,re])=>re.test(k))||[''])[0];
   if(hd&&d==='bg')return 'assets/bg_hd/'+k+'.jpg';
-  return 'assets/'+(d?d+'/':'')+k+'.'+(ASSET_EXT[k]||'png');
+  return 'assets/'+(d?d+'/':'')+k+'.'+(ASSET_EXT[k]||(d==='npc'?'webp':'png'));   // 人物圖讀 WebP（v0.40.69 續 15；png 是原圖，tools/build_single_file.py 會自動轉）
 }

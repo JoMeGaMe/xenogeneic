@@ -89,20 +89,28 @@ function chrAttr(k){const o=chrOl(k),c=chrSplit(k);if(o)return `data-chr="${esc(
 // 本機直接開 index.html（file://）時瀏覽器不准把畫布轉成圖片，就維持原圖（GitHub Pages、單檔預覽版都正常）。
 const CHR_OL={},CHR_OL_Q=[];let CHR_OL_BUSY=false;
 const chrNew=k=>/_[LR]_[^_]+$/.test(chrSplit(k).base);
-function chrOl(k){if(!k||!chrNew(k))return '';if(CHR_OL[k]===undefined){CHR_OL[k]=false;CHR_OL_Q.push(k);chrOlRun()}return CHR_OL[k]||''}
+// first＝馬上要用（劇情這段的人物，v0.41.0）：排到隊伍最前面，不用等背景預先描的那些
+function chrOl(k,first){if(!k||!chrNew(k))return '';
+  if(CHR_OL[k]===undefined){CHR_OL[k]=false;CHR_OL_Q[first?'unshift':'push'](k);chrOlRun()}
+  else if(first&&CHR_OL[k]===false){const i=CHR_OL_Q.indexOf(k);if(i>0){CHR_OL_Q.splice(i,1);CHR_OL_Q.unshift(k)}}
+  return CHR_OL[k]||''}
 function chrOlRun(){
   if(CHR_OL_BUSY||!CHR_OL_Q.length)return;CHR_OL_BUSY=true;
   const k=CHR_OL_Q.shift(),c=chrSplit(k),srcs=[c.base,c.acc].filter(Boolean);
   const next=()=>{CHR_OL_BUSY=false;setTimeout(chrOlRun,0)};
-  Promise.all(srcs.map(s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=assetImg(s)}))).then(ims=>{
+  // 遊戲頁（artifact）版的圖是附加檔案（v0.41.0）：先 fetch 成 blob 再畫，畫布才能輸出；fetch 不行就照舊直接讀
+  const load=u=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=u});
+  const get=s=>{const u=assetImg(s);if(/^(data|blob):/.test(u)||location.protocol==='file:'||typeof fetch!=='function')return load(u);
+    return fetch(u).then(x=>{if(!x.ok)throw 0;return x.blob()}).then(b=>load(URL.createObjectURL(b))).catch(()=>load(u))};
+  Promise.all(srcs.map(get)).then(ims=>{
     if(!ims[0]){CHR_OL[k]=null;next();return}
     const W=ims[0].naturalWidth,H=ims[0].naturalHeight,cv=()=>{const e=document.createElement('canvas');e.width=W;e.height=H;return e};
     const s=cv(),sg=s.getContext('2d');ims.forEach(i=>i&&sg.drawImage(i,0,0,W,H));
     const m=cv(),mg=m.getContext('2d');mg.drawImage(s,0,0);mg.globalCompositeOperation='source-in';mg.fillStyle='#fff';mg.fillRect(0,0,W,H);
     const o=cv(),og=o.getContext('2d'),r=Math.round(DOLL_OUTLINE*W/DOLL_W);
-    for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++)if(x*x+y*y<=r*r+r)og.drawImage(m,x,y);
-    og.drawImage(s,0,0);
-    try{CHR_OL[k]=o.toDataURL()}catch(e){CHR_OL[k]=null}
+    olStamp(og,m,r);   // js/doll.js（v0.41.0：只蓋在圓的邊界＋內圈，49 次；原本 113 次）
+    og.drawImage(s,0,0);ims.forEach(i=>i&&i.src.startsWith('blob:')&&URL.revokeObjectURL(i.src));   // fetch 來的暫存圖用完就丟
+    try{CHR_OL[k]=o.toDataURL()}catch(e){CHR_OL[k]=null}   // （試過 toBlob：在手機模擬上反而慢很多，維持 toDataURL）
     if(CHR_OL[k])document.querySelectorAll('img[data-chr]').forEach(e=>{if(e.dataset.chr===k)chrSet(e,k)});
     next();
   });

@@ -62,7 +62,7 @@ const STORY_CMDS={
   arcade:{cat:'rest',at:'arcade',eff:{money:-200,fat:-25,soc:1},big:'place_avenue',small:'place_arcade',act:'rest'},
   ktv:  {cat:'rest',at:'ktv',eff:{money:-300,fat:-30,soc:2},big:'place_avenue',small:'place_ktv',act:'rest'},
   volunteer:{cat:'job',at:'community',eff:{money:150,soc:2,know:1,fat:15},big:'place_community',small:'place_community',act:'work',enc:[['yanjie',.6]],stage:{npcCrowd:{yanjie:{p:1,n:6}},crowdAlone:6}},   // 言街在＝小球圍著他；不在＝圍著玩家（v0.40.49）   // v0.40.30：活動中心義工（言街念故事給小球們聽；還沒有背景，先借廣場）
-  lab:  {cat:'job',at:'hall',open:'f4',need:{know:25},eff:{money:900,know:3,fat:12},kick:{know:25},kickEff:{fat:10},big:'hall_lobby',small:'hall_4f',act:'work',enc:[['yanxiang',1]]},   // v0.40.23：4F 研究室（自由行動第一次去、知識不夠會被言巷趕出來；知識 25 以上才出現在行程表）
+  lab:  {cat:'job',at:'hall',open:'f4',need:{know:25},eff:{money:800,know:3,fat:12},kick:{know:25},kickEff:{fat:10},big:'hall_lobby',small:'hall_4f',act:'work',enc:[['yanxiang',1]]},   // v0.40.23：4F 研究室（自由行動第一次去、知識不夠會被言巷趕出來；知識 25 以上才出現在行程表）
   f5:   {cat:'job',at:'hall',open:'f5',eff:{money:50,soc:2,fat:-10},big:'hall_lobby',small:'hall_top',act:'work',enc:[['yanjie',.6]],
          stage:{crowd:6,crowdBad:.5,npc:{bad:{face:1}},me:{bad:'shock'},pass:{n:[1]}}},   // 小球們圍著玩家；大失敗＝一半跑去找言街，言街無奈地笑（喜）、玩家嚇到（驚）   // v0.40.36：5F 幫言街顧跑來找他玩的小球（言街忙文書的時候）
   free: {cat:'rest',ord:1,eff:{fat:-10},act:'rest'}     // 自由行動（行程空白）：那天執行時打開地圖自己選（v0.40.14）；這裡只是行程表上的名字
