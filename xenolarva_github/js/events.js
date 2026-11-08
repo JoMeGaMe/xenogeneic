@@ -110,4 +110,4 @@ function chrOlRun(){
 // 開遊戲後先在背景把常用的立繪描好
 function chrOlPreload(){[...Object.values(HALL_FLOORS).flatMap(f=>f.chr||[]),...Object.values(LOBBY_NPC).flatMap(n=>n.chr||[]),...SHOP_SCENE.chr,GRETE_IMG,GRETE_IMG2,
   ...Object.values(STORY_NPC).flatMap(n=>n.img?[n.img,n.img.replace(/_L_/,'_R_')]:[])].forEach(chrOl)}
-setTimeout(()=>{try{chrOlPreload()}catch(e){}},1200);
+{const go=()=>setTimeout(()=>{try{chrOlPreload()}catch(e){}},800);if(document.readyState==='complete')go();else addEventListener('load',go)}   // 整頁讀完才開始（v0.40.69：不和開頭搶網路）

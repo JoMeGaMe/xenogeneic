@@ -62,6 +62,7 @@ function watchToggle(id,on){
 function watchOpen(){const b=$('wlist');watchRender();$('ovWatch').classList.add('show')}
 
 function pvEnter(){
+  if(!IMG.bg_preview){const im=new Image();im.src=ASSETS.bg_preview||BASE+'bg_preview.png';IMG.bg_preview=im}   // 第一次進來才讀背景（v0.40.69）
   if(PV||$('ovEnd').classList.contains('show'))return;        // 結局框開著時不進來（避免在觀察水缸裡結束這一輪）
   if(!pvList().length){toast(PV_TXT.noList);return}
   ['ovMenu','ovPick','ovBag'].forEach(i=>$(i).classList.remove('show'));$('devp').hidden=true;

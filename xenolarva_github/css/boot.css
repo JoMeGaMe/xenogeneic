@@ -1,0 +1,13 @@
+/* 開頭的讀取畫面（v0.40.69）：在所有程式載完前就出現（不靠 JS），跳跳小球＋讀條＋百分比；js/boot.js 算進度，js/layout.js 最後呼叫 bootDone() 收掉 */
+#boot{position:fixed;inset:0;z-index:9999;background:#000;color:#e8c27a;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 30px 34px;transition:opacity .35s}
+#boot.out{opacity:0;pointer-events:none}
+#boot .bootw{display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-size:20px;letter-spacing:.1em;font-family:"Cubic 11","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+#boot .bootb{position:relative;width:56px;height:56px;margin-left:calc(1.65em - 28px)}
+#boot .bootb i{position:absolute;inset:0;background:center/contain no-repeat;opacity:0;animation:bootf .75s infinite}
+#boot .bootb i:nth-child(1){background-image:url(../assets/ui/loading_1.png)}
+#boot .bootb i:nth-child(2){background-image:url(../assets/ui/loading_2.png);animation-delay:-.5s}
+#boot .bootb i:nth-child(3){background-image:url(../assets/ui/loading_3.png);animation-delay:-.25s}
+@keyframes bootf{0%,33.3%{opacity:1}33.4%,100%{opacity:0}}
+#boot .bootbar{width:160px;height:6px;background:#3a3020;border-radius:3px;overflow:hidden;margin-top:4px}
+#boot .bootbar i{display:block;height:100%;width:0;background:#e8c27a;transition:width .2s}
+#boot .bootpct{font-size:13px;letter-spacing:0;opacity:.8}

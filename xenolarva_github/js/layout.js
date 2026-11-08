@@ -43,3 +43,5 @@ let actsRaf=0;
 function actsFit(){cancelAnimationFrame(actsRaf);actsRaf=requestAnimationFrame(()=>{const a=$('acts');document.documentElement.style.setProperty('--actsH',(mobileQ.matches?a.offsetHeight:0)+'px')})}
 if(window.ResizeObserver)new ResizeObserver(actsFit).observe($('acts'));
 addEventListener('resize',actsFit);actsFit();
+// 開頭的讀取畫面收掉（js/boot.js；這個檔案是最後一個載入的）
+if(window.bootDone)bootDone();

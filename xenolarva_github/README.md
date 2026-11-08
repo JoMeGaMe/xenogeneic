@@ -29,6 +29,7 @@
 | 調整版面、顏色、按鈕 | `css/style.css`、`index.html` |
 | 介面配色、版型、按鈕質感 | `css/theme.css`（接在 style.css 後面；顏色都用這裡的變數） |
 | 設定裡的外觀選項（版型／配色／字體） | `js/skin.js`（文字：`texts.js` 的 `skin`；字體檔 `assets/font/`） |
+| 開頭的讀取畫面（跳跳小球＋讀條） | `index.html` 的 `#boot`、`css/boot.css`、`js/boot.js`（`js/layout.js` 最後呼叫 `bootDone()`；`data-n` 由 `tools/build_single_file.py` 自動更新） |
 | 開場故事、第 0 日（沒小球）、接取委託、設定、交還協會積分 | `js/flow.js`（資料：`js/data/assoc.js`；文字：`texts.js` 的 `intro`／`idle`／`assoc`） |
 | 觀察水缸模式（750×500、最多 5 隻、可戳） | `js/preview.js`（背景 `assets/larva/bg_preview.png`） |
 | 聊天與聊天染色（單色／雙色） | `js/chat.js`、`js/data/chat.js`；事件在 `js/events.js`（`colorTalk`／`colorTalk2`） |

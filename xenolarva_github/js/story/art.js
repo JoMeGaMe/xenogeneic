@@ -3,7 +3,7 @@
 
 // ---------- 圖 ----------
 // 大背景：有大圖（assets/bg_hd）就用大圖。單檔預覽版裡只有小圖；預覽頁另外放了 bg_hd 檔案時（v0.40.15），開頭試讀一張成功就改用大圖
-let ST_HD=typeof ASSETS==='undefined';
+let ST_HD=typeof ASSETS==='undefined'||!Object.keys(ASSETS).length;   // GitHub 版（ASSETS 空的）一定有大圖：不用開頭試讀（v0.40.69：省 394KB）
 if(!ST_HD){const t=new Image();t.onload=()=>{ST_HD=true;if($('ovStory').classList.contains('show'))stRender()};t.src=assetPath('home_night',true)}
 const stBg=(k,hd)=>{const p=hd&&ST_HD&&assetPath(k,true);return p&&p.includes('bg_hd')?p:(typeof ASSETS!=='undefined'&&ASSETS[k])||assetPath(k,hd)};
 let ST_PRE=[];   // 先讀好的圖（留著參考，瀏覽器才不會丟掉）

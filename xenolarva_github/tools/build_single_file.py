@@ -2,6 +2,13 @@
 # 用法：在專案根目錄執行  python tools/build_single_file.py
 import re, base64, glob, os, json
 html = open('index.html', encoding='utf-8').read()
+# v0.40.69：開頭讀取畫面的 data-n＝boot.js 後面有幾個 <script>（進度條用），自動更新 index.html
+_m = re.search(r'<script src="js/boot\.js[^"]*"></script>', html)
+if _m:
+    _n = len(re.findall(r'<script src="', html[_m.end():]))
+    _new = re.sub(r'(<div id="boot" data-n=")\d+(")', r'\g<1>%d\g<2>' % _n, html)
+    if _new != html:
+        html = _new; open('index.html', 'w', encoding='utf-8').write(html); print('index.html：讀取畫面 data-n =', _n)
 # css/ 底下每個 <link> 都內嵌（style.css、theme.css…）；CSS 裡的 url(../assets/…)（字體、框圖）轉成 base64
 CSS_MIME = {'.woff2': 'font/woff2', '.woff': 'font/woff', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml'}
 def css_url(m):
