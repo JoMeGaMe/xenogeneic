@@ -129,17 +129,19 @@ function stVnDlg(V,L,T,hp){const ls=V.ev.lines,fx=V.fx||[];let h='';
   return h;}
 // 畫面上層：好感提示、預覽的句號、跳過
 function stVnTop(V){let h='';
-  if(ST_FAVPOP.length)h+=`<div class="svfavs">${ST_FAVPOP.map(x=>`<div class="svfav${x.bad?' bad':''}" data-id="${x.id}" style="animation-delay:-${Math.round(performance.now()-x.t0)}ms">${esc(x.t)}</div>`).join('')}</div>`;
+  h+=stFavPopHtml();
   if(!ST_REPLAY)h+=`<button class="svskip" data-act="vskip">${esc(stT().skip)}</button>`;
   if(ST_REPLAY)h+=`<button class="svpvx" data-act="rpquit">${esc(stT().diaryQuit)}</button>`;
   if(ST_PV)h+=`<span class="svpvno">${esc(V.ev.id)} #${V.i+1}</span>`;   // 預覽：跳過＝結束這段（不另外放「結束預覽」）   // 預覽：左上顯示句號（和總表「句號」欄一樣）
   return h;}
 // 跳過這段劇情：照預設路線（選項選第一個）把還沒算的數值變化算完，直接結束這段
+// 好感提示（劇情裡）
+const stFavPopHtml=()=>ST_FAVPOP.length?`<div class="svfavs">${ST_FAVPOP.map(x=>`<div class="svfav${x.bad?' bad':''}" data-id="${x.id}" style="animation-delay:-${Math.round(performance.now()-x.t0)}ms">${esc(x.t)}</div>`).join('')}</div>`:'';
 function stVnSkip(){const V=SUI.vn;if(!V)return;const ls=V.ev.lines;let i=V.i,first=true,n=0;
   while(i<ls.length&&n++<999){const L=ls[i];
     if(L.who==='cond'){i=stCondJump(ls,i);continue}
-    if(L.who==='choice'){if(L.eff)stEff(L.eff);const j=L.go==='end'?ls.length:L.go?ls.findIndex(l=>l.tag===L.go):i+1;i=j<0?ls.length:j;first=false;continue}
-    if(!first&&L.eff)stEff(L.eff);first=false;
+    if(L.who==='choice'){const e=String(L.eff||'').split(/[,，、]/).filter(p=>!/^\s*fav\./.test(p)).join(',');if(e)stEff(e);const j=L.go==='end'?ls.length:L.go?ls.findIndex(l=>l.tag===L.go):i+1;i=j<0?ls.length:j;first=false;continue}   /* 跳過：選項的好感不給（使用者 11-08：只算一定會給的），其他效果照算、走第一個選項 */
+    if(!first&&L.eff)stEff(L.eff);first=false;   // 跳過：效果照算、不浮好感提示（使用者 11-08：有給就好）
     if(L.go){const j=L.go==='end'?ls.length:ls.findIndex(l=>l.tag===L.go);i=j<0?ls.length:j}else i++;}
   clearInterval(ST_TW);const d=V.done;SUI.vn=null;stRender();d();}
 // 日記本：重看看過的劇情（ST_REPLAY：不加數值、不記錄，看完回到日記本）
